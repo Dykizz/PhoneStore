@@ -7,6 +7,9 @@ import { AppService } from './app.service';
 import { DatabaseConfig } from './Configs/DatabaseConfig';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
+import { SuppliersModule } from './suppliers/suppliers.module';
+import { APP_GUARD } from '@nestjs/core';
+import { RolesGuard } from './common/guards/roles.guard';
 
 @Module({
   imports: [
@@ -25,6 +28,7 @@ import { AuthModule } from './auth/auth.module';
     }),
     UsersModule,
     AuthModule,
+    SuppliersModule,
   ],
   controllers: [AppController],
   providers: [AppService],

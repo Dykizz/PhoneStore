@@ -27,7 +27,7 @@ export class UsersService {
     return {
       id: user.id,
       email: user.email,
-      username: user.username,
+      userName: user.userName,
       role: user.role,
     };
   }
@@ -40,7 +40,7 @@ export class UsersService {
     return {
       id: user.id,
       email: user.email,
-      username: user.username,
+      userName: user.userName,
       avatar: user.avatar,
       role: user.role,
       createdAt: user.createdAt,
