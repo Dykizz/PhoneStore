@@ -13,7 +13,7 @@ import * as bcrypt from 'bcrypt';
 export interface IUser {
   id: string;
   email: string;
-  username: string;
+  userName: string;
   role: UserRole;
   remember?: boolean;
 }
@@ -39,7 +39,7 @@ export class User {
   email: string;
 
   @Column()
-  username: string;
+  userName: string;
 
   @Column()
   @Exclude()
@@ -60,10 +60,10 @@ export class User {
   status: UserStatus;
 
   @Column({ nullable: true })
-  phone: string;
+  phoneNumber: string;
 
   @Column({ nullable: true })
-  address: string;
+  defaultAddress: string;
 
   @Column({ nullable: true })
   refreshToken: string;

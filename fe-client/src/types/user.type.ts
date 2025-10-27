@@ -2,14 +2,14 @@ export type UserRole = "admin" | "user" | "employee";
 
 export interface IUser {
   id: string;
-  username: string;
+  userName: string;
   email: string;
   role: UserRole;
 }
 
 export interface BaseUser {
   id: string;
-  username: string;
+  userName: string;
   email: string;
   role: UserRole;
   avatar?: string;
