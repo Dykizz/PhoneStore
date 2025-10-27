@@ -12,7 +12,7 @@ export class RegisterUserDto {
   @IsString({ message: 'Tên người dùng phải là chuỗi' })
   @MinLength(6, { message: 'Tên người dùng phải có ít nhất 6 ký tự' })
   @MaxLength(20, { message: 'Tên người dùng không được vượt quá 20 ký tự' })
-  username: string;
+  userName: string;
 
   @IsNotEmpty({ message: 'Email không được để trống' })
   @IsEmail({}, { message: 'Email không hợp lệ' })

@@ -7,7 +7,7 @@ export interface ApiResponseSuccess<T> {
 
 export interface ApiResponseError {
   success: false;
-  statusCode: string;
+  statusCode: number;
   message: string;
   timestamp: string;
   path: string;
