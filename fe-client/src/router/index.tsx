@@ -3,6 +3,7 @@ import { Home } from "@/pages/Home";
 import LoginPage from "@/pages/Login";
 import RegisterPage from "@/pages/Register";
 import { createBrowserRouter } from "react-router-dom";
+import { ProductDetail } from '@/pages/ProductDetail';
 
 export const router = createBrowserRouter([
   {
@@ -25,6 +26,10 @@ export const router = createBrowserRouter([
       {
         path: "register",
         element: <RegisterPage />,
+      },
+      {
+        path: "product/:id",
+        element: <ProductDetail />
       },
       {
         path: "about",
