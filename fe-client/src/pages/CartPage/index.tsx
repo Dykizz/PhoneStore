@@ -1,5 +1,4 @@
-import React from "react";
-import { useCart } from "@/contexts/cartContext";
+import { useCart } from "@/contexts/cartContexts";
 import { Button } from "@/components/ui/button";
 
 export function CartPage() {

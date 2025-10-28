@@ -2,7 +2,7 @@ import { useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { useCart } from "@/contexts/cartContext";
+import { useCart } from "@/contexts/cartContexts";
 import {
   Card,
   CardContent,
@@ -18,20 +18,11 @@ import {
   type BaseProduct,
 } from "@/data";
 
-const handleAddToCart = (e: React.MouseEvent, productId: string, quantity: number, name: string, price: number, image: string) => {
-  e.stopPropagation();
-  e.preventDefault();
-  // Sử dụng addToCart từ CartContext
-  addToCart({ id: productId, quantity, name, price, image });
-};
 
-
-// Hàm định dạng giá
 function formatPrice(price: number) {
   return price.toLocaleString("vi-VN") + "₫";
 }
 
-// Hàm tính giá sau khi áp dụng giảm giá
 function calculateDiscountedPrice(price: number, discount: number): number {
   return price - (price * discount / 100);
 }
@@ -43,6 +34,9 @@ export function ProductDetail() {
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(true);
   const [relatedProducts, setRelatedProducts] = useState<BaseProduct[]>([]);
+
+  const { addToCart } = useCart();
+
 
   useEffect(() => {
     if (!id) return;
@@ -77,6 +71,13 @@ export function ProductDetail() {
     setQuantity(1); // Reset số lượng
     setLoading(false); // Hoàn thành tải dữ liệu
   }, [id]);
+
+  const handleAddToCart = (e: React.MouseEvent, productId: string, quantity: number, name: string, price: number, image: string) => {
+  e.stopPropagation();
+  e.preventDefault();
+  // Sử dụng addToCart từ CartContext
+  addToCart({ id: productId, quantity, name, price, image });
+  };
 
   if (loading) {
     return (
