@@ -1,78 +1,102 @@
-// fe-client/src/contexts/cardContexts.tsx
-
-// SỬA 1: Xóa 'React' (không dùng)
 import { createContext, useContext, useState } from "react";
 import type { ReactNode } from "react";
 
-// SỬA 2: Thêm 'export' để các file khác có thể dùng kiểu này
 export interface CartItem {
-  id: string;
+  // SỬA 1: Đổi tên 'id' thành 'cartItemId' để rõ ràng hơn
+  // Đây sẽ là ID duy nhất cho biến thể (vd: "iphone15-black")
+  cartItemId: string;
+  productId: string; // Giữ lại ID gốc của sản phẩm
   name: string;
-  price: number;
+  price: number; // Giá cuối cùng (đã giảm)
   quantity: number;
   image: string;
+  // SỬA 2: Thêm thuộc tính để hiển thị biến thể (ví dụ: màu sắc)
+  variantInfo?: string; // Ví dụ: "Màu: Đen"
 }
 
 interface CartContextType {
-  cart: CartItem[];
-  addToCart: (item: CartItem) => void;
-  removeFromCart: (id: string) => void;
-  updateQuantity: (id: string, quantity: number) => void;
+  cartItems: CartItem[];
+  cartCount: number;
+  addToCart: (item: Omit<CartItem, 'cartItemId'>, variantIdPart: string) => void; // Sửa tham số addToCart
+  removeFromCart: (cartItemId: string) => void; // Dùng cartItemId
+  updateQuantity: (cartItemId: string, quantity: number) => void; // Dùng cartItemId
+  clearCart: () => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 // eslint-disable-next-line react-refresh/only-export-components
-export const useCart = (): CartContextType => {
+export function useCart() {
   const context = useContext(CartContext);
   if (!context) {
-    throw new Error("useCart must be used within a CartProvider");
+    throw new Error("useCart must be used within CartProvider");
   }
   return context;
-};
+}
 
 export const CartProvider = ({ children }: { children: ReactNode }) => {
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
 
-  const addToCart = (item: CartItem) => {
-    setCart((prevCart) => {
-      // Kiểm tra xem sản phẩm đã có trong giỏ hàng chưa
-      const existingItemIndex = prevCart.findIndex(
-        (cartItem) => cartItem.id === item.id
+  const cartCount = cartItems.reduce((total, item) => total + item.quantity, 0);
+
+  // SỬA 3: Sửa hàm addToCart để nhận thêm variantIdPart
+  const addToCart = (newItemData: Omit<CartItem, 'cartItemId'>, variantIdPart: string) => {
+    // Tạo ID duy nhất cho biến thể trong giỏ hàng
+    const cartItemId = `${newItemData.productId}-${variantIdPart}`;
+
+    setCartItems((prevItems) => {
+      // Tìm kiếm dựa trên cartItemId duy nhất này
+      const existingItemIndex = prevItems.findIndex(
+        (item) => item.cartItemId === cartItemId
       );
+
       if (existingItemIndex > -1) {
-        // Nếu có, tăng số lượng sản phẩm
-        const updatedCart = [...prevCart];
-
-        // SỬA LỖI CHÍNH Ở ĐÂY:
-        // Sửa "existingItemIndexMoi" thành "existingItemIndex"
-        updatedCart[existingItemIndex].quantity += item.quantity;
-
-        return updatedCart;
+        // Nếu tìm thấy chính xác biến thể này -> tăng số lượng
+        const updatedItems = [...prevItems];
+        updatedItems[existingItemIndex].quantity += newItemData.quantity;
+        return updatedItems;
       } else {
-        // Nếu chưa, thêm sản phẩm mới vào giỏ hàng
-        return [...prevCart, item];
+        // Nếu không tìm thấy -> thêm biến thể mới vào giỏ
+        const newItem: CartItem = {
+          ...newItemData,
+          cartItemId: cartItemId, // Gán ID duy nhất
+        };
+        return [...prevItems, newItem];
       }
     });
   };
 
-  const removeFromCart = (id: string) => {
-    setCart((prevCart) => prevCart.filter((item) => item.id !== id));
+  // SỬA 4: Các hàm khác dùng cartItemId
+  const removeFromCart = (cartItemId: string) => {
+    setCartItems((prevItems) => prevItems.filter((item) => item.cartItemId !== cartItemId));
   };
 
-  const updateQuantity = (id: string, quantity: number) => {
-    setCart((prevCart) =>
-      prevCart.map((item) =>
-        // Giữ lại logic Math.max(quantity, 1) vì CartPage
-        // đã 'disabled' nút trừ, logic này an toàn
-        item.id === id ? { ...item, quantity: Math.max(quantity, 1) } : item
+  const updateQuantity = (cartItemId: string, quantity: number) => {
+    if (quantity <= 0) {
+      removeFromCart(cartItemId);
+      return;
+    }
+    setCartItems((prevItems) =>
+      prevItems.map((item) =>
+        item.cartItemId === cartItemId ? { ...item, quantity } : item
       )
     );
   };
 
+  const clearCart = () => {
+    setCartItems([]);
+  };
+
   return (
     <CartContext.Provider
-      value={{ cart, addToCart, removeFromCart, updateQuantity }}
+      value={{
+        cartItems,
+        cartCount,
+        addToCart,
+        removeFromCart,
+        updateQuantity,
+        clearCart,
+      }}
     >
       {children}
     </CartContext.Provider>
