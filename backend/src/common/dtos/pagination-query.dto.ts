@@ -100,7 +100,15 @@ export class PaginationQueryDto {
     // Apply search
     if (this.search && searchFields?.length) {
       const searchConditions = searchFields
-        .map(field => `${alias}.${field} ILIKE :search`)
+        .map(field => {
+          // Nếu là quan hệ, ví dụ 'supplier.name' thì dùng trực tiếp alias con
+          if (field.includes('.')) {
+            const [relationAlias, column] = field.split('.');
+            return `${relationAlias}.${column} ILIKE :search`;
+          }
+          // Nếu là cột của bảng chính
+          return `${alias}.${field} ILIKE :search`;
+        })
         .join(' OR ');
 
       qb.andWhere(`(${searchConditions})`, {
@@ -108,7 +116,7 @@ export class PaginationQueryDto {
       });
     }
 
-    // Apply filters (với qs parsing support)
+    // Apply filters
     if (this.filters && Object.keys(this.filters).length > 0) {
       this.applyFiltersToQueryBuilder(qb, alias, this.filters);
     }
@@ -119,7 +127,14 @@ export class PaginationQueryDto {
       ? this.sortBy
       : allowedSortFields[0];
 
-    qb.orderBy(`${alias}.${sortField}`, this.sortOrder);
+    // Nếu sortBy có quan hệ, xử lý tương tự
+    let sortExpression = `${alias}.${sortField}`;
+    if (sortField.includes('.')) {
+      const [relationAlias, column] = sortField.split('.');
+      sortExpression = `${relationAlias}.${column}`;
+    }
+
+    qb.orderBy(sortExpression, this.sortOrder);
 
     // Apply pagination
     qb.skip((this.page - 1) * this.limit).take(this.limit);
@@ -137,25 +152,17 @@ export class PaginationQueryDto {
   ) {
     Object.entries(filters).forEach(([key, value]) => {
       if (value !== undefined && value !== null && value !== '') {
-        // Handle nested objects (từ qs parsing)
         if (
           typeof value === 'object' &&
           !Array.isArray(value) &&
           !value.operator
         ) {
-          // Nested filter: filters[user][role] = admin
           this.applyNestedFilter(qb, alias, key, value);
-        }
-        // Handle arrays
-        else if (Array.isArray(value)) {
+        } else if (Array.isArray(value)) {
           qb.andWhere(`${alias}.${key} IN (:...${key})`, { [key]: value });
-        }
-        // Handle advanced filters với operators
-        else if (typeof value === 'object' && value.operator) {
+        } else if (typeof value === 'object' && value.operator) {
           this.applyAdvancedFilter(qb, alias, key, value);
-        }
-        // Handle simple equality
-        else {
+        } else {
           qb.andWhere(`${alias}.${key} = :${key}`, { [key]: value });
         }
       }
