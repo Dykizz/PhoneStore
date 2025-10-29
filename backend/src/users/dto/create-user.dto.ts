@@ -16,7 +16,7 @@ export class CreateUserDto {
 
   @IsString()
   @MaxLength(100)
-  username: string;
+  userName: string;
 
   @IsString()
   @MinLength(6)
@@ -33,10 +33,10 @@ export class CreateUserDto {
 
   @IsOptional()
   @IsPhoneNumber('VN')
-  phone?: string;
+  phoneNumber?: string;
 
   @IsOptional()
   @IsString()
   @MaxLength(255)
-  address?: string;
+  defaultAddress?: string;
 }

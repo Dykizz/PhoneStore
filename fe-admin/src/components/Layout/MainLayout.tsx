@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Layout, Menu, theme, Switch, Button } from "antd";
+import { Layout, Menu, theme } from "antd";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import {
   DashboardOutlined,
@@ -7,12 +7,12 @@ import {
   ShoppingCartOutlined,
   UserOutlined,
   SettingOutlined,
-  MenuFoldOutlined,
-  MenuUnfoldOutlined,
 } from "@ant-design/icons";
 import { useTheme } from "../../providers/ThemeContext";
+import { AuthProvider } from "@/providers/AuthProvider";
+import Header from "../Header";
 
-const { Header, Sider, Content } = Layout;
+const { Sider, Content } = Layout;
 
 const MainLayout: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
@@ -74,118 +74,89 @@ const MainLayout: React.FC = () => {
   };
 
   return (
-    <Layout style={{ minHeight: "100vh", backgroundColor: colorBgLayout }}>
-      <Sider
-        trigger={null}
-        collapsible
-        collapsed={collapsed}
-        theme={isDark ? "dark" : "light"}
-        style={{
-          overflow: "auto",
-          height: "100vh",
-          position: "fixed",
-          left: 0,
-          top: 0,
-          bottom: 0,
-          backgroundColor: colorBgContainer, // Dùng cùng màu với Content
-        }}
-      >
-        <div
+    <AuthProvider>
+      <Layout style={{ minHeight: "100vh", backgroundColor: colorBgLayout }}>
+        <Sider
+          trigger={null}
+          collapsible
+          collapsed={collapsed}
+          theme={isDark ? "dark" : "light"}
           style={{
-            height: "64px",
-            padding: "16px",
-            borderBottom: `1px solid ${colorBorder}`,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            backgroundColor: colorBgContainer, // Dùng cùng màu
+            overflow: "auto",
+            height: "100vh",
+            position: "fixed",
+            left: 0,
+            top: 0,
+            bottom: 0,
+            backgroundColor: colorBgContainer, // Dùng cùng màu với Content
           }}
         >
-          <h2
+          <div
             style={{
-              margin: 0,
-              fontWeight: "bold",
-              color: isDark ? colorTextBase : colorPrimary,
-              fontSize: collapsed ? "14px" : "16px",
-              transition: "font-size 0.2s",
+              height: "64px",
+              padding: "16px",
+              borderBottom: `1px solid ${colorBorder}`,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: colorBgContainer, // Dùng cùng màu
             }}
           >
-            {collapsed ? "PS" : "Phone Store"}
-          </h2>
-        </div>
+            <h2
+              style={{
+                margin: 0,
+                fontWeight: "bold",
+                color: isDark ? colorTextBase : colorPrimary,
+                fontSize: collapsed ? "14px" : "16px",
+                transition: "font-size 0.2s",
+              }}
+            >
+              {collapsed ? "PS" : "Phone Store"}
+            </h2>
+          </div>
 
-        <Menu
-          theme={isDark ? "dark" : "light"}
-          mode="inline"
-          selectedKeys={[location.pathname]}
-          defaultOpenKeys={["/products"]}
-          items={menuItems}
-          onClick={handleMenuClick}
-          style={{
-            backgroundColor: colorBgContainer, // Dùng cùng màu
-            border: "none",
-          }}
-        />
-      </Sider>
-
-      <Layout
-        style={{
-          marginLeft: collapsed ? 80 : 200,
-          transition: "margin-left 0.2s",
-          backgroundColor: colorBgLayout,
-        }}
-      >
-        <Header
-          style={{
-            height: "64px",
-            padding: "0 16px",
-            background: colorBgContainer,
-            borderBottom: `1px solid ${colorBorder}`,
-            position: "sticky",
-            top: 0,
-            zIndex: 1,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <Button
-            type="text"
-            icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-            onClick={() => setCollapsed(!collapsed)}
+          <Menu
+            theme={isDark ? "dark" : "light"}
+            mode="inline"
+            selectedKeys={[location.pathname]}
+            defaultOpenKeys={["/products"]}
+            items={menuItems}
+            onClick={handleMenuClick}
             style={{
-              fontSize: "16px",
-              width: 40,
-              height: 40,
+              backgroundColor: colorBgContainer, // Dùng cùng màu
+              border: "none",
             }}
           />
+        </Sider>
 
-          <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-            <Switch
-              checked={isDark}
-              onChange={toggleTheme}
-              checkedChildren="🌙"
-              unCheckedChildren="☀️"
-              size="small"
-            />
-            <span>Admin User</span>
-          </div>
-        </Header>
-
-        <Content
+        <Layout
           style={{
-            margin: "24px 16px",
-            padding: 24,
-            minHeight: "calc(100vh - 112px)",
-            background: colorBgContainer,
-            borderRadius: borderRadiusLG,
-            overflow: "auto",
+            marginLeft: collapsed ? 80 : 200,
+            transition: "margin-left 0.2s",
+            backgroundColor: colorBgLayout,
           }}
         >
-          <Outlet />
-        </Content>
+          <Header
+            isDark={isDark}
+            collapsed={collapsed}
+            setCollapsed={setCollapsed}
+            toggleTheme={toggleTheme}
+          />
+          <Content
+            style={{
+              margin: "24px 16px",
+              padding: 24,
+              minHeight: "calc(100vh - 112px)",
+              background: colorBgContainer,
+              borderRadius: borderRadiusLG,
+              overflow: "auto",
+            }}
+          >
+            <Outlet />
+          </Content>
+        </Layout>
       </Layout>
-    </Layout>
+    </AuthProvider>
   );
 };
 

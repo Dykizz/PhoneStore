@@ -8,6 +8,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<BaseUser | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const logout = async () => {
+    await apiClient.post("/auth/logout");
+    localStorage.removeItem("user");
+    localStorage.removeItem("access_token");
+    apiClient.clearToken();
+    setUser(null);
+    window.location.href = "/login";
+  };
+
   const fetchUser = async () => {
     try {
       setLoading(true);
@@ -26,6 +35,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error("Failed to fetch user profile", error);
       setUser(null);
+      console.log("Logging out due to fetch user error");
+      logout();
     } finally {
       setLoading(false);
     }
@@ -40,15 +51,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem("user", JSON.stringify(userData));
     apiClient.setAccessToken(accessToken);
     setUser(userData);
-  };
-
-  const logout = async () => {
-    await apiClient.post("/auth/logout");
-    localStorage.removeItem("user");
-    localStorage.removeItem("access_token");
-    apiClient.clearToken();
-    setUser(null);
-    window.location.href = "/login";
   };
 
   const value = useMemo(

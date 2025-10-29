@@ -27,7 +27,7 @@ export class UsersService {
     return {
       id: user.id,
       email: user.email,
-      username: user.username,
+      userName: user.userName,
       role: user.role,
     };
   }
@@ -40,7 +40,7 @@ export class UsersService {
     return {
       id: user.id,
       email: user.email,
-      username: user.username,
+      userName: user.userName,
       avatar: user.avatar,
       role: user.role,
       createdAt: user.createdAt,
@@ -83,8 +83,8 @@ export class UsersService {
   async findAll(
     query: PaginationQueryDto,
   ): Promise<PaginatedResponseDto<BaseUserDto>> {
-    const searchFields = ['email', 'username', 'phone'];
-    const validSortFields = ['email', 'username', 'createdAt', 'updatedAt'];
+    const searchFields = ['email', 'userName', 'phoneNumber'];
+    const validSortFields = ['email', 'userName', 'createdAt', 'updatedAt'];
 
     const queryBuilder = this.usersRepository.createQueryBuilder('user');
     if (query.page < 1) query.page = 1;
@@ -107,7 +107,7 @@ export class UsersService {
     return {
       id: user.id,
       email: user.email,
-      username: user.username,
+      userName: user.userName,
       role: user.role,
       avatar: user.avatar,
     };

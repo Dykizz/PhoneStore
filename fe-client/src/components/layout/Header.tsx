@@ -99,7 +99,7 @@ export function Header() {
                     <AvatarImage src={user?.avatar} alt="User Avatar" />
                     {/* Fallback nếu không có ảnh */}
                     <AvatarFallback>
-                      {user?.username?.charAt(0)?.toUpperCase() || "U"}
+                      {user?.userName?.charAt(0)?.toUpperCase() || "U"}
                     </AvatarFallback>
                   </Avatar>
                 </Button>
@@ -109,7 +109,7 @@ export function Header() {
                 {/* Thông tin User */}
                 <div className="flex items-center justify-start gap-2 p-2">
                   <div className="flex flex-col space-y-1 leading-none">
-                    <p className="font-medium">{user.username}</p>
+                    <p className="font-medium">{user.userName}</p>
                     <p className="w-[200px] truncate text-sm text-muted-foreground">
                       {user.email}
                     </p>
@@ -191,12 +191,12 @@ export function Header() {
                       <Avatar className="h-9 w-9"> {/* Tăng cỡ Avatar */}
                         <AvatarImage src={user?.avatar} alt="User Avatar" />
                         <AvatarFallback>
-                          {user?.username?.charAt(0)?.toUpperCase() || "U"}
+                          {user?.userName?.charAt(0)?.toUpperCase() || "U"}
                         </AvatarFallback>
                       </Avatar>
                       <div>
-                        <p className="font-medium">{user.username}</p>
-                        <p className="text-sm text-muted-foreground truncate w-48"> {/* Thêm truncate */}
+                        <p className="font-medium">{user.userName}</p>
+                        <p className="text-sm text-muted-foreground">
                           {user.email}
                         </p>
                       </div>
