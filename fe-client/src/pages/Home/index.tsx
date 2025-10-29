@@ -11,9 +11,12 @@ import {
 import { productData, type BaseProduct } from "@/data";
 import { useCart } from "@/contexts/cartContexts";
 
+// Hàm định dạng giá
 function formatPrice(price: number) {
   return price.toLocaleString("vi-VN") + "₫";
 }
+
+// Hàm tính giá đã giảm
 function calculateDiscountedPrice(price: number, discount: number): number {
   return price - (price * discount) / 100;
 }
@@ -22,40 +25,58 @@ export function Home() {
   const [products, setProducts] = useState<BaseProduct[]>([]);
   const { addToCart } = useCart();
 
-  const handleAddToCart = (
-    e: React.MouseEvent,
-    product: BaseProduct,
-    quantity: number
-  ) => {
-    e.stopPropagation();
-    e.preventDefault();
+  // Hàm xử lý thêm sản phẩm vào giỏ hàng
+ const handleAddToCart = (
+  e: React.MouseEvent,
+  productToAdd: DetailProduct | BaseProduct,
+  qty: number,
+  selectedIndex: number
+) => {
+  e.stopPropagation();
+  e.preventDefault();
 
-    const finalPrice =
-      product.discountPercent && product.discountPercent > 0
-        ? calculateDiscountedPrice(product.price, product.discountPercent)
-        : product.price;
+  let variantIdPart = "default";
+  let variantDisplayInfo = "";
+  let imageForCart = productToAdd.image;
 
-    addToCart({
-      id: product.id,
-      quantity,
-      name: product.name,
-      price: finalPrice, 
-      image: product.image,
-    });
-    alert(`Đã thêm ${product.name} vào giỏ hàng!`);
-  };
+  // Cập nhật biến thể (ví dụ: màu sắc)
+  if ('colors' in productToAdd && productToAdd.colors && productToAdd.colors[selectedIndex]) {
+    const selectedColor = productToAdd.colors[selectedIndex];
+    variantIdPart = selectedColor.toLowerCase().replace(/\s+/g, '-');
+    variantDisplayInfo = `Màu: ${selectedColor}`;
+  }
 
+  // Tính giá cuối cùng
+  const finalPrice = productToAdd.discountPercent && productToAdd.discountPercent > 0
+    ? calculateDiscountedPrice(productToAdd.price, productToAdd.discountPercent)
+    : productToAdd.price;
+
+  // Thêm sản phẩm vào giỏ
+  addToCart({
+    productId: productToAdd.id,
+    quantity: qty,
+    name: productToAdd.name,
+    price: finalPrice,
+    image: imageForCart,
+    variantInfo: variantDisplayInfo,
+  }, variantIdPart);
+
+  alert(`Đã thêm ${qty} ${productToAdd.name} ${variantDisplayInfo ? `(${variantDisplayInfo})` : ''} vào giỏ hàng!`);
+};
+
+  // Hàm tải sản phẩm từ dữ liệu
   useEffect(() => {
     const loadProducts = async () => {
       try {
-        setProducts(productData);
+        setProducts(productData); // Giả sử bạn có data sẵn
       } catch (error) {
         console.error("Lỗi khi tải sản phẩm:", error);
       }
     };
 
     loadProducts();
-  }, []); 
+  }, []);
+
   return (
     <div className="container py-8">
       {/* Phần giới thiệu */}
@@ -79,9 +100,7 @@ export function Home() {
 
       {/* Phần sản phẩm nổi bật */}
       <section className="py-12">
-        <h2 className="text-3xl font-bold text-center mb-8">
-          Sản phẩm nổi bật
-        </h2>
+        <h2 className="text-3xl font-bold text-center mb-8">Sản phẩm nổi bật</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Lặp qua danh sách sản phẩm */}
           {products.map((product) => {
@@ -141,10 +160,11 @@ export function Home() {
                         {formatPrice(product.price)}
                       </div>
                     )}
+
                     {/* Nút Thêm sản phẩm */}
                     <Button
                       className="w-full mt-4"
-                      onClick={(e) => handleAddToCart(e, product, 1)} // Gọi hàm xử lý
+                      onClick={(e) => handleAddToCart(e, product, 1)} // Truyền số lượng khi thêm vào giỏ
                     >
                       Thêm sản phẩm
                     </Button>

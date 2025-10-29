@@ -11,13 +11,17 @@ export function CartPage() {
   };
 
   const handleQuantityChange = (productId: string, quantity: number) => {
-    // Nếu số lượng giảm xuống dưới 1, coi như xóa sản phẩm
     if (quantity < 1) {
-      handleRemove(productId);
+      if (window.confirm("Bạn có chắc chắn muốn xóa sản phẩm này khỏi giỏ hàng?")) {
+        handleRemove(productId);
+      } else {
+        return;
+      }
     } else {
-      updateQuantity(productId, quantity); 
+      updateQuantity(productId, quantity);
     }
   };
+
 
   const calculateTotal = () => {
     return cart.reduce(
