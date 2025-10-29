@@ -4,6 +4,20 @@ import LoginPage from "@/pages/Login";
 import ProductsPage from "@/pages/Products";
 import RegisterPage from "@/pages/Register";
 import { createBrowserRouter } from "react-router-dom";
+// import { ProductDetail } from '@/pages/ProductDetail';
+// import { CheckoutPage } from "@/pages/CheckoutPage";
+
+
+// const isAuthenticated = () => {
+//   return true;
+// };
+
+// const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
+//   if (!isAuthenticated()) {
+//     return <Navigate to="/login" replace />;
+//   }
+//   return children; // Nếu đã đăng nhập, cho phép truy cập
+// };
 
 export const router = createBrowserRouter([
   {
@@ -27,10 +41,18 @@ export const router = createBrowserRouter([
         path: "register",
         element: <RegisterPage />,
       },
-      {
-        path: "products",
-        element: <ProductsPage />,
-      },
+      // {
+      //   path: "product/:id",
+      //   element: <ProductDetail />
+      // },
+      // {
+      //   path: "checkout",
+      //   element: (
+      //     <ProtectedRoute>
+      //       <CheckoutPage />
+      //     </ProtectedRoute>
+      //   ),
+      // },
       {
         path: "about",
         element: (
@@ -47,6 +69,10 @@ export const router = createBrowserRouter([
           </div>
         ),
       },
+      {
+        path: "products",
+        element: <ProductsPage />,
+      }
     ],
   },
 ]);
