@@ -13,7 +13,7 @@ export function Footer() {
             </p>
           </div>
           <div>
-            <h4 className="font-semibold mb-4">Products</h4>
+            <h4 className="font-semibold mb-4">Sản phẩm</h4>
             <ul className="space-y-2 text-sm">
               <li>
                 <Link
@@ -36,13 +36,13 @@ export function Footer() {
                   to="/products/accessories"
                   className="text-muted-foreground hover:text-foreground"
                 >
-                  Accessories
+                  Phụ kiện
                 </Link>
               </li>
             </ul>
           </div>
           <div>
-            <h4 className="font-semibold mb-4">Support</h4>
+            <h4 className="font-semibold mb-4">Hỗ trợ</h4>
             <ul className="space-y-2 text-sm">
               <li>
                 <Link
@@ -71,7 +71,7 @@ export function Footer() {
             </ul>
           </div>
           <div>
-            <h4 className="font-semibold mb-4">Company</h4>
+            <h4 className="font-semibold mb-4">Công ty</h4>
             <ul className="space-y-2 text-sm">
               <li>
                 <Link
