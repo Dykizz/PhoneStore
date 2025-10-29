@@ -38,17 +38,53 @@ const MainLayout: React.FC = () => {
       label: "Dashboard",
     },
     {
+      key: "/suppliers",
+      icon: <ShopOutlined />,
+      label: "Nhà cung cấp",
+    },
+    {
+      key: "/product-types",
+      icon: <ShopOutlined />,
+      label: "Loại sản phẩm",
+    },
+    {
+      key: "/brands",
+      icon: <ShopOutlined />,
+      label: "Thương hiệu",
+    },
+    {
+      key: "/discount-policies",
+      icon: <ShopOutlined />,
+      label: "Chính sách giảm giá",
+    },
+
+    {
       key: "/products",
       icon: <ShopOutlined />,
-      label: "Products",
+      label: "Sản phẩm",
       children: [
         {
           key: "/products",
-          label: "Product List",
+          label: "DS sản phẩm",
         },
         {
-          key: "/products/new",
-          label: "Add Product",
+          key: "/products/add",
+          label: "Thêm sản phẩm",
+        },
+      ],
+    },
+    {
+      key: "/goods-receipts",
+      icon: <ShopOutlined />,
+      label: "Phiếu nhập hàng",
+      children: [
+        {
+          key: "/goods-receipts",
+          label: "DS phiếu nhập hàng",
+        },
+        {
+          key: "/goods-receipts/add",
+          label: "Tạo phiếu nhập hàng",
         },
       ],
     },
@@ -88,7 +124,7 @@ const MainLayout: React.FC = () => {
             left: 0,
             top: 0,
             bottom: 0,
-            backgroundColor: colorBgContainer, // Dùng cùng màu với Content
+            backgroundColor: colorBgContainer,
           }}
         >
           <div

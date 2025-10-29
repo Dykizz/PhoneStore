@@ -10,6 +10,11 @@ import { AuthModule } from './auth/auth.module';
 import { SuppliersModule } from './suppliers/suppliers.module';
 import { APP_GUARD } from '@nestjs/core';
 import { RolesGuard } from './common/guards/roles.guard';
+import { BrandsModule } from './brands/brands.module';
+import { ProductTypesModule } from './product-types/product-types.module';
+import { ProductsModule } from './products/products.module';
+import { DiscountPoliciesModule } from './discount-policies/discount-policies.module';
+import { GoodsReceiptsModule } from './goods-receipts/goods-receipts.module';
 
 @Module({
   imports: [
@@ -29,6 +34,11 @@ import { RolesGuard } from './common/guards/roles.guard';
     UsersModule,
     AuthModule,
     SuppliersModule,
+    BrandsModule,
+    ProductTypesModule,
+    ProductsModule,
+    DiscountPoliciesModule,
+    GoodsReceiptsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
