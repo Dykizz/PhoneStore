@@ -1,6 +1,7 @@
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Home } from "@/pages/Home";
 import LoginPage from "@/pages/Login";
+import ProductsPage from "@/pages/Products";
 import RegisterPage from "@/pages/Register";
 import { createBrowserRouter } from "react-router-dom";
 
@@ -25,6 +26,10 @@ export const router = createBrowserRouter([
       {
         path: "register",
         element: <RegisterPage />,
+      },
+      {
+        path: "products",
+        element: <ProductsPage />,
       },
       {
         path: "about",
