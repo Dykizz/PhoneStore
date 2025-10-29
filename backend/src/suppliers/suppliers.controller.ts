@@ -32,7 +32,7 @@ export class SuppliersController {
   @Get()
   @Roles(UserRole.ADMIN)
   @ResponseMessage('Lấy danh sách nhà cung cấp thành công')
-  async findAll(@Query() query: PaginationQueryDto, @User() user: IUser) {
+  async findAll(@Query() query: PaginationQueryDto) {
     return await this.suppliersService.findAll(query);
   }
 
