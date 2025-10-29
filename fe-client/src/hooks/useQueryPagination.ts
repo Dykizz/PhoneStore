@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { QueryBuilder, type QueryParams } from "@utils/queryBuilder";
+import { QueryBuilder, type QueryParams } from "@/utils/queryBuilder";
 export function useQueryBuilder(initial?: Partial<QueryParams>) {
   // Khởi tạo state với QueryBuilder
   const [queryBuilder, setQueryBuilder] = useState(() =>
