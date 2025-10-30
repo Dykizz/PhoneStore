@@ -127,9 +127,15 @@ const AddProductPage: React.FC = () => {
         })) || [];
 
       const data: CreateProduct = {
-        ...values,
-        variants,
-        price: Number(values.price || 0),
+        baseDescription: values.baseDescription,
+        detailDescription: values.detailDescription,
+        name: values.name,
+        isReleased: values.isReleased,
+        price: Number(values.price),
+        brandId: values.brandId,
+        productTypeId: values.productTypeId,
+        variants: variants,
+        discountPolicyId: values.discountPolicyId,
       };
 
       const response = await createProduct(data);

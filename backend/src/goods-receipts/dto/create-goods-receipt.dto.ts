@@ -8,14 +8,14 @@ import {
   Min,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+import { VariantProduct } from 'src/products/dto/response-product.dto';
 
 class ProductDto {
   @IsUUID()
   productId: string;
 
-  @IsNumber()
-  @Min(1, { message: 'Số lượng phải lớn hơn 0' })
-  quantity: number;
+  @IsArray({ message: 'Danh sách số lượng phải là mảng' })
+  variants: VariantProduct[];
 
   @IsNumber({}, { message: 'Giá phải là số' })
   @Min(0, { message: 'Giá phải lớn hơn hoặc bằng 0' })
