@@ -18,7 +18,7 @@ import { useNotificationContext } from "@/providers/NotificationProvider";
 import { QueryBuilder } from "@/utils/queryBuilder";
 import { getSuppliers } from "@/apis/supplier.api";
 import { getProducts } from "@/apis/product.api";
-import type { BaseProduct } from "@/types/product.type";
+import type { BaseProduct, VariantProduct } from "@/types/product.type";
 import { useDebounce } from "@/hooks/useDebounce";
 
 const { Option } = Select;
@@ -74,9 +74,9 @@ const CreateGoodsReceiptPage: React.FC = () => {
       const data: CreateGoodReceipt = {
         supplierId: values.supplierId,
         products: values.products.map((p: any) => ({
-          productId: p.productId,
-          quantity: p.quantity,
-          price: p.price,
+          productId: p.id,
+          price: Number(p.price),
+          variants: p.variants,
         })),
         note: values.note,
       };
@@ -129,158 +129,234 @@ const CreateGoodsReceiptPage: React.FC = () => {
           {(fields, { add, remove }) => (
             <>
               {fields.map(({ key, name, ...restField }) => (
-                <Row gutter={16} key={key} align="middle">
-                  <Col span={8}>
-                    <Form.Item
-                      {...restField}
-                      name={[name, "productName"]}
-                      label="Tên sản phẩm"
-                      rules={[
-                        { required: true, message: "Vui lòng chọn sản phẩm" },
-                      ]}
-                    >
-                      <AutoComplete
-                        placeholder="Nhập tên sản phẩm"
-                        onSearch={setSearchText}
-                        onSelect={(value) => {
-                          const selectedProduct = products.find(
-                            (p) => p.id === value
-                          );
-                          if (!selectedProduct) return;
-
-                          // ✅ Chặn trùng sản phẩm
-                          const currentProducts =
-                            form.getFieldValue("products") || [];
-                          const isDuplicate = currentProducts.some(
-                            (p: any, i: number) =>
-                              i !== name && p.productId === selectedProduct.id
-                          );
-
-                          if (isDuplicate) {
-                            warningNotification(
-                              "Sản phẩm đã được thêm",
-                              "Vui lòng chọn sản phẩm khác"
+                <div key={key}>
+                  <Row gutter={16} align="middle">
+                    <Col span={8}>
+                      <Form.Item
+                        {...restField}
+                        name={[name, "productName"]}
+                        label="Tên sản phẩm"
+                        rules={[
+                          { required: true, message: "Vui lòng chọn sản phẩm" },
+                        ]}
+                      >
+                        <AutoComplete
+                          placeholder="Nhập tên sản phẩm"
+                          onSearch={setSearchText}
+                          // ⚙️ Khi chọn: hiện tên, lưu id, cập nhật variants + giá
+                          onSelect={(value) => {
+                            const selectedProduct = products.find(
+                              (p) => p.name === value
                             );
-                            // ✅ Xoá giá trị trùng
+                            if (!selectedProduct) return;
+
+                            const currentProducts =
+                              form.getFieldValue("products") || [];
+
+                            const isDuplicate = currentProducts.some(
+                              (p: BaseProduct, i: number) =>
+                                i !== name && p.id === selectedProduct.id
+                            );
+
+                            if (isDuplicate) {
+                              warningNotification(
+                                "Sản phẩm đã được thêm",
+                                "Vui lòng chọn sản phẩm khác"
+                              );
+                              return;
+                            }
+
                             form.setFieldsValue({
                               products: currentProducts.map(
-                                (p: any, i: number) =>
+                                (p: BaseProduct, i: number) =>
                                   i === name
-                                    ? { ...p, productName: "", productId: null }
+                                    ? {
+                                        ...p,
+                                        id: selectedProduct.id, // ✅ Lưu id thật
+                                        productName: selectedProduct.name, // ✅ Hiện tên ra AutoComplete
+                                        price: selectedProduct.price || 0,
+                                        variants: selectedProduct.variants.map(
+                                          (v) => ({
+                                            color: v.color,
+                                            image: v.image,
+                                            quantity: 0,
+                                          })
+                                        ),
+                                      }
                                     : p
                               ),
                             });
-                            return;
-                          }
-
-                          // ✅ Gán giá trị cho sản phẩm
-                          form.setFieldsValue({
-                            products: currentProducts.map((p: any, i: number) =>
-                              i === name
-                                ? {
-                                    ...p,
-                                    productId: selectedProduct.id,
-                                    productName: selectedProduct.name,
-                                    price: selectedProduct.price || 0,
-                                  }
-                                : p
-                            ),
-                          });
-                        }}
-                        options={products.map((product) => ({
-                          value: product.id,
-                          label: (
-                            <div
-                              style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 8,
-                              }}
-                            >
-                              <img
-                                src={product.image || "/no-image.png"}
-                                alt={product.name}
-                                style={{
-                                  width: 40,
-                                  height: 40,
-                                  objectFit: "cover",
-                                  borderRadius: 6,
-                                  border: "1px solid #f0f0f0",
-                                }}
-                              />
+                          }}
+                          // ✅ Hiển thị gợi ý bằng tên (value = name)
+                          options={products.map((product) => ({
+                            value: product.name,
+                            label: (
                               <div
                                 style={{
                                   display: "flex",
-                                  flexDirection: "column",
+                                  alignItems: "center",
+                                  gap: 8,
                                 }}
                               >
-                                <span style={{ fontWeight: 500 }}>
-                                  {product.name}
-                                </span>
-                                <span style={{ fontSize: 12, color: "#888" }}>
-                                  ₫{product.price?.toLocaleString() || 0}
-                                </span>
+                                <img
+                                  src={
+                                    product.variants[0]?.image ||
+                                    "/no-image.png"
+                                  }
+                                  alt={product.name}
+                                  style={{
+                                    width: 40,
+                                    height: 40,
+                                    objectFit: "cover",
+                                    borderRadius: 6,
+                                    border: "1px solid #f0f0f0",
+                                  }}
+                                />
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    flexDirection: "column",
+                                  }}
+                                >
+                                  <span style={{ fontWeight: 500 }}>
+                                    {product.name}
+                                  </span>
+                                  <span style={{ fontSize: 12, color: "#888" }}>
+                                    Có {product.variants.length} màu
+                                  </span>
+                                </div>
                               </div>
+                            ),
+                          }))}
+                          popupRender={(menu) => (
+                            <div
+                              style={{
+                                maxHeight: 250,
+                                overflowY: "auto",
+                                borderRadius: 8,
+                              }}
+                            >
+                              {menu}
                             </div>
-                          ),
-                        }))}
-                        popupRender={(menu) => (
-                          <div
-                            style={{
-                              maxHeight: 250,
-                              overflowY: "auto",
-                              borderRadius: 8,
-                            }}
-                          >
-                            {menu}
-                          </div>
-                        )}
-                      />
-                    </Form.Item>
-                  </Col>
+                          )}
+                        />
+                      </Form.Item>
+                    </Col>
 
-                  <Col span={6}>
-                    <Form.Item
-                      {...restField}
-                      name={[name, "quantity"]}
-                      label="Số lượng"
-                      rules={[
-                        { required: true, message: "Vui lòng nhập số lượng" },
-                      ]}
-                    >
-                      <InputNumber
-                        style={{ width: "100%" }}
-                        min={1}
-                        placeholder="Số lượng"
-                      />
-                    </Form.Item>
-                  </Col>
+                    <Col span={6}>
+                      <Form.Item
+                        {...restField}
+                        name={[name, "price"]}
+                        label="Giá"
+                        rules={[
+                          { required: true, message: "Vui lòng nhập giá" },
+                        ]}
+                      >
+                        <InputNumber
+                          min={0}
+                          formatter={(value) =>
+                            `₫ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+                          }
+                          parser={(value) => value!.replace(/₫\s?|(,*)/g, "")}
+                          style={{ width: "100%" }}
+                          placeholder="Giá"
+                        />
+                      </Form.Item>
+                    </Col>
 
-                  <Col span={6}>
-                    <Form.Item
-                      {...restField}
-                      name={[name, "price"]}
-                      label="Giá"
-                      rules={[{ required: true, message: "Vui lòng nhập giá" }]}
-                    >
-                      <InputNumber
-                        min={0}
-                        formatter={(value) =>
-                          `₫ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
-                        }
-                        parser={(value) => value!.replace(/₫\s?|(,*)/g, "")}
-                        style={{ width: "100%" }}
-                        placeholder="Giá"
-                      />
-                    </Form.Item>
-                  </Col>
+                    <Col span={4}>
+                      <Button danger onClick={() => remove(name)}>
+                        Xóa
+                      </Button>
+                    </Col>
+                  </Row>
 
-                  <Col span={4}>
-                    <Button danger onClick={() => remove(name)}>
-                      Xóa
-                    </Button>
-                  </Col>
-                </Row>
+                  {/* ✅ Hiển thị danh sách các màu nếu có */}
+                  <Form.Item
+                    shouldUpdate={(prev, cur) =>
+                      prev.products?.[name]?.variants !==
+                      cur.products?.[name]?.variants
+                    }
+                  >
+                    {() => {
+                      const variants =
+                        form.getFieldValue(["products", name, "variants"]) ||
+                        [];
+                      return variants.length > 0 ? (
+                        <div
+                          style={{
+                            marginLeft: 16,
+                            marginBottom: 12,
+                            background: "#fafafa",
+                            padding: 12,
+                            borderRadius: 8,
+                          }}
+                        >
+                          <strong>Các màu:</strong>
+                          {variants.map((v: VariantProduct, index: number) => (
+                            <Row
+                              key={index}
+                              align="middle"
+                              gutter={12}
+                              style={{ marginTop: 8 }}
+                            >
+                              <Col span={10}>
+                                <div
+                                  style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: 8,
+                                  }}
+                                >
+                                  <img
+                                    src={
+                                      products.find(
+                                        (p) =>
+                                          p.id ===
+                                          form.getFieldValue([
+                                            "products",
+                                            name,
+                                            "id",
+                                          ])
+                                      )?.variants[index]?.image ||
+                                      "/no-image.png"
+                                    }
+                                    alt={v.color}
+                                    style={{
+                                      width: 40,
+                                      height: 40,
+                                      borderRadius: 6,
+                                      objectFit: "cover",
+                                      border: "1px solid #ddd",
+                                    }}
+                                  />
+                                  <span>{v.color}</span>
+                                </div>
+                              </Col>
+                              <Col span={8}>
+                                <Form.Item
+                                  name={[name, "variants", index, "quantity"]}
+                                  label="Số lượng"
+                                  rules={[
+                                    {
+                                      required: true,
+                                      message: "Nhập số lượng cho màu này",
+                                    },
+                                  ]}
+                                >
+                                  <InputNumber
+                                    min={0}
+                                    style={{ width: "100%" }}
+                                  />
+                                </Form.Item>
+                              </Col>
+                            </Row>
+                          ))}
+                        </div>
+                      ) : null;
+                    }}
+                  </Form.Item>
+                </div>
               ))}
 
               <Row gutter={16}>
@@ -288,7 +364,7 @@ const CreateGoodsReceiptPage: React.FC = () => {
                   <Form.Item>
                     <Button
                       type="dashed"
-                      onClick={() => add()}
+                      onClick={add}
                       block
                       icon={<PlusOutlined />}
                     >

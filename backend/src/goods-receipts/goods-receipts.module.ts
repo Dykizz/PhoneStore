@@ -4,9 +4,13 @@ import { GoodsReceiptsController } from './goods-receipts.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { GoodsReceipt } from './entities/goods-receipt.entity';
 import { GoodsReceiptDetail } from './entities/goods-receipt-detail.entity';
+import { ProductsModule } from 'src/products/products.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([GoodsReceipt, GoodsReceiptDetail])],
+  imports: [
+    TypeOrmModule.forFeature([GoodsReceipt, GoodsReceiptDetail]),
+    ProductsModule,
+  ],
   controllers: [GoodsReceiptsController],
   providers: [GoodsReceiptsService],
 })

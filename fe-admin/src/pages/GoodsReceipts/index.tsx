@@ -127,7 +127,7 @@ export default function GoodsReceiptsPage() {
   };
 
   const handleCreate = () => {
-    navigate("/goods-receipts/create");
+    navigate("/goods-receipts/add");
   };
 
   const handleDelete = async (id: string) => {

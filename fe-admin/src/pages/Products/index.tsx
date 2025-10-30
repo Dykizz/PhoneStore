@@ -19,7 +19,7 @@ import {
 import { Link } from "react-router-dom";
 import { QueryBuilder } from "@/utils/queryBuilder";
 import { deleteProduct, getProducts } from "@/apis/product.api";
-import type { BaseProduct } from "@/types/product.type";
+import type { BaseProduct, VariantProduct } from "@/types/product.type";
 import { useNotificationContext } from "@/providers/NotificationProvider";
 import { getBrands } from "@/apis/brand.api";
 import type { Brand } from "@/types/brand.type";
@@ -191,12 +191,12 @@ const ProductsPage: React.FC = () => {
     },
     {
       title: "Hình ảnh",
-      dataIndex: "image",
-      key: "image",
-      render: (image: string) =>
-        image ? (
+      dataIndex: "variants",
+      key: "variants",
+      render: (variants: VariantProduct[]) =>
+        variants.length > 0 ? (
           <Image
-            src={image}
+            src={variants[0].image}
             alt="Product"
             width={70}
             height={70}

@@ -84,7 +84,7 @@ export class ProductsService {
       name: product.name,
       price: product.price,
       isReleased: product.isReleased,
-      image: product.variants?.[0].image,
+      variants: product.variants || [],
       discount: product.discountPolicy
         ? {
             discountPercent: product.discountPolicy.discountPercent,
@@ -96,6 +96,7 @@ export class ProductsService {
       quantity: product.quantity,
       productTypeId: product.productTypeId,
       brandId: product.brandId,
+      baseDescription: product.baseDescription,
     }));
 
     return new PaginatedResponseDto(
@@ -160,5 +161,22 @@ export class ProductsService {
     }
 
     await this.productsRepository.remove(product);
+  }
+
+  async addQuantity(
+    id: string,
+    indexVariant: number,
+    quantityToAdd: number,
+  ): Promise<void> {
+    const product = await this.productsRepository.findOne({ where: { id } });
+    if (!product) {
+      throw new BadRequestException('Sản phẩm không tồn tại');
+    }
+    if (indexVariant < 0 || indexVariant >= product.variants.length) {
+      throw new BadRequestException('Biến thể sản phẩm không tồn tại');
+    }
+    product.variants[indexVariant].quantity += quantityToAdd;
+    product.quantity += quantityToAdd;
+    await this.productsRepository.save(product);
   }
 }

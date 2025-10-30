@@ -41,13 +41,13 @@ export class GoodsReceiptsController {
     return await this.goodsReceiptsService.findOne(id);
   }
 
-  // @Patch(':id')
-  // update(
-  //   @Param('id') id: string,
-  //   @Body() updateGoodsReceiptDto: UpdateGoodsReceiptDto,
-  // ) {
-  //   return this.goodsReceiptsService.update(id, updateGoodsReceiptDto);
-  // }
+  @Patch(':id')
+  async update(
+    @Param('id') id: string,
+    @Body() updateGoodsReceiptDto: UpdateGoodsReceiptDto,
+  ) {
+    return this.goodsReceiptsService.update(id, updateGoodsReceiptDto);
+  }
 
   // @Delete(':id')
   // remove(@Param('id') id: string) {
