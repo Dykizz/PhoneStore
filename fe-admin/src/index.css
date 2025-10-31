@@ -15,3 +15,8 @@ body {
 * {
   box-sizing: border-box;
 }
+
+.ant-table td,
+.ant-table th {
+  text-align: center !important;
+}

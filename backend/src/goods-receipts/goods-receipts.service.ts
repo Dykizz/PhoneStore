@@ -46,13 +46,12 @@ export class GoodsReceiptsService {
     });
 
     products.forEach(async product => {
-      product.variants.forEach(async (variant, idx) => {
-        await this.productsService.addQuantity(
-          product.productId,
-          idx,
+      for (const variant of product.variants) {
+        await this.productsService.addQuantityToVariant(
+          variant.id,
           variant.quantity,
         );
-      });
+      }
     });
 
     const goodsReceipt = this.goodsReceiptRepository.create({
@@ -126,7 +125,7 @@ export class GoodsReceiptsService {
 
     const details = await this.goodsReceiptDetailRepository.find({
       where: { goodsReceiptId: id },
-      relations: ['product'],
+      relations: ['product', 'product.variants'],
     });
 
     const detailGoodsReceipt: DetailGoodsReceipt = {
@@ -136,7 +135,7 @@ export class GoodsReceiptsService {
       note: goodsReceipt.note,
       products: details.map(detail => ({
         productId: detail.productId,
-        image: detail.product.variants[0]?.image || '',
+        variants: detail.variants,
         name: detail.product.name,
         priceSold: detail.product.price,
         quantity: detail.quantity,

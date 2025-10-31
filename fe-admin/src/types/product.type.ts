@@ -1,4 +1,5 @@
 export interface VariantProduct {
+  id?: string;
   color: string;
   image: string;
   quantity: number;
