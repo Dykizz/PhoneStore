@@ -276,7 +276,11 @@ class ApiClient {
   }
 }
 
-const apiClient = new ApiClient("http://localhost:8000");
-//const apiClient = new ApiClient("http://localhost:3000/api");
+// const apiClient = new ApiClient("http://localhost:8000");
+const baseURL = import.meta.env.VITE_PORT_BE
+  ? `http://localhost:${import.meta.env.VITE_PORT_BE}`
+  : "http://localhost:8000";
+
+const apiClient = new ApiClient(baseURL); // <== Sửa dòng này
 
 export default apiClient;

@@ -1,6 +1,5 @@
 "use client";
-import type { BaseProduct } from "@/data";
-import { productData } from "@/data";
+import { productData, type BaseProduct } from "@/data";
 import {
   Card,
   CardHeader,
