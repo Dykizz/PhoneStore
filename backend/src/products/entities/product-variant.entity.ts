@@ -26,4 +26,7 @@ export class ProductVariant {
 
   @Column('int', { default: 0 })
   quantity: number;
+
+  @Column('int', { default: 0 })
+  quantitySold: number;
 }

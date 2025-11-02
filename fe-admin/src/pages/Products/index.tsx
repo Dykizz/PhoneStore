@@ -17,6 +17,8 @@ import {
   PlusOutlined,
   EditOutlined,
   DeleteOutlined,
+  ArrowLeftOutlined,
+  EyeFilled,
 } from "@ant-design/icons";
 import { Link } from "react-router-dom";
 import { QueryBuilder } from "@/utils/queryBuilder";
@@ -327,6 +329,12 @@ const ProductsPage: React.FC = () => {
       key: "actions",
       render: (_: any, record: BaseProduct) => (
         <Space>
+          <Link to={`/products/${record.id}`}>
+            <Button type="link" icon={<EyeFilled />}>
+              Chi tiết
+            </Button>
+          </Link>
+
           <Link to={`/products/edit/${record.id}`}>
             <Button type="link" icon={<EditOutlined />}>
               Sửa

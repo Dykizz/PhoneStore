@@ -2,16 +2,15 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { Home } from "@/pages/Home";
 import LoginPage from "@/pages/Login";
 import RegisterPage from "@/pages/Register";
-import { createBrowserRouter } from "react-router-dom";
-import { ProductDetail } from '@/pages/ProductDetail';
+import { createBrowserRouter, Navigate } from "react-router-dom";
+import { ProductDetail } from "@/pages/ProductDetail";
 import { CheckoutPage } from "@/pages/CheckoutPage";
-
 
 const isAuthenticated = () => {
   return true;
 };
 
-const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   if (!isAuthenticated()) {
     return <Navigate to="/login" replace />;
   }
@@ -30,11 +29,11 @@ export const router = createBrowserRouter([
       {
         path: "login",
         element: <LoginPage />,
-        children:[
+        children: [
           {
             path: "con",
-          }
-        ]
+          },
+        ],
       },
       {
         path: "register",
@@ -42,7 +41,7 @@ export const router = createBrowserRouter([
       },
       {
         path: "product/:id",
-        element: <ProductDetail />
+        element: <ProductDetail />,
       },
       {
         path: "checkout",

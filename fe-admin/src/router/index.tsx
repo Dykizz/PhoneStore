@@ -13,6 +13,11 @@ import EditProductPage from "@/pages/Products/EditProduct";
 import GoodsReceiptsPage from "@/pages/GoodsReceipts";
 import CreateGoodsReceiptPage from "@/pages/GoodsReceipts/AddGoodsReceipt";
 import EditGoodsReceiptPage from "@/pages/GoodsReceipts/EditGoodsReceipt";
+import ProductDetailPage from "@/pages/Products/DetailProduct";
+import UsersPage from "@/pages/Users";
+import AddUserPage from "@/pages/Users/AddUser";
+import EditUserPage from "@/pages/Users/EditUser";
+import DetailUserPage from "@/pages/Users/Detailuser";
 export const ThemeContext = React.createContext({
   isDark: false,
   toggleTheme: () => {},
@@ -56,6 +61,10 @@ export const router = createBrowserRouter([
         element: <EditProductPage />,
       },
       {
+        path: "products/:id",
+        element: <ProductDetailPage />,
+      },
+      {
         path: "discount-policies",
         element: <DiscountPolicyPage />,
       },
@@ -70,6 +79,22 @@ export const router = createBrowserRouter([
       {
         path: "goods-receipts/edit/:id",
         element: <EditGoodsReceiptPage />,
+      },
+      {
+        path: "users",
+        element: <UsersPage />,
+      },
+      {
+        path: "users/add",
+        element: <AddUserPage />,
+      },
+      {
+        path: "users/edit/:id",
+        element: <EditUserPage />,
+      },
+      {
+        path: "users/:id",
+        element: <DetailUserPage />,
       },
     ],
   },
