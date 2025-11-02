@@ -161,15 +161,20 @@ const EditProductPage: React.FC = () => {
       const variants =
         values.colorImages?.map((item: any) => ({
           color: item.color,
-          image: item.image?.[0]?.originFileObj
-            ? item.image[0].originFileObj
-            : item.image?.[0]?.url,
+          quantity: Number(item.quantity),
+          image: item.image[0].originFileObj,
         })) || [];
 
       const data: UpdateProduct = {
-        ...values,
-        variants,
-        price: Number(values.price || 0),
+        baseDescription: values.baseDescription,
+        detailDescription: values.detailDescription,
+        name: values.name,
+        isReleased: values.isReleased,
+        price: Number(values.price),
+        brandId: values.brandId,
+        productTypeId: values.productTypeId,
+        variants: variants,
+        discountPolicyId: values.discountPolicyId,
       };
 
       const response = await updateProduct(id!, data);
@@ -317,7 +322,7 @@ const EditProductPage: React.FC = () => {
 
         <Row gutter={16}>
           <Col span={12}>
-            <Form.Item name="isReleased" label="Bán ra" valuePropName="checked">
+            <Form.Item name="isReleased" label="Hiện" valuePropName="checked">
               <Switch />
             </Form.Item>
           </Col>
@@ -333,7 +338,7 @@ const EditProductPage: React.FC = () => {
                 style={{ width: "100%" }}
                 min={0}
                 formatter={(value) =>
-                  `₫ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+                  `${value} VND`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
                 }
                 parser={(value) => value!.replace(/₫\s?|(,*)/g, "")}
                 placeholder="Nhập giá sản phẩm"

@@ -11,7 +11,11 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
-class VariantDto {
+export class VariantDto {
+  @IsOptional()
+  @IsUUID(undefined, { message: 'ID biến thể phải là UUID hợp lệ' })
+  id?: string;
+
   @IsString({ message: 'Màu sắc phải là chuỗi ký tự' })
   color: string;
 

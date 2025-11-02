@@ -7,6 +7,7 @@ import * as cookieParser from 'cookie-parser';
 import * as qs from 'qs';
 import helmet from 'helmet';
 import { ValidationPipe } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -52,7 +53,8 @@ async function bootstrap() {
 
   const reflector = app.get(Reflector);
   // Global guard for JWT authentication
-  app.useGlobalGuards(new JwtAuthGuard(reflector));
+  const jwtService = app.get(JwtService);
+  app.useGlobalGuards(new JwtAuthGuard(reflector, jwtService));
   // Global interceptor for response transformation
   app.useGlobalInterceptors(new TransformInterceptor(reflector));
   // Global filter for handling exceptions

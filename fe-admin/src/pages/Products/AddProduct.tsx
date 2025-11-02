@@ -279,7 +279,7 @@ const AddProductPage: React.FC = () => {
 
         <Row gutter={16}>
           <Col span={12}>
-            <Form.Item name="isReleased" label="Bán ra" valuePropName="checked">
+            <Form.Item name="isReleased" label="Hiện" valuePropName="checked">
               <Switch />
             </Form.Item>
           </Col>
@@ -295,7 +295,7 @@ const AddProductPage: React.FC = () => {
                 style={{ width: "100%" }}
                 min={0}
                 formatter={(value) =>
-                  `₫ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+                  `${value} VND`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
                 }
                 parser={(value) => value!.replace(/₫\s?|(,*)/g, "")}
                 placeholder="Nhập giá sản phẩm"

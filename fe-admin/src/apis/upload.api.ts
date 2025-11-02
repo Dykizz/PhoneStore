@@ -1,5 +1,6 @@
 import type { ApiResponse } from "@/interfaces/apiResponse.interface";
 import apiClient from "@/utils/apiClient";
+import imageCompression from "browser-image-compression";
 
 export async function getSignature(): Promise<
   ApiResponse<{
@@ -25,12 +26,17 @@ export async function uploadImages(files: File[]): Promise<string[]> {
   const { signature, timestamp, cloudName, apiKey } = res.data;
 
   const uploadPromises = Array.from(files).map(async (file) => {
+    const compressedFile = await imageCompression(file, {
+      maxSizeMB: 1,
+      maxWidthOrHeight: 1920,
+      useWebWorker: true,
+    });
+
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append("file", compressedFile);
     formData.append("api_key", apiKey);
     formData.append("timestamp", String(timestamp));
     formData.append("signature", signature);
-
     formData.append("folder", "uploads");
     formData.append("upload_preset", "ml_default");
     formData.append("access_mode", "public");

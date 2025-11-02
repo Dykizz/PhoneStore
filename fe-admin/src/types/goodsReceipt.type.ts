@@ -25,7 +25,7 @@ export interface DetailGoodsReceipt {
   id: string;
   products: {
     productId: string;
-    image: string;
+    variants: VariantProduct[];
     name: string;
     priceSold: number;
     quantity: number;
