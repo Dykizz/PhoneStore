@@ -9,34 +9,49 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const logout = async () => {
-    await apiClient.post("/auth/logout");
-    localStorage.removeItem("user");
-    localStorage.removeItem("access_token");
-    apiClient.clearToken();
-    setUser(null);
-    window.location.href = "/login";
+    try {
+      await apiClient.post("/auth/logout");
+    } catch (error) {
+      console.error("Logout error:", error);
+    } finally {
+      localStorage.removeItem("user");
+      localStorage.removeItem("access_token");
+      apiClient.clearToken();
+      setUser(null);
+      window.location.href = "/login";
+    }
   };
 
   const fetchUser = async () => {
     try {
       setLoading(true);
       const accessToken = localStorage.getItem("access_token");
+
       if (!accessToken) {
         setUser(null);
+        setLoading(false);
         return;
       }
+
       const response = await getMyProfile();
+
       if (response.success) {
         setUser(response.data);
         localStorage.setItem("user", JSON.stringify(response.data));
       } else {
+        // Token invalid hoặc expired
         setUser(null);
+        localStorage.removeItem("user");
+        localStorage.removeItem("access_token");
+        apiClient.clearToken();
       }
     } catch (error) {
       console.error("Failed to fetch user profile", error);
+      // Clear local data nhưng KHÔNG redirect
       setUser(null);
-      console.log("Logging out due to fetch user error");
-      logout();
+      localStorage.removeItem("user");
+      localStorage.removeItem("access_token");
+      apiClient.clearToken();
     } finally {
       setLoading(false);
     }

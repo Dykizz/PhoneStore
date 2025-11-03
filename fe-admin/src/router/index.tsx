@@ -18,6 +18,7 @@ import UsersPage from "@/pages/Users";
 import AddUserPage from "@/pages/Users/AddUser";
 import EditUserPage from "@/pages/Users/EditUser";
 import DetailUserPage from "@/pages/Users/Detailuser";
+import UnAuthLayout from "@/components/Layout/UnAuthLayout";
 export const ThemeContext = React.createContext({
   isDark: false,
   toggleTheme: () => {},
@@ -25,16 +26,22 @@ export const ThemeContext = React.createContext({
 
 export const router = createBrowserRouter([
   {
+    element: <UnAuthLayout />,
+
+    children: [
+      {
+        path: "/login",
+        element: <LoginPage />,
+      },
+    ],
+  },
+  {
     path: "/",
     element: <MainLayout />,
     children: [
       {
         index: true,
         element: <Dashboard />,
-      },
-      {
-        path: "login",
-        element: <LoginPage />,
       },
       {
         path: "suppliers",
