@@ -24,3 +24,10 @@ export async function getGoodsReceipt(
 ): Promise<ApiResponse<DetailGoodsReceipt>> {
   return await apiClient.get<DetailGoodsReceipt>(`/goods-receipts/${id}`);
 }
+
+export async function updateGoodsReceipt(
+  id: string,
+  data: Partial<CreateGoodReceipt>
+): Promise<ApiResponse<void>> {
+  return await apiClient.patch<void>(`/goods-receipts/${id}`, data);
+}

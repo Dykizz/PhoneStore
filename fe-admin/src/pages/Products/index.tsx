@@ -9,22 +9,27 @@ import {
   Row,
   Col,
   Popconfirm,
+  Tag,
+  Badge,
 } from "antd";
 import {
   SearchOutlined,
   PlusOutlined,
   EditOutlined,
   DeleteOutlined,
+  ArrowLeftOutlined,
+  EyeFilled,
 } from "@ant-design/icons";
 import { Link } from "react-router-dom";
 import { QueryBuilder } from "@/utils/queryBuilder";
 import { deleteProduct, getProducts } from "@/apis/product.api";
-import type { BaseProduct } from "@/types/product.type";
+import type { BaseProduct, VariantProduct } from "@/types/product.type";
 import { useNotificationContext } from "@/providers/NotificationProvider";
 import { getBrands } from "@/apis/brand.api";
 import type { Brand } from "@/types/brand.type";
 import { getProductTypes } from "@/apis/productType.api";
 import type { ProductType } from "@/types/productType.type";
+import dayjs from "dayjs";
 import { Image } from "antd";
 
 const { Option } = Select;
@@ -61,7 +66,8 @@ const ProductsPage: React.FC = () => {
     return map;
   }, [productTypes]);
 
-  const { successNotification, errorNotification } = useNotificationContext();
+  const { successNotification, errorNotification, infoNotification } =
+    useNotificationContext();
 
   const fetchProducts = async (page = 1) => {
     setLoading(true);
@@ -162,8 +168,22 @@ const ProductsPage: React.FC = () => {
     try {
       setLoading(true);
       const response = await deleteProduct(id);
+      const deletedProduct = products.find((p) => p.id === id);
       if (response.success) {
-        successNotification("Xóa sản phẩm", "Xóa sản phẩm thành công");
+        if (deletedProduct!.quantitySold! > 0) {
+          infoNotification(
+            "Xóa sản phẩm",
+            "Sản phẩm này đã được bán, chỉ ẩn sản phẩm khỏi cửa hàng"
+          );
+        } else if (deletedProduct!.quantity! > 0) {
+          infoNotification(
+            "Xóa sản phẩm",
+            "Sản phẩm này vẫn còn trong kho, chỉ ẩn sản phẩm khỏi cửa hàng"
+          );
+        } else {
+          successNotification("Xóa sản phẩm", "Xóa sản phẩm thành công");
+        }
+
         fetchProducts(pagination.current);
       } else {
         errorNotification("Lỗi xóa sản phẩm", response.message);
@@ -182,21 +202,26 @@ const ProductsPage: React.FC = () => {
       dataIndex: "name",
       key: "name",
       sorter: true,
-      sortOrder:
-        sortBy === "name" && sortOrder === "DESC"
-          ? "descend"
-          : sortBy === "name"
-          ? "ascend"
-          : undefined,
+      render: (text, record) => {
+        const isHot =
+          record.discount?.discountPercent >= 20 || record.quantitySold >= 100;
+        return (
+          <Space>
+            <span>{text}</span>
+            {isHot && <Tag color="volcano">Hot</Tag>}
+          </Space>
+        );
+      },
     },
+
     {
       title: "Hình ảnh",
-      dataIndex: "image",
-      key: "image",
-      render: (image: string) =>
-        image ? (
+      dataIndex: "variants",
+      key: "variants",
+      render: (variants: VariantProduct[]) =>
+        variants.length > 0 ? (
           <Image
-            src={image}
+            src={variants[0].image}
             alt="Product"
             width={70}
             height={70}
@@ -218,77 +243,98 @@ const ProductsPage: React.FC = () => {
           : sortBy === "price"
           ? "ascend"
           : undefined,
-      render: (price: number) => `${price.toLocaleString()} VND`,
+      render: (price: number) =>
+        `${price} VND`.replace(/\B(?=(\d{3})+(?!\d))/g, ","),
     },
     {
-      title: "Giảm giá (%)",
+      title: "Giảm giá",
       dataIndex: "discount",
       key: "discount",
-      render: (discount: {
-        discountPercent: number;
-        startDate: Date;
-        endDate: Date;
-      }) => {
-        if (!discount) return "0%";
-        const now = new Date();
-        const start = new Date(discount.startDate);
-        const end = new Date(discount.endDate);
-        let status = "";
-        let color = "";
-        if (now < start) {
-          status = "Sắp diễn ra";
+      render: (discount: any) => {
+        if (!discount) return <Tag color="default">Không có</Tag>;
+        const now = dayjs();
+        const start = dayjs(discount.startDate);
+        const end = dayjs(discount.endDate);
+        let color = "default";
+        let label = "";
+
+        if (now.isBefore(start)) {
           color = "orange";
-        } else if (now <= end) {
-          status = "Đang diễn ra";
+          label = "Sắp diễn ra";
+        } else if (now.isBefore(end)) {
           color = "green";
+          label = "Đang diễn ra";
         } else {
-          status = "Đã hết";
           color = "red";
+          label = "Đã kết thúc";
         }
+
         return (
-          <span style={{ color }}>
-            {`${discount.discountPercent}% (${status})`}
-          </span>
+          <Space>
+            <Tag color={color}>{`${discount.discountPercent}%`}</Tag>
+            <Tag color={color} bordered={false}>
+              {label}
+            </Tag>
+          </Space>
         );
       },
     },
+
     {
       title: "Số lượng",
       dataIndex: "quantity",
       key: "quantity",
       sorter: true,
-      sortOrder:
-        sortBy === "quantity" && sortOrder === "DESC"
-          ? "descend"
-          : sortBy === "quantity"
-          ? "ascend"
-          : undefined,
+      render: (quantity: number) => {
+        if (quantity === 0) return <Tag color="red">Hết hàng</Tag>;
+        if (quantity < 10) return <Tag color="orange">{quantity}</Tag>;
+        return <Tag color="green">{quantity}</Tag>;
+      },
     },
+
     {
       title: "Thương hiệu",
       dataIndex: "brandId",
       key: "brandId",
-      render: (brandId: string) =>
-        brands.find((b) => b.id === brandId)?.name || "",
+      render: (brandId: string) => {
+        const brandName = brands.find((b) => b.id === brandId)?.name || "Khác";
+        return <Tag color="blue">{brandName}</Tag>;
+      },
     },
     {
       title: "Loại sản phẩm",
       dataIndex: "productTypeId",
       key: "productTypeId",
-      render: (productTypeId: string) =>
-        productTypes.find((p) => p.id === productTypeId)?.name || "",
+      render: (typeId: string) => {
+        const typeName =
+          productTypes.find((p) => p.id === typeId)?.name || "Khác";
+        return <Tag color="purple">{typeName}</Tag>;
+      },
     },
+
     {
-      title: "Bán ra",
+      title: "Hiện",
       dataIndex: "isReleased",
       key: "isReleased",
-      render: (isReleased: boolean) => (isReleased ? "Có" : "Không"),
+      render: (isReleased: boolean) =>
+        isReleased ? (
+          <Badge status="success" text="Hiện" />
+        ) : (
+          <Badge status="error" text="Ẩn" />
+        ),
     },
+
     {
       title: "Thao tác",
       key: "actions",
       render: (_: any, record: BaseProduct) => (
         <Space>
+          <Link to={`/products/${record.id}`}>
+            <Button type="link" icon={<EyeFilled />}>
+              Chi tiết
+            </Button>
+          </Link>
+
           <Link to={`/products/edit/${record.id}`}>
             <Button type="link" icon={<EditOutlined />}>
               Sửa

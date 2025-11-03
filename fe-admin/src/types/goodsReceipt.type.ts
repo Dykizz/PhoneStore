@@ -1,4 +1,5 @@
-import { DetailGoodsReceipt } from "./../../../backend/src/goods-receipts/dto/response-goods-receipt.dto";
+import type { VariantProduct } from "./product.type";
+
 export interface BaseGoodsReceipt {
   id: string;
   supplierId: string;
@@ -14,8 +15,8 @@ export interface CreateGoodReceipt {
   supplierId: string;
   products: {
     productId: string;
-    quantity: number;
     price: number;
+    variants: VariantProduct[];
   }[];
   note?: string;
 }
@@ -24,7 +25,7 @@ export interface DetailGoodsReceipt {
   id: string;
   products: {
     productId: string;
-    image: string;
+    variants: VariantProduct[];
     name: string;
     priceSold: number;
     quantity: number;

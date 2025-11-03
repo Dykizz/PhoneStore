@@ -1,3 +1,4 @@
+import { UploadService } from './../upload/upload.service';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -14,6 +15,7 @@ export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
+    private uploadService: UploadService,
   ) {}
   async validateUser(email: string, password: string): Promise<IUser | null> {
     const user = await this.usersRepository.findOne({ where: { email } });
@@ -33,7 +35,10 @@ export class UsersService {
   }
 
   async getProfile(id: string): Promise<DetailUserDto> {
-    const user = await this.usersRepository.findOne({ where: { id } });
+    const user = await this.usersRepository.findOne({
+      where: { id },
+      relations: ['createdBy'],
+    });
     if (!user) {
       throw new BadRequestException('User not found');
     }
@@ -41,10 +46,17 @@ export class UsersService {
       id: user.id,
       email: user.email,
       userName: user.userName,
+      phoneNumber: user.phoneNumber,
       avatar: user.avatar,
       role: user.role,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
+      createdBy: user.createdBy && {
+        id: user.createdBy.id,
+        userName: user.createdBy.userName,
+      },
+      isBlocked: user.isBlocked,
+      defaultAddress: user.defaultAddress,
     };
   }
 
@@ -69,15 +81,18 @@ export class UsersService {
     return user;
   }
 
-  async create(createUserDto: CreateUserDto) {
+  async create(createUserDto: CreateUserDto, user?: IUser) {
     const existingUser = await this.usersRepository.findOne({
       where: { email: createUserDto.email },
     });
     if (existingUser) {
       throw new BadRequestException('Email này đã được sử dụng.');
     }
-    const user = this.usersRepository.create(createUserDto);
-    return await this.usersRepository.save(user);
+    const newUser = this.usersRepository.create({
+      ...createUserDto,
+      createdById: user?.id || null,
+    });
+    return await this.usersRepository.save(newUser);
   }
 
   async findAll(
@@ -102,26 +117,67 @@ export class UsersService {
 
     return new PaginatedResponseDto(userDtos, total, query.page, query.limit);
   }
-  // Helper method để transform User entity thành UserBaseDto
+
   private transformToUserBaseDto(user: User): BaseUserDto {
     return {
       id: user.id,
       email: user.email,
       userName: user.userName,
+      phoneNumber: user.phoneNumber,
       role: user.role,
       avatar: user.avatar,
+      isBlocked: user.isBlocked,
     };
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
+  async findOne(id: string): Promise<DetailUserDto> {
+    const user = await this.usersRepository.findOne({
+      where: { id },
+      relations: ['createdBy'],
+    });
+    if (!user) {
+      throw new BadRequestException('Không tìm thấy người dùng');
+    }
+    return {
+      id: user.id,
+      email: user.email,
+      userName: user.userName,
+      avatar: user.avatar,
+      role: user.role,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+      isBlocked: user.isBlocked,
+      createdBy: user.createdBy && {
+        id: user.createdBy.id,
+        userName: user.createdBy.userName,
+      },
+      defaultAddress: user.defaultAddress,
+      phoneNumber: user.phoneNumber,
+    };
   }
+  async update(id: string, updateUserDto: UpdateUserDto) {
+    console.log('UpdateUserDto:', updateUserDto);
+    const user = await this.usersRepository.findOne({ where: { id } });
+    if (!user) {
+      throw new BadRequestException('Không tìm thấy người dùng');
+    }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
-  }
+    const oldAvatar = user.avatar;
+    const newAvatar = updateUserDto.avatar;
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+    if (newAvatar && oldAvatar && newAvatar !== oldAvatar) {
+      try {
+        await this.uploadService.deleteMultipleImagesByUrls([oldAvatar]);
+      } catch (error) {
+        console.error('Error deleting old avatar:', error);
+      }
+    }
+
+    if (!newAvatar) {
+      delete updateUserDto.avatar;
+    }
+
+    Object.assign(user, updateUserDto);
+    return await this.usersRepository.save(user);
   }
 }

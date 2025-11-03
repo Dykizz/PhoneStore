@@ -37,6 +37,17 @@ class ApiClient {
       if (this.accessToken) {
         config.headers = config.headers ?? {};
         config.headers["Authorization"] = `Bearer ${this.accessToken}`;
+      } else {
+        // Lấy accessToken từ localStorage nếu chưa có trong biến
+        const accessToken =
+          typeof window !== "undefined"
+            ? localStorage.getItem("access_token")
+            : null;
+        if (accessToken) {
+          this.accessToken = accessToken;
+          config.headers = config.headers ?? {};
+          config.headers["Authorization"] = `Bearer ${accessToken}`;
+        }
       }
       return config;
     });

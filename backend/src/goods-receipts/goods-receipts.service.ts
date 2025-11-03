@@ -1,3 +1,4 @@
+import { ProductsService } from './../products/products.service';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateGoodsReceiptDto } from './dto/create-goods-receipt.dto';
 import { UpdateGoodsReceiptDto } from './dto/update-goods-receipt.dto';
@@ -17,6 +18,7 @@ export class GoodsReceiptsService {
     private readonly goodsReceiptRepository: Repository<GoodsReceipt>,
     @InjectRepository(GoodsReceiptDetail)
     private readonly goodsReceiptDetailRepository: Repository<GoodsReceiptDetail>,
+    private readonly productsService: ProductsService,
   ) {}
 
   async create(createGoodsReceiptDto: CreateGoodsReceiptDto, user: IUser) {
@@ -29,13 +31,28 @@ export class GoodsReceiptsService {
     let totalPrice = 0;
     let totalQuantity = 0;
     const totalUniqueProducts = products.length;
+    const quantityEachProduct = products.reduce((acc, product) => {
+      const totalQuantityForProduct = product.variants.reduce(
+        (sum, v) => sum + v.quantity,
+        0,
+      );
+      acc[product.productId] = totalQuantityForProduct;
+      return acc;
+    }, {});
 
     products.forEach(product => {
-      totalPrice += product.price * product.quantity;
-      totalQuantity += product.quantity;
+      totalPrice += product.price * quantityEachProduct[product.productId];
+      totalQuantity += quantityEachProduct[product.productId];
     });
 
-    console.log({ totalPrice, totalQuantity, totalUniqueProducts });
+    products.forEach(async product => {
+      for (const variant of product.variants) {
+        await this.productsService.addQuantityToVariant(
+          variant.id,
+          variant.quantity,
+        );
+      }
+    });
 
     const goodsReceipt = this.goodsReceiptRepository.create({
       supplierId,
@@ -46,21 +63,19 @@ export class GoodsReceiptsService {
       totalUniqueProducts,
     });
 
-    // ✅ Lưu phiếu nhập
     const savedReceipt = await this.goodsReceiptRepository.save(goodsReceipt);
 
-    // ✅ Lưu chi tiết phiếu nhập
-    const goodsReceiptDetails = products.map(product =>
-      this.goodsReceiptDetailRepository.create({
+    const goodsReceiptDetails = products.map(product => {
+      return this.goodsReceiptDetailRepository.create({
         goodsReceiptId: savedReceipt.id,
         productId: product.productId,
-        quantity: product.quantity,
+        quantity: quantityEachProduct[product.productId],
+        variants: product.variants,
         price: product.price,
-      }),
-    );
+      });
+    });
 
     await this.goodsReceiptDetailRepository.save(goodsReceiptDetails);
-
     return savedReceipt;
   }
 
@@ -110,7 +125,7 @@ export class GoodsReceiptsService {
 
     const details = await this.goodsReceiptDetailRepository.find({
       where: { goodsReceiptId: id },
-      relations: ['product'],
+      relations: ['product', 'product.variants'],
     });
 
     const detailGoodsReceipt: DetailGoodsReceipt = {
@@ -120,7 +135,7 @@ export class GoodsReceiptsService {
       note: goodsReceipt.note,
       products: details.map(detail => ({
         productId: detail.productId,
-        image: detail.product.variants[0]?.image || '',
+        variants: detail.variants,
         name: detail.product.name,
         priceSold: detail.product.price,
         quantity: detail.quantity,

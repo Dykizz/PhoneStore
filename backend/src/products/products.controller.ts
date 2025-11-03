@@ -13,14 +13,17 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { ResponseMessage } from 'src/common/decorators/response-message.decorator';
 import { User } from 'src/common/decorators/user.decorator';
-import { IUser } from 'src/users/entities/user.entity';
+import { IUser, UserRole } from 'src/users/entities/user.entity';
 import { PaginationQueryDto } from 'src/common/dtos/pagination-query.dto';
+import { Public } from 'src/common/decorators/public.decorator';
+import { Roles } from 'src/common/decorators/roles.decorator';
 
 @Controller('products')
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
   @Post()
+  @Roles(UserRole.ADMIN, UserRole.EMPLOYEE)
   @ResponseMessage('Tạo sản phẩm thành công')
   async create(
     @Body() createProductDto: CreateProductDto,
@@ -30,18 +33,21 @@ export class ProductsController {
   }
 
   @Get()
+  @Public()
   @ResponseMessage('Lấy danh sách sản phẩm thành công')
-  async findAll(@Query() query: PaginationQueryDto) {
-    return this.productsService.findAll(query);
+  async findAll(@Query() query: PaginationQueryDto, @User() user: IUser) {
+    return this.productsService.findAll(query, user);
   }
 
   @Get(':id')
+  @Public()
   @ResponseMessage('Lấy thông tin sản phẩm thành công')
-  async findOne(@Param('id') id: string) {
-    return await this.productsService.findOne(id);
+  async findOne(@Param('id') id: string, @User() user: IUser) {
+    return await this.productsService.findOne(id, user);
   }
 
   @Patch(':id')
+  @Roles(UserRole.ADMIN, UserRole.EMPLOYEE)
   @ResponseMessage('Cập nhật sản phẩm thành công')
   async update(
     @Param('id') id: string,
@@ -51,6 +57,7 @@ export class ProductsController {
   }
 
   @Delete(':id')
+  @Roles(UserRole.ADMIN, UserRole.EMPLOYEE)
   @ResponseMessage('Xóa sản phẩm thành công')
   async remove(@Param('id') id: string) {
     return await this.productsService.remove(id);

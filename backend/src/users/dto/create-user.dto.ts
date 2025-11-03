@@ -8,7 +8,7 @@ import {
   MaxLength,
   IsPhoneNumber,
 } from 'class-validator';
-import { UserRole, UserStatus } from '../entities/user.entity';
+import { UserRole } from '../entities/user.entity';
 
 export class CreateUserDto {
   @IsEmail()
@@ -18,6 +18,10 @@ export class CreateUserDto {
   @MaxLength(100)
   userName: string;
 
+  @IsOptional()
+  @IsString()
+  avatar?: string;
+
   @IsString()
   @MinLength(6)
   @MaxLength(100)
@@ -26,10 +30,6 @@ export class CreateUserDto {
   @IsOptional()
   @IsEnum(UserRole)
   role?: UserRole;
-
-  @IsOptional()
-  @IsEnum(UserStatus)
-  status?: UserStatus;
 
   @IsOptional()
   @IsPhoneNumber('VN')

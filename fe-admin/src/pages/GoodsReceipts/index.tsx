@@ -127,7 +127,7 @@ export default function GoodsReceiptsPage() {
   };
 
   const handleCreate = () => {
-    navigate("/goods-receipts/create");
+    navigate("/goods-receipts/add");
   };
 
   const handleDelete = async (id: string) => {
@@ -175,7 +175,7 @@ export default function GoodsReceiptsPage() {
       key: "totalPrice",
       sorter: true,
       sortDirections: ["ascend", "descend"],
-      render: (value) => `${value.toLocaleString()} VND`,
+      render: (value) => `${value} VND`.replace(/\B(?=(\d{3})+(?!\d))/g, ","),
     },
     {
       title: "Ghi chú",
