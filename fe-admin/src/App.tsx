@@ -5,6 +5,7 @@ import { lightTheme, darkTheme } from "./theme";
 import { ThemeProvider, useTheme } from "./providers/ThemeContext";
 import { App as AntdApp } from "antd";
 import { NotificationProvider } from "./providers/NotificationProvider";
+import { AuthProvider } from "./providers/AuthProvider";
 
 function AppContent() {
   const { isDark } = useTheme();
@@ -13,7 +14,9 @@ function AppContent() {
     <ConfigProvider theme={isDark ? darkTheme : lightTheme}>
       <AntdApp>
         <NotificationProvider>
-          <RouterProvider router={router} />
+          <AuthProvider>
+            <RouterProvider router={router} />
+          </AuthProvider>
         </NotificationProvider>
       </AntdApp>
     </ConfigProvider>
