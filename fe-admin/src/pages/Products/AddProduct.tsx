@@ -146,7 +146,10 @@ const AddProductPage: React.FC = () => {
       navigate("/products");
     } catch (error) {
       console.error("Error creating product:", error);
-      errorNotification("Lỗi thêm sản phẩm", "Vui lòng thử lại");
+      errorNotification(
+        "Lỗi thêm sản phẩm",
+        error instanceof Error ? error.message : "Vui lòng thử lại sau"
+      );
     } finally {
       setSubmitting(false);
     }

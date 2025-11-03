@@ -9,6 +9,7 @@ import { PaginationQueryDto } from 'src/common/dtos/pagination-query.dto';
 import { PaginatedResponseDto } from 'src/common/dtos/paginated-response.dto';
 import { BaseProduct, DetailProduct } from './dto/response-product.dto';
 import { ProductVariant } from './entities/product-variant.entity';
+import { UploadService } from 'src/upload/upload.service';
 
 @Injectable()
 export class ProductsService {
@@ -17,6 +18,7 @@ export class ProductsService {
     private readonly productsRepository: Repository<Product>,
     @InjectRepository(ProductVariant)
     private readonly productVariantsRepository: Repository<ProductVariant>,
+    private readonly uploadService: UploadService,
   ) {}
 
   private mapEntityToBaseicInfo(product: Product) {
@@ -30,20 +32,34 @@ export class ProductsService {
   }
 
   private async deleteProductVariants(ids: string[]) {
-    return await this.productVariantsRepository.delete({ productId: In(ids) });
-  }
+    const variants = await this.productVariantsRepository.find({
+      where: { id: In(ids) },
+    });
 
-  private async createProductVariants(
-    variantDto: VariantDto[],
-    productId: string,
-  ) {
-    const variants = variantDto.map(v => ({
-      color: v.color,
-      image: v.image,
-      quantity: 0,
-      productId: productId,
-    }));
-    return await this.productVariantsRepository.save(variants);
+    if (variants.length === 0) {
+      console.log('No variants found to delete');
+      return;
+    }
+
+    const hasQuantity = variants.some(v => v.quantity > 0);
+    if (hasQuantity) {
+      throw new BadRequestException(
+        'Không thể xóa variant có số lượng tồn kho. Vui lòng xuất hết hàng trước khi xóa.',
+      );
+    }
+
+    const imageUrls = variants
+      .map(v => v.image)
+      .filter(url => url && url.trim() !== '');
+
+    if (imageUrls.length > 0) {
+      try {
+        await this.uploadService.deleteMultipleImagesByUrls(imageUrls);
+      } catch (error) {
+        console.error('Error deleting images:', error);
+      }
+    }
+    await this.productVariantsRepository.delete(ids);
   }
 
   async addQuantityToVariant(
@@ -76,32 +92,42 @@ export class ProductsService {
     if (existingProduct) {
       throw new BadRequestException('Tên sản phẩm đã tồn tại');
     }
-    const variants =
-      createProductDto.variants?.map(v => ({
-        id: v.id,
-        color: v.color,
-        image: v.image,
-        quantity: 0,
-      })) || [];
 
+    if (!createProductDto.variants || createProductDto.variants.length === 0) {
+      throw new BadRequestException('Sản phẩm phải có ít nhất một biến thể');
+    }
     const newProduct = this.productsRepository.create({
-      ...createProductDto,
+      name: createProductDto.name,
+      baseDescription: createProductDto.baseDescription,
+      detailDescription: createProductDto.detailDescription,
+      price: createProductDto.price,
+      isReleased: createProductDto.isReleased,
+      brandId: createProductDto.brandId,
+      productTypeId: createProductDto.productTypeId,
+      discountPolicyId: createProductDto.discountPolicyId,
       createdById: user.id,
       quantity: 0,
     });
-    const savedProduct = await this.productsRepository.save(newProduct);
-    const createdVariants = await this.createProductVariants(
-      variants,
-      savedProduct.id,
-    );
 
-    variants.forEach((v, index) => {
-      v.id = createdVariants[index].id;
+    const savedProduct = await this.productsRepository.save(newProduct);
+
+    if (createProductDto.variants && createProductDto.variants.length > 0) {
+      const variantsToCreate = createProductDto.variants.map(v => ({
+        color: v.color,
+        image: v.image,
+        quantity: 0,
+        productId: savedProduct.id,
+      }));
+
+      await this.productVariantsRepository.save(variantsToCreate);
+    }
+
+    const productWithVariants = await this.productsRepository.findOne({
+      where: { id: savedProduct.id },
+      relations: ['variants'],
     });
 
-    this.productsRepository.update(savedProduct.id, { variants: variants });
-
-    return this.mapEntityToBaseicInfo(savedProduct);
+    return this.mapEntityToBaseicInfo(productWithVariants);
   }
 
   async findAll(
@@ -204,7 +230,6 @@ export class ProductsService {
       productTypeId: product.productTypeId,
       brandId: product.brandId,
     };
-    console.log('user in findOne product service', user?.role);
 
     if (!user || user.role === UserRole.USER) return response;
     return {
@@ -223,37 +248,58 @@ export class ProductsService {
       where: { id },
       relations: ['variants'],
     });
+
     if (!product) {
       throw new BadRequestException('Sản phẩm không tồn tại');
     }
 
-    if (updateProductDto.variants) {
-      const existingVariantIds = product.variants.map(v => v.id);
-      const deleteProductVariantIds = existingVariantIds.filter(
-        id => !updateProductDto.variants.some(v => v.id === id),
-      );
-      if (deleteProductVariantIds.length > 0) {
-        await this.deleteProductVariants(deleteProductVariantIds);
-        const quantityDeleted = product.variants
-          .filter(v => deleteProductVariantIds.includes(v.id))
-          .reduce((sum, v) => sum + v.quantity, 0);
-        product.quantity -= quantityDeleted;
+    if (updateProductDto.variants && updateProductDto.variants.length > 0) {
+      const incomingVariants = updateProductDto.variants;
+
+      const incomingVariantIds = incomingVariants
+        .filter(v => v.id)
+        .map(v => v.id);
+
+      const variantsToDelete = product.variants
+        .filter(v => !incomingVariantIds.includes(v.id))
+        .map(v => v.id);
+
+      if (variantsToDelete.length > 0) {
+        await this.deleteProductVariants(variantsToDelete);
       }
 
-      const updatedVariants = await this.createProductVariants(
-        updateProductDto.variants.filter(v => !v.id),
-        product.id,
-      );
-      product.variants = [
-        ...product.variants.filter(v =>
-          updateProductDto.variants.some(uv => uv.id === v.id),
-        ),
-        ...updatedVariants,
-      ];
+      for (const variantDto of incomingVariants) {
+        if (variantDto.id) {
+          const existingVariant = product.variants.find(
+            v => v.id === variantDto.id,
+          );
+          if (existingVariant) {
+            const hasChanges =
+              existingVariant.color !== variantDto.color ||
+              existingVariant.image !== variantDto.image;
+
+            if (hasChanges) {
+              await this.productVariantsRepository.update(variantDto.id, {
+                color: variantDto.color,
+                image: variantDto.image,
+              });
+            }
+          }
+        } else {
+          const newVariant = this.productVariantsRepository.create({
+            color: variantDto.color,
+            image: variantDto.image,
+            quantity: 0,
+            productId: product.id,
+          });
+          await this.productVariantsRepository.save(newVariant);
+        }
+      }
       delete updateProductDto.variants;
+    } else {
+      throw new BadRequestException('Sản phẩm phải có ít nhất 1 biến thể');
     }
-    Object.assign(product, updateProductDto);
-    await this.productsRepository.save(product);
+    await this.productsRepository.update(id, updateProductDto);
   }
 
   async remove(id: string): Promise<void> {
