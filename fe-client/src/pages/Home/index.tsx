@@ -1,27 +1,23 @@
-// fe-client/src/pages/Home/index.tsx
-
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import React, { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
-  CardDescription,
+  // CardDescription
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import { useCart } from "@/contexts/cartContexts";
-import type { BaseProduct } from "@/types/product.type.ts";
+import type { BaseProduct } from "@/types/product.type";
 import { getProducts } from "@/apis/product.api";
 import { QueryBuilder } from "@/utils/queryBuilder";
 import { showToast } from "@/utils/toast";
 
-// Hàm định dạng giá
 function formatPrice(price: number) {
-  return price.toLocaleString("vi-VN") + "₫";
+  return price.toLocaleString("en-US") + "₫";
 }
 
-// Hàm tính giá đã giảm
 function calculateDiscountedPrice(price: number, discount: number): number {
   return price - (price * discount) / 100;
 }
@@ -29,30 +25,32 @@ function calculateDiscountedPrice(price: number, discount: number): number {
 export function Home() {
   const [products, setProducts] = useState<BaseProduct[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { addToCart } = useCart();
 
-  // Hàm xử lý thêm sản phẩm vào giỏ hàng (sửa để dùng 'variants')
   const handleAddToCart = (
     e: React.MouseEvent,
-    productToAdd: BaseProduct, // Dùng kiểu Product (động)
+    productToAdd: BaseProduct,
     qty: number,
-    selectedIndex: number // index của variant
+    selectedIndex: number
   ) => {
     e.stopPropagation();
     e.preventDefault();
 
-    // Logic lấy thông tin từ variant
     const selectedVariant = productToAdd.variants[selectedIndex];
-    if (!selectedVariant) return; // An toàn nếu không có variant
+    if (!selectedVariant) return;
 
-    let variantIdPart = selectedVariant.id || "default";
-    let variantDisplayInfo = `Phiên bản: ${selectedVariant.name}`;
-    let imageForCart = selectedVariant.image; // Lấy ảnh từ variant
+    const variantIdPart = selectedVariant.id || "default";
+    const variantDisplayInfo = `Phiên bản: ${selectedVariant.color}`;
+    const imageForCart = selectedVariant.image;
 
-    // API thật không có discountPercent ở gốc, ta lấy giá từ variant
-    const finalPrice = selectedVariant.price;
+    const finalPrice = productToAdd.discount
+      ? calculateDiscountedPrice(
+          productToAdd.price,
+          productToAdd.discount.discountPercent
+        )
+      : productToAdd.price;
 
-    // Thêm sản phẩm vào giỏ
     addToCart(
       {
         productId: productToAdd.id,
@@ -73,33 +71,33 @@ export function Home() {
   useEffect(() => {
     const loadProducts = async () => {
       setIsLoading(true);
-      console.log("tai sp")
+      setError(null);
+      console.log("Bắt đầu tải sản phẩm...");
+      console.log("tai sp");
       try {
-         const query = QueryBuilder.create()
-        .page(1)
-        .limit(4)
-        .build();
+        const query = QueryBuilder.create().page(1).limit(4).build();
 
         const response = await getProducts(query);
-        if (!response.success){
+        if (!response.success) {
           throw new Error(response.message);
         }
+        console.log("API response:", response);
         setProducts(response.data.data);
       } catch (error) {
         console.error("Lỗi khi tải sản phẩm:", error);
+        setError(error instanceof Error ? error.message : "Lỗi không xác định");
         showToast({
           title: "Lỗi",
-          description: "Lỗi khi tải sản phẩm"
-        })
+          description: "Lỗi khi tải sản phẩm",
+        });
       } finally {
         setIsLoading(false);
       }
     };
 
     loadProducts();
-  }, [queryParams]); // <== SỬA ĐỔI: Thêm queryParams vào dependencies
+  }, []);
 
-  // <== SỬA ĐỔI: Xử lý giao diện khi đang tải hoặc lỗi
   if (isLoading) {
     return (
       <div className="container py-8 text-center">Đang tải sản phẩm...</div>
@@ -113,20 +111,9 @@ export function Home() {
       </div>
     );
   }
-  // --- Hết phần xử lý loading/error ---
-
-  // Xử lý giao diện khi đang tải hoặc lỗi
-  if (isLoading) {
-    return (
-      <div className="container py-8 text-center">Đang tải sản phẩm...</div>
-    );
-  }
-
-
-
+  
   return (
     <div className="container py-8">
-      {/* Phần giới thiệu (Giữ nguyên) */}
       <section className="text-center py-12">
         <h1 className="text-4xl font-bold tracking-tight lg:text-6xl">
           Welcome to Phone Store
@@ -149,77 +136,68 @@ export function Home() {
       <section className="py-12">
         <h2 className="text-3xl font-bold text-center mb-8">Sản phẩm nổi bật</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Lặp qua danh sách sản phẩm từ API */}
           {products.map((product) => {
-            const displayPrice =
-              product.discount ?
-                 calculateDiscountedPrice(product.price, product.discount.discountPercent)
-                : product.price;
+            const firstVariant = product.variants && product.variants[0];
+            if (!firstVariant) {
+              return null;
+            }
+
+            const hasDiscount = !!product.discount;
+            const finalPrice = hasDiscount
+              ? calculateDiscountedPrice(
+                  product.price,
+                  product.discount.discountPercent
+                )
+              : product.price;
 
             return (
-              // Mỗi sản phẩm là một Card
-              <Card key={product.id} className="h-full flex flex-col">
-                {/* Phần Header Card (Tên, mô tả ngắn) */}
-                <Link to={`/product/${product.id}`}>
-                  <CardHeader>
-                    <CardTitle>{product.name}</CardTitle>
-                    {/* Dùng "description" từ API (động) */}
-                    <CardDescription>Mo ta</CardDescription>
+              <Link to={`/product/${product.id}`} key={product.id} className="h-full flex flex-col">
+                <Card
+                  className="overflow-hidden hover:shadow-lg transition relative h-full flex flex-col"
+                >
+                  <CardHeader className="p-0 relative flex items-center justify-center bg-white h-64">
+                    <img
+                      src={firstVariant.image}
+                      alt={product.name}
+                      className="object-contain w-full h-full p-4 rounded-md shadow-sm transition-transform duration-300 hover:scale-105"
+                    />
+                    {hasDiscount && (
+                      <span className="absolute top-2 left-2 bg-red-600 text-white text-xs px-2 py-1 rounded">
+                        -{product.discount.discountPercent}%
+                      </span>
+                    )}
+                    {!product.isReleased && (
+                      <span className="absolute top-2 right-2 bg-gray-800 text-white text-xs px-2 py-1 rounded">
+                        Sắp ra mắt
+                      </span>
+                    )}
                   </CardHeader>
-                </Link>
 
-                {/* Phần Content Card (Ảnh, Giá, Nút) */}
-                <CardContent className="flex flex-col flex-grow">
-                  {/* Link bao quanh ảnh */}
-                  <Link to={`/product/${product.id}`} className="block">
-                    <div className="aspect-square bg-muted rounded-lg mb-4 relative">
-                      {/* Lấy ảnh từ variant đầu tiên */}
-                      <img
-                        src={firstVariant.image}
-                        alt={product.name}
-                        className="w-full h-full object-cover rounded-lg"
-                      />
-                      {/* Tag giảm giá (nếu có) */}
-                      {product.discount  && (
-                        <div className="absolute top-2 left-2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-md">
-                          -{product.discount.discountPercent}%
-                        </div>
-                      )}
+                  {/* Nội dung */}
+                  <CardContent className="p-4 flex flex-col flex-grow">
+                    <CardTitle className="text-sm font-semibold mb-2 line-clamp-2">
+                      {product.name}
+                    </CardTitle>
+                    
+                    <div className="text-red-600 font-bold text-lg">
+                      {formatPrice(finalPrice)}
                     </div>
-                  </Link>
-
-                  {/* Phần dưới cùng của Card (Giá và Nút) */}
-                  <div className="mt-auto">
-                    {/* Hiển thị giá */}
-                    {product.discount ? (
-                      <>
-                        <div className="text-3xl font-bold text-red-600">
-                          {formatPrice(displayPrice)}
-                        </div>
-                        <div className="text-xl text-gray-500 line-through">
-                          {/* Lấy giá gốc từ variant */}
-                          {formatPrice(product.price)}
-                        </div>
-                      </>
-                    ) : (
-                      // Trường hợp không giảm giá
-                      <div className="text-3xl font-bold text-red-600">
-                        {/* Lấy giá từ variant */}
+                    {hasDiscount && (
+                      <div className="text-gray-400 text-sm line-through">
                         {formatPrice(product.price)}
                       </div>
                     )}
-
-                    {/* Nút Thêm sản phẩm */}
+                    
                     <Button
-                      className="w-full mt-4"
-                      // Truyền variant index (0) vào
+                      className="w-full mt-4 mt-auto"
                       onClick={(e) => handleAddToCart(e, product, 1, 0)}
                     >
                       Thêm sản phẩm
                     </Button>
-                  </div>
-                </CardContent>
-              </Card>
+
+                  </CardContent>
+                </Card>
+              </Link>
             );
           })}
         </div>
