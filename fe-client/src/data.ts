@@ -260,3 +260,33 @@ export const orders: Order[] = [
 export const orderDetails: OrderDetail[] = [
   { orderId: 1, id: 1, amount: 1, price: 17390000 },
 ];
+
+
+// fe-client/src/data.ts
+
+// ... (Giữ nguyên toàn bộ code cũ của bạn ở trên) ...
+
+/* -------------------------- CÁC KIỂU DỮ LIỆU ĐỘNG ------------------------- */
+
+// Kiểu cho một "phiên bản" (variant) của sản phẩm
+export interface ProductVariant {
+  id: string;
+  name: string; // Ví dụ: "Đen, 128GB"
+  price: number;
+  quantity: number;
+  image: string; // URL ảnh của phiên bản này
+}
+
+// Kiểu "Product" (Sản phẩm) mà API thật trả về
+export interface Product {
+  id: string;
+  name: string;
+  description: string;
+  brand: { id: string; name: string };
+  productType: { id: string; name: string };
+  isPublished: boolean;
+  // Quan trọng: Dữ liệu động có một mảng variants
+  variants: ProductVariant[];
+  // Dữ liệu tĩnh có discountPercent ở gốc, ta tạm giữ nó
+  discountPercent?: number;
+}

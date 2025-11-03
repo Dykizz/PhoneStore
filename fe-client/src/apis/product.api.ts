@@ -1,38 +1,85 @@
-// src/apis/product.api.ts
+import type { ApiResponse } from "@/interfaces/apiResponse.interface";
+import type { PaginatedResponse } from "@/interfaces/pagination.interface";
 import apiClient from "@/utils/apiClient";
-import type { Product } from "@/data";
 import type {
-  ApiResponse,
-  ApiResponseSuccess,
-  ApiResponseError,
-} from "@/interfaces/apiResponse.interface";
+  BaseProduct,
+  CreateProduct,
+  DetailProduct,
+  UpdateProduct,
+} from "@/types/product.type";
+import { uploadImages } from "./upload.api";
 
-function isSuccess<T>(res: ApiResponse<T>): res is ApiResponseSuccess<T> {
-  // Kiểm tra trường 'success' === true (theo interface của bạn)
-  return (res as ApiResponseSuccess<T>).success === true;
+export async function getProducts(
+  query: string
+): Promise<ApiResponse<PaginatedResponse<BaseProduct>>> {
+  return await apiClient.get<PaginatedResponse<BaseProduct>>(
+    `/products${query}`
+  );
 }
 
-export const fetchProducts = async (): Promise<Product[]> => {
-  const res = await apiClient.get<Product[]>("/products"); // res: ApiResponse<Product[]>
+export async function getProduct(
+  id: string
+): Promise<ApiResponse<DetailProduct>> {
+  return await apiClient.get<DetailProduct>(`/products/${id}`);
+}
 
-  if (isSuccess(res)) {
-    return res.data;
+export async function createProduct(
+  data: CreateProduct
+): Promise<ApiResponse<void>> {
+  if (data.variants?.length > 0) {
+    const imageFiles: File[] = [];
+    data.variants.forEach((v) => {
+      if (v.image instanceof File) {
+        imageFiles.push(v.image);
+      }
+    });
+
+    if (imageFiles.length > 0) {
+      const uploadedImageUrls = await uploadImages(imageFiles);
+      let uploadIndex = 0;
+      data.variants = data.variants.map((v) => {
+        const url = uploadedImageUrls[uploadIndex];
+        if (v.image instanceof File) {
+          uploadIndex++;
+          return { ...v, image: url };
+        } else {
+          return v;
+        }
+      });
+    }
   }
+  return await apiClient.post<void>(`/products`, data);
+}
 
-  // Nếu không success => ném lỗi để caller xử lý
-  const err = res as ApiResponseError;
-  throw new Error(err.message || "Lỗi khi tải danh sách sản phẩm");
-};
+export async function updateProduct(
+  id: string,
+  data: UpdateProduct
+): Promise<ApiResponse<void>> {
+  if (data.variants && data.variants?.length > 0) {
+    const imageFiles: File[] = [];
+    data.variants.forEach((v) => {
+      if (v.image instanceof File) {
+        imageFiles.push(v.image);
+      }
+    });
 
-export const fetchProductById = async (
-  id: string | number
-): Promise<Product> => {
-  const res = await apiClient.get<Product>(`/products/${id}`);
-
-  if (isSuccess(res)) {
-    return res.data;
+    if (imageFiles.length > 0) {
+      const uploadedImageUrls = await uploadImages(imageFiles);
+      let uploadIndex = 0;
+      data.variants = data.variants.map((v) => {
+        const url = uploadedImageUrls[uploadIndex];
+        if (v.image instanceof File) {
+          uploadIndex++;
+          return { ...v, image: url };
+        } else {
+          return v;
+        }
+      });
+    }
   }
+  return await apiClient.patch<void>(`/products/${id}`, data);
+}
 
-  const err = res as ApiResponseError;
-  throw new Error(err.message || "Lỗi khi tải chi tiết sản phẩm");
-};
+export async function deleteProduct(id: string): Promise<ApiResponse<null>> {
+  return await apiClient.delete<null>(`/products/${id}`);
+}
