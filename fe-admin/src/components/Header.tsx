@@ -1,7 +1,7 @@
 import { useAuth } from "@/hooks/useAuth";
 import { MenuFoldOutlined, MenuUnfoldOutlined } from "@ant-design/icons";
 import { Button, Layout, Switch, theme } from "antd";
-import { useEffect } from "react"; // ✅ Thêm import
+import { useEffect } from "react";
 
 export default function Header({
   collapsed,
@@ -24,17 +24,9 @@ export default function Header({
   useEffect(() => {
     if (!user && !loading) {
       logout();
+      window.location.href = "/login";
     }
-    console.log("Header auth state:", { user, loading });
   }, [user, loading, logout]);
-
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-
-  if (!user) {
-    return null;
-  }
 
   return (
     <Header
@@ -70,7 +62,7 @@ export default function Header({
           unCheckedChildren="☀️"
           size="small"
         />
-        <span>{user.userName}</span>
+        <span>{user?.userName}</span>
       </div>
     </Header>
   );

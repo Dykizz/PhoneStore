@@ -12,9 +12,11 @@ import {
   TrademarkOutlined,
   AppstoreOutlined,
   TeamOutlined,
+  LogoutOutlined,
 } from "@ant-design/icons";
 import { useTheme } from "../../providers/ThemeContext";
 import Header from "../Header";
+import apiClient from "@/utils/apiClient";
 
 const { Sider, Content } = Layout;
 
@@ -23,7 +25,18 @@ const MainLayout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { isDark, toggleTheme } = useTheme();
-
+  const logout = async () => {
+    try {
+      await apiClient.post("/auth/logout");
+    } catch (error) {
+      console.error("Logout error:", error);
+    } finally {
+      localStorage.removeItem("user");
+      localStorage.removeItem("access_token");
+      apiClient.clearToken();
+      window.location.href = "/login";
+    }
+  };
   const {
     token: {
       colorBgContainer,
@@ -112,9 +125,14 @@ const MainLayout: React.FC = () => {
       ],
     },
     {
+      key: "/",
+      icon: <LogoutOutlined />,
+      label: <div onClick={logout}>Đăng xuất</div>,
+    },
+    {
       key: "/settings",
       icon: <SettingOutlined />,
-      label: "Settings",
+      label: "Cài đặt",
     },
   ];
 
