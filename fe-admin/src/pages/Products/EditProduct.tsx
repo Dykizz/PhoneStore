@@ -332,16 +332,27 @@ const EditProductPage: React.FC = () => {
               label="Giá sản phẩm"
               rules={[
                 { required: true, message: "Vui lòng nhập giá sản phẩm" },
+                {
+                  type: "number",
+                  min: 0,
+                  message: "Giá phải lớn hơn hoặc bằng 0",
+                },
               ]}
             >
               <InputNumber
                 style={{ width: "100%" }}
                 min={0}
-                formatter={(value) =>
-                  `${value} VND`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
-                }
-                parser={(value) => value!.replace(/₫\s?|(,*)/g, "")}
+                step={1000}
+                formatter={(value) => {
+                  if (!value) return "";
+                  return `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                }}
+                parser={(value) => {
+                  if (!value) return 0;
+                  return Number(value.replace(/,/g, ""));
+                }}
                 placeholder="Nhập giá sản phẩm"
+                addonAfter="VND"
               />
             </Form.Item>
           </Col>
