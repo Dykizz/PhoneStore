@@ -1,8 +1,9 @@
 export interface VariantProduct {
-  id: string;
+  id?: string;
   color: string;
   image: string;
   quantity: number;
+  quantitySold?: number;
 }
 
 export interface BaseProduct {
@@ -26,6 +27,12 @@ export interface BaseProduct {
 export interface DetailProduct extends BaseProduct {
   detailDescription?: string;
   brandName: string;
+  createdBy?: {
+    id: string;
+    userName: string;
+  };
+  createdAt?: Date;
+  updatedAt?: Date;
   productTypeName: string;
 }
 
@@ -38,6 +45,7 @@ export interface CreateProduct {
   productTypeId: string;
   brandId: string;
   variants: { color: string; image: File | string }[];
+  discountPolicyId?: string;
 }
 
 export type UpdateProduct = Partial<CreateProduct>;
