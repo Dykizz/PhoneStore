@@ -31,11 +31,11 @@ export const router = createBrowserRouter([
       {
         path: "login",
         element: <LoginPage />,
-        children:[
+        children: [
           {
             path: "con",
-          }
-        ]
+          },
+        ],
       },
       {
         path: "register",

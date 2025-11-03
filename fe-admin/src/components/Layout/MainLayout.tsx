@@ -7,6 +7,11 @@ import {
   ShoppingCartOutlined,
   UserOutlined,
   SettingOutlined,
+  FileTextOutlined,
+  PercentageOutlined,
+  TrademarkOutlined,
+  AppstoreOutlined,
+  TeamOutlined,
 } from "@ant-design/icons";
 import { useTheme } from "../../providers/ThemeContext";
 import { AuthProvider } from "@/providers/AuthProvider";
@@ -39,25 +44,24 @@ const MainLayout: React.FC = () => {
     },
     {
       key: "/suppliers",
-      icon: <ShopOutlined />,
+      icon: <TeamOutlined />,
       label: "Nhà cung cấp",
     },
     {
       key: "/product-types",
-      icon: <ShopOutlined />,
+      icon: <AppstoreOutlined />,
       label: "Loại sản phẩm",
     },
     {
       key: "/brands",
-      icon: <ShopOutlined />,
+      icon: <TrademarkOutlined />,
       label: "Thương hiệu",
     },
     {
       key: "/discount-policies",
-      icon: <ShopOutlined />,
+      icon: <PercentageOutlined />,
       label: "Chính sách giảm giá",
     },
-
     {
       key: "/products",
       icon: <ShopOutlined />,
@@ -75,7 +79,7 @@ const MainLayout: React.FC = () => {
     },
     {
       key: "/goods-receipts",
-      icon: <ShopOutlined />,
+      icon: <FileTextOutlined />,
       label: "Phiếu nhập hàng",
       children: [
         {
@@ -91,12 +95,22 @@ const MainLayout: React.FC = () => {
     {
       key: "/orders",
       icon: <ShoppingCartOutlined />,
-      label: "Orders",
+      label: "Đơn hàng",
     },
     {
       key: "/users",
       icon: <UserOutlined />,
-      label: "Users",
+      label: "Người dùng",
+      children: [
+        {
+          key: "/users",
+          label: "DS người dùng",
+        },
+        {
+          key: "/users/add",
+          label: "Tạo người dùng",
+        },
+      ],
     },
     {
       key: "/settings",

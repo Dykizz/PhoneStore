@@ -77,6 +77,8 @@ export class AuthService {
         userName: profileUser.userName,
         avatar: profileUser.avatar,
         role: profileUser.role,
+        phoneNumber: profileUser.phoneNumber,
+        isBlocked: profileUser.isBlocked,
       },
     };
   }

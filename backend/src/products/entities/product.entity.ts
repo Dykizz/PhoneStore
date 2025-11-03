@@ -2,6 +2,7 @@ import { Brand } from 'src/brands/entities/brand.entity';
 import { DiscountPolicy } from 'src/discount-policies/entities/discount-policy.entity';
 import { ProductType } from 'src/product-types/entities/product-type.entity';
 import { User } from 'src/users/entities/user.entity';
+import { ProductVariant } from './product-variant.entity'; // Add import
 import {
   Column,
   Entity,
@@ -10,6 +11,7 @@ import {
   UpdateDateColumn,
   ManyToOne,
   JoinColumn,
+  OneToMany,
 } from 'typeorm';
 
 @Entity('products')
@@ -26,12 +28,10 @@ export class Product {
   @Column({ type: 'text', nullable: true })
   detailDescription: string;
 
-  @Column({ type: 'jsonb', nullable: true })
-  variants: {
-    color: string;
-    image: string;
-    quantity: number;
-  }[];
+  @OneToMany(() => ProductVariant, variant => variant.product, {
+    cascade: true,
+  })
+  variants: ProductVariant[];
 
   @Column('numeric', { default: 0 })
   price: number;
@@ -40,7 +40,7 @@ export class Product {
   isReleased: boolean;
 
   @Column('int', { default: 0 })
-  quantity: number;
+  quantity: number; // Có thể tính từ variants hoặc giữ tổng
 
   @Column('int', { default: 0 })
   quantitySold: number;

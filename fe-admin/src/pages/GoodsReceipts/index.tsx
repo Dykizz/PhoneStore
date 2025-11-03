@@ -175,7 +175,7 @@ export default function GoodsReceiptsPage() {
       key: "totalPrice",
       sorter: true,
       sortDirections: ["ascend", "descend"],
-      render: (value) => `${value.toLocaleString()} VND`,
+      render: (value) => `${value} VND`.replace(/\B(?=(\d{3})+(?!\d))/g, ","),
     },
     {
       title: "Ghi chú",

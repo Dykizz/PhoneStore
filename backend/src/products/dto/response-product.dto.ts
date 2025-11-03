@@ -1,6 +1,9 @@
 import { IsNumber, IsString } from 'class-validator';
 
 export class VariantProduct {
+  @IsString({ message: 'ID biến thể phải là chuỗi ký tự' })
+  id: string;
+
   @IsString({ message: 'Màu sắc phải là chuỗi ký tự' })
   color: string;
 
@@ -32,5 +35,11 @@ export interface BaseProduct {
 export interface DetailProduct extends BaseProduct {
   detailDescription?: string;
   brandName: string;
+  createdBy?: {
+    id: string;
+    userName: string;
+  };
+  createdAt?: Date;
+  updatedAt?: Date;
   productTypeName: string;
 }

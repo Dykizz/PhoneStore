@@ -6,6 +6,8 @@ import {
   UpdateDateColumn,
   BeforeInsert,
   BeforeUpdate,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
 import { Exclude } from 'class-transformer';
 import * as bcrypt from 'bcrypt';
@@ -22,12 +24,6 @@ export enum UserRole {
   ADMIN = 'admin',
   USER = 'user',
   EMPLOYEE = 'employee',
-}
-
-export enum UserStatus {
-  ACTIVE = 'active',
-  INACTIVE = 'inactive',
-  BANNED = 'banned',
 }
 
 @Entity('users')
@@ -52,12 +48,8 @@ export class User {
   })
   role: UserRole;
 
-  @Column({
-    type: 'enum',
-    enum: UserStatus,
-    default: UserStatus.ACTIVE,
-  })
-  status: UserStatus;
+  @Column({ default: false })
+  isBlocked: boolean;
 
   @Column({ nullable: true })
   phoneNumber: string;
@@ -77,7 +69,13 @@ export class User {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  // Hash password before insert/update
+  @JoinColumn({ name: 'supplierId' })
+  @ManyToOne(() => User)
+  createdBy: User;
+
+  @Column({ type: 'uuid', nullable: true })
+  createdById: string;
+
   @BeforeInsert()
   @BeforeUpdate()
   async hashPassword() {
@@ -86,7 +84,6 @@ export class User {
     }
   }
 
-  // Method để verify password
   async validatePassword(password: string): Promise<boolean> {
     return bcrypt.compare(password, this.password);
   }

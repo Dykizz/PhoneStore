@@ -143,7 +143,6 @@ const CreateGoodsReceiptPage: React.FC = () => {
                         <AutoComplete
                           placeholder="Nhập tên sản phẩm"
                           onSearch={setSearchText}
-                          // ⚙️ Khi chọn: hiện tên, lưu id, cập nhật variants + giá
                           onSelect={(value) => {
                             const selectedProduct = products.find(
                               (p) => p.name === value
@@ -271,7 +270,6 @@ const CreateGoodsReceiptPage: React.FC = () => {
                     </Col>
                   </Row>
 
-                  {/* ✅ Hiển thị danh sách các màu nếu có */}
                   <Form.Item
                     shouldUpdate={(prev, cur) =>
                       prev.products?.[name]?.variants !==
@@ -309,18 +307,7 @@ const CreateGoodsReceiptPage: React.FC = () => {
                                   }}
                                 >
                                   <img
-                                    src={
-                                      products.find(
-                                        (p) =>
-                                          p.id ===
-                                          form.getFieldValue([
-                                            "products",
-                                            name,
-                                            "id",
-                                          ])
-                                      )?.variants[index]?.image ||
-                                      "/no-image.png"
-                                    }
+                                    src={v.image}
                                     alt={v.color}
                                     style={{
                                       width: 40,
