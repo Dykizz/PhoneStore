@@ -5,6 +5,7 @@ import RegisterPage from "@/pages/Register";
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import { ProductDetail } from "@/pages/ProductDetail";
 import { CheckoutPage } from "@/pages/CheckoutPage";
+import Profile from "@/pages/Profile";
 
 const isAuthenticated = () => {
   return true;
@@ -14,7 +15,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   if (!isAuthenticated()) {
     return <Navigate to="/login" replace />;
   }
-  return children; // Nếu đã đăng nhập, cho phép truy cập
+  return children; 
 };
 
 export const router = createBrowserRouter([
@@ -48,6 +49,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute>
             <CheckoutPage />
+          </ProtectedRoute>
+        ),
+      },
+       {
+        path: "profile", 
+        element: (
+          <ProtectedRoute>
+            <Profile />
           </ProtectedRoute>
         ),
       },
