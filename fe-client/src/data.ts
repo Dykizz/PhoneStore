@@ -383,3 +383,124 @@ export const orders: Order[] = [
 export const orderDetails: OrderDetail[] = [
   { orderId: 1, id: 1, amount: 1, price: 17390000 },
 ];
+
+
+// fe-client/src/data.ts
+
+// ... (Giữ nguyên toàn bộ code cũ của bạn ở trên) ...
+
+/* -------------------------- CÁC KIỂU DỮ LIỆU ĐỘNG ------------------------- */
+
+// Kiểu cho một "phiên bản" (variant) của sản phẩm
+export interface ProductVariant {
+  id: string;
+  name: string; // Ví dụ: "Đen, 128GB"
+  price: number;
+  quantity: number;
+  image: string; // URL ảnh của phiên bản này
+}
+
+// Kiểu "Product" (Sản phẩm) mà API thật trả về
+export interface Product {
+  id: string;
+  name: string;
+  description: string;
+  brand: { id: string; name: string };
+  productType: { id: string; name: string };
+  isPublished: boolean;
+  // Quan trọng: Dữ liệu động có một mảng variants
+  variants: ProductVariant[];
+  // Dữ liệu tĩnh có discountPercent ở gốc, ta tạm giữ nó
+  discountPercent?: number;
+}
+
+/* -------------------------- CART DATA -------------------------- */
+export interface CartItem {
+  id: string;               // id sản phẩm
+  name: string;             // tên
+  price: number;            // giá gốc
+  image: string;            // ảnh
+  discountPercent?: number; // giảm giá
+  quantity: number;         // số lượng người dùng chọn
+  maxQuantity: number;      // số lượng tồn kho
+}
+
+export const cartData: CartItem[] = [
+  {
+    id: "1",
+    name: "iPhone 15 128GB | Chính hãng VN/A",
+    price: 17390000,
+    image: ip15_den,
+    discountPercent: 10,
+    quantity: 1,
+    maxQuantity: 5,
+  },
+  {
+    id: "5",
+    name: "iPhone 16 128GB | Chính hãng VN/A",
+    price: 21390000,
+    image: ip16_den,
+    discountPercent: 10,
+    quantity: 2,
+    maxQuantity: 10,
+  },
+];
+/* -------------------------- CHECKOUT DATA -------------------------- */
+export interface CheckoutProduct {
+  id: string;
+  name: string;
+  image: string;
+  price: number;
+  originalPrice?: number;
+  quantity: number;
+}
+
+export interface CheckoutUser {
+  fullName: string;
+  membership?: string; // ví dụ: S-NULL, S-MEMBER
+  email: string;
+  phone: string;
+  receivePromotion?: boolean;
+}
+
+export interface CheckoutInfo {
+  id: number;
+  user: CheckoutUser;
+  products: CheckoutProduct[];
+  deliveryMethod: "store" | "delivery";
+  city: string;
+  district: string;
+  storeAddress?: string;
+  note?: string;
+  needCompanyInvoice: boolean;
+  subtotal: number;
+}
+
+/* -------------------------- DỮ LIỆU CHECKOUT MẪU -------------------------- */
+export const checkoutData: CheckoutInfo = {
+  id: 1,
+  user: {
+    fullName: "Nguyễn Thành Đức",
+    membership: "S-NULL",
+    email: "wtf5213@gmail.com",
+    phone: "0923219754",
+    receivePromotion: false,
+  },
+  products: [
+    {
+      id: "macbook14m4",
+      name: "MacBook Pro 14 M4 Pro 12CPU 16GPU 24GB 512GB | Chính hãng Apple Việt Nam - Đen",
+      image: ip16_den, // dùng tạm ảnh có sẵn
+      price: 49290000,
+      originalPrice: 51990000,
+      quantity: 1,
+    },
+  ],
+  deliveryMethod: "store",
+  city: "Hồ Chí Minh",
+  district: "Quận 1",
+  storeAddress: "CellphoneS - 55 Trần Quang Khải, Q.1, TP.HCM",
+  note: "",
+  needCompanyInvoice: false,
+  subtotal: 49290000,
+};

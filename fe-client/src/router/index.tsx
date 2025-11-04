@@ -1,4 +1,8 @@
 import { MainLayout } from "@/components/layout/MainLayout";
+import CartPage from "@/pages/CartPage";
+import CheckoutPage1 from "@/pages/CheckoutPage/checkout1";
+import CheckoutPage from "@/pages/CheckoutPage/checkout1";
+import CheckoutPage2 from "@/pages/CheckoutPage/checkout2";
 import { Home } from "@/pages/Home";
 import LoginPage from "@/pages/Login";
 import ProductsPage from "@/pages/Products";
@@ -72,6 +76,18 @@ export const router = createBrowserRouter([
       {
         path: "products",
         element: <ProductsPage />,
+      },
+      {
+        path: "cart",
+        element: <CartPage/>
+      },
+      {
+        path: "checkout-page1",
+        element: <CheckoutPage1/>
+      },
+      {
+        path: "checkout-page2",
+        element: <CheckoutPage2/>
       }
     ],
   },

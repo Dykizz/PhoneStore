@@ -84,5 +84,4 @@ export async function deleteProduct(id: string): Promise<ApiResponse<null>> {
   return await apiClient.delete<null>(`/products/${id}`);
 }
 
-fe-client/src/apis/product.api.ts
 
