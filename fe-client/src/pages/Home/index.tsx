@@ -8,6 +8,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 import { useCart } from "@/contexts/cartContexts";
 import type { BaseProduct } from "@/types/product.type";
 import { getProducts } from "@/apis/product.api";
@@ -27,6 +29,8 @@ export function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { addToCart } = useCart();
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
 
   const handleAddToCart = (
     e: React.MouseEvent,
@@ -36,6 +40,16 @@ export function Home() {
   ) => {
     e.stopPropagation();
     e.preventDefault();
+
+
+  if (!isAuthenticated) {
+      showToast({
+        title: "Yêu cầu đăng nhập",
+        description: "Bạn cần đăng nhập để thêm sản phẩm vào giỏ hàng.",
+      });
+      navigate("/login"); 
+      return; 
+    }
 
     const selectedVariant = productToAdd.variants[selectedIndex];
     if (!selectedVariant) return;
