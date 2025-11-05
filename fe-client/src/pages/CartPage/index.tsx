@@ -1,142 +1,217 @@
-// Import Link, useCart và kiểu CartItem
-import { Link } from "react-router-dom";
-import { useCart, type CartItem } from "@/contexts/cartContexts";
+"use client";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom"; // ✅ Dùng cho React Router
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Trash2, Minus, Plus, ArrowLeft } from "lucide-react";
+import { cartData, type CartItem } from "@/data";
 
-export function CartPage() {
-  const { cart, removeFromCart, updateQuantity } = useCart();
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
-  const handleRemove = (productId: string) => {
-    removeFromCart(productId); 
-  };
+export default function CartPage() {
+  const [cartItems, setCartItems] = useState<CartItem[]>(cartData);
+  const [selectedItems, setSelectedItems] = useState<string[]>(
+    cartData.map((p) => p.id)
+  );
 
-  const handleQuantityChange = (productId: string, quantity: number) => {
-    if (quantity < 1) {
-      if (window.confirm("Bạn có chắc chắn muốn xóa sản phẩm này khỏi giỏ hàng?")) {
-        handleRemove(productId);
-      } else {
-        return;
-      }
-    } else {
-      updateQuantity(productId, quantity);
-    }
-  };
+  const navigate = useNavigate(); // ✅ Dùng để quay lại trang chủ
 
+  // ✅ Tính tổng tiền
+  const total = cartItems
+    .filter((x) => selectedItems.includes(x.id))
+    .reduce((acc, item) => {
+      const finalPrice = item.discountPercent
+        ? item.price * (1 - item.discountPercent / 100)
+        : item.price;
+      return acc + finalPrice * item.quantity;
+    }, 0);
 
-  const calculateTotal = () => {
-    return cart.reduce(
-      (total: number, item: CartItem) => total + item.price * item.quantity,
-      0 
+  // ✅ Chọn / bỏ chọn 1 sản phẩm
+  const handleToggleSelect = (id: string) => {
+    setSelectedItems((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     );
   };
 
-  return (
-    <div className="container py-12">
-      <h2 className="text-3xl font-bold mb-8">Giỏ hàng của bạn</h2>
+  // ✅ Chọn / bỏ chọn tất cả
+  const handleToggleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedItems(cartItems.map((item) => item.id));
+    } else {
+      setSelectedItems([]);
+    }
+  };
 
-      <div>
-        {cart.length === 0 ? (
-          <div className="text-center">
-            <p className="text-xl mb-4">Giỏ hàng của bạn đang trống.</p>
-            <Button asChild> 
-              <Link to="/">Quay lại trang chủ</Link>
-            </Button>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Cột trái: Danh sách sản phẩm trong giỏ */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Lặp qua từng sản phẩm trong giỏ hàng */}
-              {cart.map((item: CartItem) => (
-                // Mỗi sản phẩm là một div có border
-                <div
-                  key={item.id} // Key là ID sản phẩm
-                  className="flex items-center gap-4 p-4 border rounded-lg shadow-sm"
-                >
-                  {/* Ảnh sản phẩm */}
-                  <img
-                    src={item.image}
-                    alt={item.name}
-                    className="w-20 h-20 object-cover rounded-md"
-                  />
-                  {/* Thông tin tên và giá */}
-                  <div className="ml-4 flex-1">
-                    <h3 className="font-semibold text-lg">{item.name}</h3>
-                    <p className="text-red-600 font-bold">
-                      {item.price.toLocaleString("vi-VN")}₫ {/* Giá đã thêm vào giỏ */}
-                    </p>
+  // ✅ Tăng / giảm số lượng
+  const handleQuantityChange = (id: string, delta: number) => {
+    setCartItems((prev) =>
+      prev.map((item) =>
+        item.id === id
+          ? {
+              ...item,
+              quantity: Math.max(
+                1,
+                Math.min(item.maxQuantity, item.quantity + delta)
+              ),
+            }
+          : item
+      )
+    );
+  };
+
+  // ✅ Xóa sản phẩm
+  const handleDelete = (id: string) => {
+    setCartItems((prev) => prev.filter((item) => item.id !== id));
+    setSelectedItems((prev) => prev.filter((x) => x !== id));
+  };
+
+  return (
+    <div className="max-w-6xl mx-auto p-6 relative">
+      {/* ====== Nút quay lại ====== */}
+      <Button
+        variant="ghost"
+        onClick={() => navigate("/")}
+        className="absolute top-4 left-4 flex items-center gap-1 text-gray-700 hover:text-red-600"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        <span>Quay lại trang chủ</span>
+      </Button>
+
+      <h1 className="text-2xl font-bold mb-4 text-center mt-10">Giỏ hàng của bạn</h1>
+      {/* ====== Checkbox chọn tất cả ====== */}
+      <div className="flex items-center gap-2 mb-4">
+        <Checkbox
+          checked={selectedItems.length === cartItems.length && cartItems.length > 0}
+          onCheckedChange={(checked) => handleToggleSelectAll(!!checked)}
+        />
+        <span className="text-gray-700 font-medium">Chọn tất cả</span>
+        <span className="text-gray-400 text-sm">
+          ({selectedItems.length}/{cartItems.length})
+        </span>
+      </div>
+
+      {/* ====== Danh sách sản phẩm ====== */}
+      <div className="bg-white rounded-xl shadow-sm border divide-y">
+        {cartItems.map((item) => {
+          const hasDiscount = !!item.discountPercent;
+          const finalPrice = hasDiscount
+            ? Math.round(item.price * (1 - item.discountPercent / 100))
+            : item.price;
+
+          return (
+            <div key={item.id} className="p-4 flex gap-4">
+              {/* Checkbox giữa dòng */}
+              <div className="flex items-center">
+                <Checkbox
+                  checked={selectedItems.includes(item.id)}
+                  onCheckedChange={() => handleToggleSelect(item.id)}
+                />
+              </div>
+
+              {/* Thông tin sản phẩm */}
+              <div className="flex items-start gap-4 flex-1">
+                <img
+                  src={item.image}
+                  alt={item.name}
+                  className="w-24 h-24 object-contain rounded-md"
+                />
+
+                <div className="flex-1">
+                  <div className="flex justify-between">
+                    <h2 className="font-semibold text-gray-800">{item.name}</h2>
+
+                    {/* ⚠️ Nút xóa có cảnh báo */}
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <Trash2 className="w-4 h-4 text-gray-500 hover:text-red-500" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>
+                            Xóa sản phẩm khỏi giỏ hàng
+                          </AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Bạn có chắc muốn xóa{" "}
+                            <span className="font-semibold text-gray-800">
+                              {item.name}
+                            </span>{" "}
+                            khỏi giỏ hàng không?
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Hủy</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleDelete(item.id)}
+                            className="bg-red-600 hover:bg-red-700 text-white"
+                          >
+                            Xóa
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
-                  {/* Phần tăng giảm số lượng */}
-                  <div className="flex items-center gap-2">
-                    {/* Nút giảm */}
+
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className="text-red-600 font-bold text-lg">
+                      {finalPrice.toLocaleString()}đ
+                    </span>
+                    {hasDiscount && (
+                      <span className="text-gray-400 line-through text-sm">
+                        {item.price.toLocaleString()}đ
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Số lượng */}
+                  <div className="mt-3 flex items-center gap-2">
                     <Button
                       variant="outline"
                       size="icon"
-                      onClick={() =>
-                        handleQuantityChange(item.id, item.quantity - 1) // Gọi hàm xử lý
-                      }
-                      className="w-8 h-8"
-                      // Không cần disabled vì logic handleQuantityChange đã xử lý
+                      onClick={() => handleQuantityChange(item.id, -1)}
                     >
-                      -
+                      <Minus className="w-4 h-4" />
                     </Button>
-                    {/* Hiển thị số lượng */}
-                    <span className="text-xl w-10 text-center">
+                    <span className="font-semibold w-6 text-center">
                       {item.quantity}
                     </span>
-                    {/* Nút tăng */}
                     <Button
                       variant="outline"
                       size="icon"
-                      onClick={() =>
-                        handleQuantityChange(item.id, item.quantity + 1) // Gọi hàm xử lý
-                      }
-                      className="w-8 h-8"
+                      onClick={() => handleQuantityChange(item.id, 1)}
                     >
-                      +
+                      <Plus className="w-4 h-4" />
                     </Button>
                   </div>
-                  {/* Nút xóa sản phẩm */}
-                  <Button
-                    variant="ghost" // Nút không có nền
-                    size="icon"
-                    onClick={() => handleRemove(item.id)} // Gọi hàm xử lý
-                    className="text-red-600 hover:text-red-800"
-                  >
-                    Xóa
-                  </Button>
                 </div>
-              ))}
+              </div>
             </div>
+          );
+        })}
+      </div>
 
-            {/* Cột phải: Tóm tắt đơn hàng */}
-            <div className="lg:col-span-1 p-6 border rounded-lg shadow-sm h-fit"> {/* h-fit để chiều cao tự động */}
-              <h3 className="text-2xl font-bold mb-4">Tổng cộng</h3>
-              {/* Tạm tính */}
-              <div className="flex justify-between mb-2">
-                <span className="text-gray-600">Tạm tính</span>
-                <span className="font-semibold">
-                  {calculateTotal().toLocaleString("vi-VN")}₫ {/* Gọi hàm tính tổng */}
-                </span>
-              </div>
-              {/* Phí vận chuyển (ví dụ) */}
-              <div className="flex justify-between mb-4">
-                <span className="text-gray-600">Phí vận chuyển</span>
-                <span className="font-semibold">Miễn phí</span>
-              </div>
-              <hr className="my-4" /> {/* Đường kẻ ngang */}
-              {/* Tổng tiền cuối cùng */}
-              <div className="flex justify-between text-xl font-bold">
-                <span>Tổng tiền</span>
-                <span>{calculateTotal().toLocaleString("vi-VN")}₫</span>
-              </div>
-              {/* Nút Thanh toán */}
-              <Button className="w-full mt-6 bg-red-600 hover:bg-red-700 text-white">
-                Tiến hành thanh toán
-              </Button>
-            </div>
+      {/* ====== Tổng tiền ====== */}
+      <div className="flex justify-between items-center bg-white mt-6 p-4 rounded-xl shadow-sm">
+        <div>
+          <div className="text-gray-600 text-sm">Tạm tính:</div>
+          <div className="text-red-600 font-bold text-2xl">
+            {total.toLocaleString()}đ
           </div>
-        )}
+        </div>
+        <Button className="bg-red-600 text-white text-lg px-10 py-5 rounded-xl">
+          Mua ngay ({selectedItems.length})
+        </Button>
       </div>
     </div>
   );

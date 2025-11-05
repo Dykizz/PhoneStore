@@ -56,7 +56,7 @@ class ApiClient {
     this.axiosInstance.interceptors.response.use(
       (response: AxiosResponse) => {
         // Kiểm tra response.data có cấu trúc của API và statusCode là 401
-        const responseData = response.data as any;
+        const responseData = response.data as { statusCode: number; [key: string]: unknown };
         if (
           responseData &&
           responseData.statusCode === 401 &&

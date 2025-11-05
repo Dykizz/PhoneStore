@@ -8,8 +8,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-// import { useNavigate } from "react-router-dom";
-// import { useAuth } from "@/hooks/useAuth";
 import { useCart } from "@/contexts/cartContexts";
 import type { BaseProduct } from "@/types/product.type";
 import { getProducts } from "@/apis/product.api";
@@ -95,8 +93,10 @@ export function Home() {
         if (!response.success) {
           throw new Error(response.message);
         }
+        console.log("API response:", response);
         setProducts(response.data.data);
       } catch (error) {
+        console.error("Lỗi khi tải sản phẩm:", error);
         setError(error instanceof Error ? error.message : "Lỗi không xác định");
         showToast({
           title: "Lỗi",
