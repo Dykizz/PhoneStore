@@ -39,11 +39,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(response.data);
         localStorage.setItem("user", JSON.stringify(response.data));
       } else {
-        // Token invalid hoặc expired
         setUser(null);
         localStorage.removeItem("user");
         localStorage.removeItem("access_token");
         apiClient.clearToken();
+        console.error("Failed to fetch user profile");
+        window.location.href = "/login";
       }
     } catch (error) {
       console.error("Failed to fetch user profile", error);

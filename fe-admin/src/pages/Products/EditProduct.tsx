@@ -11,6 +11,7 @@ import {
   message,
   Col,
   Row,
+  Tooltip,
 } from "antd";
 import { PlusOutlined, UploadOutlined } from "@ant-design/icons";
 import { useNavigate, useParams } from "react-router-dom";
@@ -122,13 +123,15 @@ const EditProductPage: React.FC = () => {
 
         const colorImages =
           product.variants?.map((variant) => ({
+            id: variant.id,
             color: variant.color,
+            quantity: variant.quantity,
             image: [
               {
-                uid: variant.color, // hoặc variant.id nếu có
+                uid: variant.id || variant.color,
                 name: `${variant.color}.jpg`,
                 status: "done",
-                url: variant.image, // link ảnh từ server
+                url: variant.image,
               },
             ],
           })) || [];
@@ -155,15 +158,34 @@ const EditProductPage: React.FC = () => {
     fetchProduct();
   }, [id]);
 
+  const handleRemoveVariant = (
+    remove: (index: number) => void,
+    name: number
+  ) => {
+    const colorImages = form.getFieldValue("colorImages");
+    const variantToDelete = colorImages[name];
+
+    if (variantToDelete?.quantity > 0) {
+      message.error(
+        `Không thể xóa variant có số lượng ${variantToDelete.quantity}. Vui lòng xuất hết số lượng trước khi xóa.`
+      );
+      return;
+    }
+
+    remove(name);
+  };
+
   const handleSubmit = async (values: any) => {
     setSubmitting(true);
     try {
       const variants =
         values.colorImages?.map((item: any) => ({
+          ...(item.id && { id: item.id }),
           color: item.color,
-          quantity: Number(item.quantity),
-          image: item.image[0].originFileObj,
+          image: item.image[0]?.url || item.image[0]?.originFileObj,
         })) || [];
+
+      console.log("Variants to submit:", variants);
 
       const data: UpdateProduct = {
         baseDescription: values.baseDescription,
@@ -185,7 +207,10 @@ const EditProductPage: React.FC = () => {
       navigate("/products");
     } catch (error) {
       console.error("Error updating product:", error);
-      errorNotification("Lỗi cập nhật sản phẩm", "Vui lòng thử lại");
+      errorNotification(
+        "Lỗi cập nhật sản phẩm",
+        error instanceof Error ? error.message : "Vui lòng thử lại sau"
+      );
     } finally {
       setSubmitting(false);
     }
@@ -204,7 +229,6 @@ const EditProductPage: React.FC = () => {
         onFinish={handleSubmit}
         initialValues={{
           isReleased: false,
-          price: 0,
         }}
       >
         <Row gutter={16}>
@@ -240,67 +264,117 @@ const EditProductPage: React.FC = () => {
         <Form.List name="colorImages">
           {(fields, { add, remove }) => (
             <>
-              {fields.map(({ key, name, ...restField }) => (
-                <Row gutter={16} key={key} align="middle">
-                  <Col span={10}>
-                    <Form.Item
-                      {...restField}
-                      name={[name, "image"]}
-                      label="Ảnh sản phẩm"
-                      valuePropName="fileList"
-                      getValueFromEvent={(e) => {
-                        const fileList = Array.isArray(e) ? e : e?.fileList;
-                        return fileList?.slice(-1);
-                      }}
-                      rules={[{ required: true, message: "Vui lòng chọn ảnh" }]}
-                    >
-                      <Upload
-                        listType="picture-card"
-                        accept="image/*"
-                        maxCount={1}
-                        beforeUpload={(file) => {
-                          const isLt5M = file.size / 1024 / 1024 < 5;
-                          if (!isLt5M) {
-                            message.error("Ảnh phải nhỏ hơn 5MB");
-                            return Upload.LIST_IGNORE;
-                          }
-                          return false;
+              {fields.map(({ key, name, ...restField }) => {
+                // ✅ Lấy quantity của variant hiện tại
+                const currentVariant = form.getFieldValue([
+                  "colorImages",
+                  name,
+                ]);
+                const hasQuantity = currentVariant?.quantity > 0;
+
+                return (
+                  <Row gutter={16} key={key} align="middle">
+                    <Col span={8}>
+                      <Form.Item
+                        {...restField}
+                        name={[name, "image"]}
+                        label="Ảnh sản phẩm"
+                        valuePropName="fileList"
+                        getValueFromEvent={(e) => {
+                          const fileList = Array.isArray(e) ? e : e?.fileList;
+                          return fileList?.slice(-1);
                         }}
-                        showUploadList={{
-                          showPreviewIcon: false,
-                          showRemoveIcon: true,
-                          showDownloadIcon: false,
-                        }}
-                        className="single-upload"
+                        rules={[
+                          { required: true, message: "Vui lòng chọn ảnh" },
+                        ]}
                       >
-                        <div className="upload-btn">
-                          <UploadOutlined style={{ fontSize: 16 }} />
-                          <div style={{ fontSize: 12 }}>Chọn ảnh</div>
-                        </div>
-                      </Upload>
-                    </Form.Item>
-                  </Col>
+                        <Upload
+                          listType="picture-card"
+                          accept="image/*"
+                          maxCount={1}
+                          beforeUpload={(file) => {
+                            const isLt5M = file.size / 1024 / 1024 < 5;
+                            if (!isLt5M) {
+                              message.error("Ảnh phải nhỏ hơn 5MB");
+                              return Upload.LIST_IGNORE;
+                            }
+                            return false;
+                          }}
+                          showUploadList={{
+                            showPreviewIcon: false,
+                            showRemoveIcon: true,
+                            showDownloadIcon: false,
+                          }}
+                          className="single-upload"
+                        >
+                          <div className="upload-btn">
+                            <UploadOutlined style={{ fontSize: 16 }} />
+                            <div style={{ fontSize: 12 }}>Chọn ảnh</div>
+                          </div>
+                        </Upload>
+                      </Form.Item>
+                    </Col>
 
-                  <Col span={10}>
-                    <Form.Item
-                      {...restField}
-                      name={[name, "color"]}
-                      label="Màu sắc"
-                      rules={[
-                        { required: true, message: "Vui lòng nhập màu sắc" },
-                      ]}
-                    >
-                      <Input placeholder="Nhập màu sắc" />
-                    </Form.Item>
-                  </Col>
+                    <Col span={7}>
+                      <Form.Item
+                        {...restField}
+                        name={[name, "color"]}
+                        label="Màu sắc"
+                        rules={[
+                          { required: true, message: "Vui lòng nhập màu sắc" },
+                        ]}
+                      >
+                        <Input placeholder="Nhập màu sắc" />
+                      </Form.Item>
+                    </Col>
 
-                  <Col span={4}>
-                    <Button type="link" danger onClick={() => remove(name)}>
-                      Xóa
-                    </Button>
-                  </Col>
-                </Row>
-              ))}
+                    {/* ✅ Hiển thị số lượng (readonly) */}
+                    <Col span={5}>
+                      <Form.Item
+                        {...restField}
+                        name={[name, "quantity"]}
+                        label="Số lượng tồn"
+                      >
+                        <Input
+                          disabled
+                          placeholder="0"
+                          style={{
+                            fontWeight: hasQuantity ? "bold" : "normal",
+                            color: hasQuantity ? "#1890ff" : undefined,
+                          }}
+                        />
+                      </Form.Item>
+                    </Col>
+
+                    {/* ✅ Hidden field để lưu ID */}
+                    <Form.Item {...restField} name={[name, "id"]} hidden>
+                      <Input />
+                    </Form.Item>
+
+                    <Col span={4}>
+                      <Form.Item label=" ">
+                        {hasQuantity ? (
+                          <Tooltip
+                            title={`Không thể xóa variant có ${currentVariant.quantity} sản phẩm tồn kho`}
+                          >
+                            <Button type="link" danger disabled>
+                              Xóa
+                            </Button>
+                          </Tooltip>
+                        ) : (
+                          <Button
+                            type="link"
+                            danger
+                            onClick={() => handleRemoveVariant(remove, name)}
+                          >
+                            Xóa
+                          </Button>
+                        )}
+                      </Form.Item>
+                    </Col>
+                  </Row>
+                );
+              })}
 
               <Row gutter={16}>
                 <Col span={24}>
@@ -332,16 +406,27 @@ const EditProductPage: React.FC = () => {
               label="Giá sản phẩm"
               rules={[
                 { required: true, message: "Vui lòng nhập giá sản phẩm" },
+                {
+                  type: "number",
+                  min: 0,
+                  message: "Giá phải lớn hơn hoặc bằng 0",
+                },
               ]}
             >
               <InputNumber
                 style={{ width: "100%" }}
                 min={0}
-                formatter={(value) =>
-                  `${value} VND`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
-                }
-                parser={(value) => value!.replace(/₫\s?|(,*)/g, "")}
+                step={1000}
+                formatter={(value) => {
+                  if (!value) return "";
+                  return `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                }}
+                parser={(value) => {
+                  if (!value) return 0;
+                  return Number(value.replace(/,/g, ""));
+                }}
                 placeholder="Nhập giá sản phẩm"
+                addonAfter="VND"
               />
             </Form.Item>
           </Col>
