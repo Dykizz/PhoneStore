@@ -45,18 +45,26 @@ export const router = createBrowserRouter([
         path: "register",
         element: <RegisterPage />,
       },
-      // {
-      //   path: "product/:id",
-      //   element: <ProductDetail />
-      // },
-      // {
-      //   path: "checkout",
-      //   element: (
-      //     <ProtectedRoute>
-      //       <CheckoutPage />
-      //     </ProtectedRoute>
-      //   ),
-      // },
+      {
+        path: "product/:id",
+        element: <ProductDetail />,
+      },
+      {
+        path: "checkout",
+        element: (
+          <ProtectedRoute>
+            <CheckoutPage />
+          </ProtectedRoute>
+        ),
+      },
+       {
+        path: "profile", 
+        element: (
+          <ProtectedRoute>
+            <Profile />
+          </ProtectedRoute>
+        ),
+      },
       {
         path: "about",
         element: (
