@@ -1,10 +1,10 @@
 import { MainLayout } from "@/components/layout/MainLayout";
 import CartPage from "@/pages/CartPage";
 import CheckoutPage1 from "@/pages/CheckoutPage/checkout1";
-import CheckoutPage from "@/pages/CheckoutPage/checkout1";
 import CheckoutPage2 from "@/pages/CheckoutPage/checkout2";
 import { Home } from "@/pages/Home";
 import LoginPage from "@/pages/Login";
+import ProductDetail from "@/pages/ProductDetail";
 import ProductsPage from "@/pages/Products";
 import RegisterPage from "@/pages/Register";
 import { createBrowserRouter } from "react-router-dom";
@@ -88,6 +88,10 @@ export const router = createBrowserRouter([
       {
         path: "checkout-page2",
         element: <CheckoutPage2/>
+      },
+      {
+        path: "/product/:id",
+        element: <ProductDetail/>
       }
     ],
   },

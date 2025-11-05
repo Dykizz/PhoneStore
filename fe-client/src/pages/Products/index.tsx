@@ -1,5 +1,7 @@
 "use client";
 import { useState } from "react";
+import { Link } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
 import { productData, type BaseProduct } from "@/data";
 import {
   Card,
@@ -16,13 +18,20 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { SlidersHorizontal, ChevronDown } from "lucide-react";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis,
+} from "@/components/ui/pagination";
 
 export default function ProductsPage() {
   const products: BaseProduct[] = productData;
 
-  // -------------------------------
-  // ⚙️ PHÂN TRANG
-  const itemsPerPage = 8; // số sản phẩm mỗi trang
+  const itemsPerPage = 8;
   const [currentPage, setCurrentPage] = useState(1);
   const totalPages = Math.ceil(products.length / itemsPerPage);
 
@@ -32,82 +41,84 @@ export default function ProductsPage() {
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page);
-      window.scrollTo({ top: 0, behavior: "smooth" }); // cuộn lên đầu khi đổi trang
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
-  // -------------------------------
 
   return (
-    <div className="p-6 max-w-7xl mx-auto flex gap-8">
-      {/* ==== CỘT TRÁI: BỘ LỌC ==== */}
-      <div className="w-1/4 bg-white border rounded-xl shadow-sm h-fit ml-[-1rem]">
-        <div className="flex items-center justify-between p-4 border-b">
-          <h2 className="font-semibold text-gray-800 text-lg flex items-center gap-2">
-            <SlidersHorizontal className="w-5 h-5 text-red-600" />
+    <div className="p-6 max-w-7xl mx-auto">
+      {/* ==== THANH BỘ LỌC ==== */}
+      <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-4 mb-10 flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-center gap-2">
+          <SlidersHorizontal className="w-5 h-5 text-black" />
+          <h2 className="font-semibold text-gray-900 text-lg">
             Bộ lọc sản phẩm
           </h2>
-          <Button
-            variant="outline"
-            className="text-sm font-medium rounded-full border-gray-300 hover:bg-red-50 hover:text-red-600"
-          >
-            Đặt lại
-          </Button>
         </div>
+        <Button
+          variant="outline"
+          className="text-sm font-medium rounded-full border-gray-300 text-gray-800 hover:bg-gray-100 hover:text-black transition-all"
+        >
+          Đặt lại
+        </Button>
 
-        <div className="p-4 flex flex-col gap-3">
-          <div className="flex flex-wrap gap-2">
-            {["Sẵn hàng", "Hàng mới về"].map((item) => (
+        <div className="w-full flex flex-wrap items-center gap-3 mt-2">
+          {["Sẵn hàng", "Hàng mới về"].map((item) => (
+            <Button
+              key={item}
+              variant="secondary"
+              className="rounded-full text-sm bg-gray-100 text-gray-800 hover:bg-gray-200 hover:text-black transition-all"
+            >
+              {item}
+            </Button>
+          ))}
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
               <Button
-                key={item}
-                variant="secondary"
-                className="rounded-full text-sm bg-gray-100 hover:bg-red-100 hover:text-red-600 w-full"
+                variant="outline"
+                className="rounded-full text-sm border-gray-300 flex items-center justify-between hover:bg-gray-100 text-gray-800"
               >
-                {item}
+                Xem theo giá
+                <ChevronDown className="w-4 h-4 ml-1" />
               </Button>
-            ))}
-          </div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-48">
+              <DropdownMenuItem>Dưới 15 triệu</DropdownMenuItem>
+              <DropdownMenuItem>15 - 25 triệu</DropdownMenuItem>
+              <DropdownMenuItem>Trên 25 triệu</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
-          <div className="flex flex-col gap-2 mt-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="rounded-full text-sm border-gray-300 flex items-center justify-between w-full"
-                >
-                  Xem theo giá
-                  <ChevronDown className="w-4 h-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-48">
-                <DropdownMenuItem>Dưới 15 triệu</DropdownMenuItem>
-                <DropdownMenuItem>15 - 25 triệu</DropdownMenuItem>
-                <DropdownMenuItem>Trên 25 triệu</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="rounded-full text-sm border-gray-300 flex items-center justify-between w-full"
-                >
-                  Nhu cầu sử dụng
-                  <ChevronDown className="w-4 h-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-56">
-                <DropdownMenuItem>Chụp ảnh & quay video</DropdownMenuItem>
-                <DropdownMenuItem>Chơi game & hiệu năng</DropdownMenuItem>
-                <DropdownMenuItem>Pin lâu, dùng cơ bản</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                className="rounded-full text-sm border-gray-300 flex items-center justify-between hover:bg-gray-100 text-gray-800"
+              >
+                Nhu cầu sử dụng
+                <ChevronDown className="w-4 h-4 ml-1" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-56">
+              <DropdownMenuItem>Chụp ảnh & quay video</DropdownMenuItem>
+              <DropdownMenuItem>Chơi game & hiệu năng</DropdownMenuItem>
+              <DropdownMenuItem>Pin lâu, dùng cơ bản</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
-      {/* ==== CỘT PHẢI: DANH SÁCH SẢN PHẨM ==== */}
-      <div className="w-3/4">
-        <div className="grid grid-cols-4 gap-6">
+      {/* ==== DANH SÁCH SẢN PHẨM ==== */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={currentPage}
+          initial={{ opacity: 0, scale: 0.98, y: 10 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.98, y: -10 }}
+          transition={{ duration: 0.4, ease: "easeOut" }}
+          className="grid grid-cols-4 gap-6"
+        >
           {currentProducts.map((p) => {
             const hasDiscount = !!p.discountPercent;
             const finalPrice = hasDiscount
@@ -115,88 +126,127 @@ export default function ProductsPage() {
               : p.price;
 
             return (
-              <Card
+              <motion.div
                 key={p.id}
-                className="overflow-hidden hover:shadow-lg transition relative"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
               >
-                {/* Hình ảnh */}
-                <CardHeader className="p-0 relative flex items-center justify-center bg-white h-64">
-                  <img
-                    src={p.image}
-                    alt={p.name}
-                    className="object-contain w-full h-full p-4 rounded-md shadow-sm transition-transform duration-300 hover:scale-105"
-                  />
-                  {hasDiscount && (
-                    <span className="absolute top-2 left-2 bg-red-600 text-white text-xs px-2 py-1 rounded">
-                      -{p.discountPercent}%
-                    </span>
-                  )}
-                  {!p.isReleased && (
-                    <span className="absolute top-2 right-2 bg-gray-800 text-white text-xs px-2 py-1 rounded">
-                      Sắp ra mắt
-                    </span>
-                  )}
-                </CardHeader>
+                <Card
+                  className="overflow-hidden border border-gray-200 bg-white hover:border-black rounded-2xl
+                   shadow-sm hover:shadow-[0_8px_20px_rgba(0,0,0,0.15)] transition-all duration-300 relative group hover:-translate-y-1"
+                >
+                  {/* ẢNH SẢN PHẨM */}
+                  <Link to={`/product/${p.id}`}>
+                    <CardHeader className="p-0 relative flex items-center justify-center bg-white h-64 cursor-pointer">
+                      <div className="overflow-hidden w-full h-full flex items-center justify-center bg-gray-50">
+                        <img
+                          src={p.image}
+                          alt={p.name}
+                          className="object-contain w-full h-full p-4 transition-transform duration-500 group-hover:scale-110"
+                        />
+                      </div>
 
-                {/* Nội dung */}
-                <CardContent className="p-4">
-                  <CardTitle className="text-sm font-semibold mb-2 line-clamp-2">
-                    {p.name}
-                  </CardTitle>
-                  <div className="text-red-600 font-bold text-lg">
-                    {finalPrice.toLocaleString()}đ
-                  </div>
-                  {hasDiscount && (
-                    <div className="text-gray-400 text-sm line-through">
-                      {p.price.toLocaleString()}đ
+                      {hasDiscount && (
+                        <span
+                          className="absolute top-2 left-2 bg-black text-white 
+                               text-[11px] px-2 py-1 rounded-md shadow-sm"
+                        >
+                          -{p.discountPercent}%
+                        </span>
+                      )}
+                      {!p.isReleased && (
+                        <span className="absolute top-2 right-2 bg-gray-800 text-white text-[11px] px-2 py-1 rounded-md">
+                          Sắp ra mắt
+                        </span>
+                      )}
+                    </CardHeader>
+                  </Link>
+
+                  {/* THÔNG TIN SẢN PHẨM */}
+                  <CardContent className="p-4">
+                    <Link to={`/product/${p.id}`}>
+                      <CardTitle className="text-sm font-semibold mb-2 line-clamp-2 text-gray-900 group-hover:text-black transition-colors">
+                        {p.name}
+                      </CardTitle>
+                    </Link>
+
+                    <div className="flex flex-col">
+                      <span className="text-black font-bold text-lg">
+                        {finalPrice.toLocaleString()}₫
+                      </span>
+                      {hasDiscount && (
+                        <span className="text-gray-400 text-sm line-through">
+                          {p.price.toLocaleString()}₫
+                        </span>
+                      )}
                     </div>
-                  )}
-                </CardContent>
+                  </CardContent>
 
-                {/* Nút */}
-                <CardFooter>
-                  <Button className="w-full bg-red-600 hover:bg-red-700 text-white">
-                    Xem chi tiết
-                  </Button>
-                </CardFooter>
-              </Card>
+                  {/* NÚT XEM CHI TIẾT */}
+                  <CardFooter className="px-4 pb-4">
+                    <Link to={`/product/${p.id}`} className="w-full">
+                      <Button
+                        className="w-full text-sm py-2 font-medium text-white bg-black hover:bg-gray-900 
+                         transition-all duration-300 rounded-full shadow-md hover:shadow-lg"
+                      >
+                        Xem chi tiết
+                      </Button>
+                    </Link>
+                  </CardFooter>
+                </Card>
+              </motion.div>
             );
           })}
-        </div>
+        </motion.div>
+      </AnimatePresence>
 
-        {/* ==== PHÂN TRANG ==== */}
-        <div className="flex justify-center items-center mt-10 gap-2">
-          <Button
-            variant="outline"
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-          >
-            « Trước
-          </Button>
+      {/* ==== PHÂN TRANG ==== */}
+      <div className="mt-10">
+        <Pagination>
+          <PaginationContent className="flex justify-center gap-1">
+            <PaginationItem>
+              <PaginationPrevious
+                href="#"
+                onClick={() => handlePageChange(currentPage - 1)}
+                className={`border border-gray-300 text-gray-700 hover:bg-gray-100 ${
+                  currentPage === 1 ? "opacity-40 pointer-events-none" : ""
+                }`}
+              />
+            </PaginationItem>
 
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-            <Button
-              key={page}
-              variant={page === currentPage ? "default" : "outline"}
-              className={`${
-                page === currentPage
-                  ? "bg-red-600 text-white hover:bg-red-700"
-                  : "hover:bg-red-50"
-              } rounded-full w-9 h-9`}
-              onClick={() => handlePageChange(page)}
-            >
-              {page}
-            </Button>
-          ))}
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <PaginationItem key={page}>
+                <PaginationLink
+                  href="#"
+                  isActive={page === currentPage}
+                  onClick={() => handlePageChange(page)}
+                  className={`${
+                    page === currentPage
+                      ? "bg-black text-white hover:bg-gray-900"
+                      : "hover:bg-gray-100 text-gray-800"
+                  } border border-gray-300 rounded-md`}
+                >
+                  {page}
+                </PaginationLink>
+              </PaginationItem>
+            ))}
 
-          <Button
-            variant="outline"
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-          >
-            Sau »
-          </Button>
-        </div>
+            {totalPages > 5 && <PaginationEllipsis />}
+
+            <PaginationItem>
+              <PaginationNext
+                href="#"
+                onClick={() => handlePageChange(currentPage + 1)}
+                className={`border border-gray-300 text-gray-700 hover:bg-gray-100 ${
+                  currentPage === totalPages
+                    ? "opacity-40 pointer-events-none"
+                    : ""
+                }`}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
       </div>
     </div>
   );
