@@ -7,8 +7,8 @@ import LoginPage from "@/pages/Login";
 import ProductDetail from "@/pages/ProductDetail";
 import ProductsPage from "@/pages/Products";
 import RegisterPage from "@/pages/Register";
-import { createBrowserRouter } from "react-router-dom";
-// import { ProductDetail } from '@/pages/ProductDetail';
+// import { createBrowserRouter, Navigate } from "react-router-dom";
+// import { ProductDetail } from "@/pages/ProductDetail";
 // import { CheckoutPage } from "@/pages/CheckoutPage";
 
 
@@ -16,7 +16,7 @@ import { createBrowserRouter } from "react-router-dom";
 //   return true;
 // };
 
-// const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
+// const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 //   if (!isAuthenticated()) {
 //     return <Navigate to="/login" replace />;
 //   }
@@ -45,18 +45,18 @@ export const router = createBrowserRouter([
         path: "register",
         element: <RegisterPage />,
       },
-      // {
-      //   path: "product/:id",
-      //   element: <ProductDetail />
-      // },
-      // {
-      //   path: "checkout",
-      //   element: (
-      //     <ProtectedRoute>
-      //       <CheckoutPage />
-      //     </ProtectedRoute>
-      //   ),
-      // },
+      {
+        path: "product/:id",
+        element: <ProductDetail />,
+      },
+      {
+        path: "checkout",
+        element: (
+          <ProtectedRoute>
+            <CheckoutPage />
+          </ProtectedRoute>
+        ),
+      },
       {
         path: "about",
         element: (
