@@ -7,10 +7,7 @@ import LoginPage from "@/pages/Login";
 import ProductDetail from "@/pages/ProductDetail";
 import ProductsPage from "@/pages/Products";
 import RegisterPage from "@/pages/Register";
-// import { createBrowserRouter, Navigate } from "react-router-dom";
-// import { ProductDetail } from "@/pages/ProductDetail";
-// import { CheckoutPage } from "@/pages/CheckoutPage";
-
+import { createBrowserRouter  } from "react-router-dom";
 
 // const isAuthenticated = () => {
 //   return true;
@@ -46,17 +43,21 @@ export const router = createBrowserRouter([
         element: <RegisterPage />,
       },
       {
+        path:"products",
+        element: <ProductsPage/>
+      },
+      {
         path: "product/:id",
         element: <ProductDetail />,
       },
-      {
-        path: "checkout",
-        element: (
-          <ProtectedRoute>
-            <CheckoutPage />
-          </ProtectedRoute>
-        ),
-      },
+      // {
+      //   path: "checkout",
+      //   element: (
+      //     <ProtectedRoute>
+      //       <CheckoutPage />
+      //     </ProtectedRoute>
+      //   ),
+      // },
       {
         path: "about",
         element: (
@@ -74,10 +75,6 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: "products",
-        element: <ProductsPage />,
-      },
-      {
         path: "cart",
         element: <CartPage/>
       },
@@ -89,10 +86,6 @@ export const router = createBrowserRouter([
         path: "checkout-page2",
         element: <CheckoutPage2/>
       },
-      {
-        path: "/product/:id",
-        element: <ProductDetail/>
-      }
     ],
   },
 ]);

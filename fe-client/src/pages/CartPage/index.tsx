@@ -105,7 +105,7 @@ export default function CartPage() {
         {cartItems.map((item) => {
           const hasDiscount = !!item.discountPercent;
           const finalPrice = hasDiscount
-            ? Math.round(item.price * (1 - item.discountPercent / 100))
+            ? Math.round(item.price * (1 - (item?.discountPercent || 0) / 100))
             : item.price;
 
           return (
