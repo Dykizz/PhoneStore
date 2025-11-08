@@ -1,21 +1,27 @@
 import { MainLayout } from "@/components/layout/MainLayout";
+import CartPage from "@/pages/CartPage";
+import CheckoutPage1 from "@/pages/CheckoutPage/checkout1";
+import CheckoutPage2 from "@/pages/CheckoutPage/checkout2";
 import { Home } from "@/pages/Home";
 import LoginPage from "@/pages/Login";
+import ProductDetail from "@/pages/ProductDetail";
+import ProductsPage from "@/pages/Products";
 import RegisterPage from "@/pages/Register";
-import { createBrowserRouter, Navigate } from "react-router-dom";
-import { ProductDetail } from "@/pages/ProductDetail";
-import { CheckoutPage } from "@/pages/CheckoutPage";
+import { createBrowserRouter } from "react-router-dom";
+// import { ProductDetail } from '@/pages/ProductDetail';
+// import { CheckoutPage } from "@/pages/CheckoutPage";
 
-const isAuthenticated = () => {
-  return true;
-};
 
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  if (!isAuthenticated()) {
-    return <Navigate to="/login" replace />;
-  }
-  return children; // Nếu đã đăng nhập, cho phép truy cập
-};
+// const isAuthenticated = () => {
+//   return true;
+// };
+
+// const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
+//   if (!isAuthenticated()) {
+//     return <Navigate to="/login" replace />;
+//   }
+//   return children; // Nếu đã đăng nhập, cho phép truy cập
+// };
 
 export const router = createBrowserRouter([
   {
@@ -51,6 +57,14 @@ export const router = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
+       {
+        path: "profile", 
+        element: (
+          <ProtectedRoute>
+            <Profile />
+          </ProtectedRoute>
+        ),
+      },
       {
         path: "about",
         element: (
@@ -67,6 +81,26 @@ export const router = createBrowserRouter([
           </div>
         ),
       },
+      {
+        path: "products",
+        element: <ProductsPage />,
+      },
+      {
+        path: "cart",
+        element: <CartPage/>
+      },
+      {
+        path: "checkout-page1",
+        element: <CheckoutPage1/>
+      },
+      {
+        path: "checkout-page2",
+        element: <CheckoutPage2/>
+      },
+      {
+        path: "/product/:id",
+        element: <ProductDetail/>
+      }
     ],
   },
 ]);
