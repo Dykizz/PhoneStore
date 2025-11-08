@@ -185,8 +185,6 @@ const EditProductPage: React.FC = () => {
           image: item.image[0]?.url || item.image[0]?.originFileObj,
         })) || [];
 
-      console.log("Variants to submit:", variants);
-
       const data: UpdateProduct = {
         baseDescription: values.baseDescription,
         detailDescription: values.detailDescription,
@@ -313,6 +311,62 @@ const EditProductPage: React.FC = () => {
                           </div>
                         </Upload>
                       </Form.Item>
+                      <Form.Item
+                        {...restField}
+                        name={[name, "imageUrl"]}
+                        label="Hoặc nhập URL ảnh"
+                        rules={[
+                          {
+                            validator: (_, value) => {
+                              const imageFiles = form.getFieldValue([
+                                "colorImages",
+                                name,
+                                "image",
+                              ]);
+                              if (imageFiles && imageFiles.length > 0)
+                                return Promise.resolve();
+
+                              if (!value)
+                                return Promise.reject("Vui lòng nhập URL ảnh");
+
+                              try {
+                                new URL(value);
+                                return Promise.resolve();
+                              } catch {
+                                return Promise.reject("URL không hợp lệ");
+                              }
+                            },
+                          },
+                        ]}
+                      >
+                        <Input
+                          placeholder="Dán link ảnh (VD: https://example.com/image.jpg)"
+                          onChange={(e) => {
+                            const url = e.target.value;
+                            if (url) {
+                              try {
+                                new URL(url);
+                                const fileList = [
+                                  {
+                                    uid: `url-${Date.now()}`,
+                                    name: "image-from-url",
+                                    status: "done" as const,
+                                    url: url,
+                                    thumbUrl: url,
+                                  },
+                                ];
+                                form.setFieldsValue({
+                                  colorImages: {
+                                    [name]: {
+                                      image: fileList,
+                                    },
+                                  },
+                                });
+                              } catch {}
+                            }
+                          }}
+                        />
+                      </Form.Item>
                     </Col>
 
                     <Col span={7}>
@@ -396,7 +450,7 @@ const EditProductPage: React.FC = () => {
 
         <Row gutter={16}>
           <Col span={12}>
-            <Form.Item name="isReleased" label="Hiện" valuePropName="checked">
+            <Form.Item name="isReleased" label="Bán ra" valuePropName="checked">
               <Switch />
             </Form.Item>
           </Col>
@@ -417,10 +471,6 @@ const EditProductPage: React.FC = () => {
                 style={{ width: "100%" }}
                 min={0}
                 step={1000}
-                formatter={(value) => {
-                  if (!value) return "";
-                  return `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-                }}
                 parser={(value) => {
                   if (!value) return 0;
                   return Number(value.replace(/,/g, ""));

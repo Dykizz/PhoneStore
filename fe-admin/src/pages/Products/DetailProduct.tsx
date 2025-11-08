@@ -16,6 +16,7 @@ import { ArrowLeftOutlined, EditOutlined } from "@ant-design/icons";
 import type { DetailProduct } from "@/types/product.type";
 import { getProduct } from "@/apis/product.api";
 import { useNotificationContext } from "@/providers/NotificationProvider";
+import { formatCurrencyVND } from "@/utils/util";
 
 const { Title, Paragraph } = Typography;
 
@@ -185,7 +186,7 @@ const ProductDetailPage: React.FC = () => {
 
             <Descriptions bordered column={2} size="middle">
               <Descriptions.Item label="Giá">
-                {`${product.price} VND`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
+                {formatCurrencyVND(product.price)}
               </Descriptions.Item>
               <Descriptions.Item label="Giảm giá">
                 {product.discount

@@ -5,7 +5,6 @@ import {
   Input,
   Space,
   Popconfirm,
-  message,
   DatePicker,
   Col,
   Row,
@@ -26,6 +25,7 @@ import { useNavigate } from "react-router-dom";
 import { getSuppliers } from "@/apis/supplier.api";
 import type { Supplier } from "@/types/supplier.type";
 import { useDebounce } from "@/hooks/useDebounce";
+import { formatCurrencyVND } from "@/utils/util";
 
 export default function GoodsReceiptsPage() {
   const [data, setData] = useState<BaseGoodsReceipt[]>([]);
@@ -175,7 +175,7 @@ export default function GoodsReceiptsPage() {
       key: "totalPrice",
       sorter: true,
       sortDirections: ["ascend", "descend"],
-      render: (value) => `${value} VND`.replace(/\B(?=(\d{3})+(?!\d))/g, ","),
+      render: (value) => formatCurrencyVND(value),
     },
     {
       title: "Ghi chú",

@@ -169,6 +169,10 @@ export class PaginationQueryDto {
     });
   }
 
+  private isOperator(key: string): boolean {
+    return ['gte', 'lte', 'gt', 'lt', 'like', 'in', 'between'].includes(key);
+  }
+
   /**
    * Apply nested filters (qs parsing result)
    */
@@ -181,7 +185,13 @@ export class PaginationQueryDto {
     Object.entries(nestedFilters).forEach(([nestedKey, nestedValue]) => {
       const fullKey = `${parentKey}_${nestedKey}`;
 
-      if (Array.isArray(nestedValue)) {
+      // ✅ Thêm check nếu nestedKey là operator
+      if (this.isOperator(nestedKey)) {
+        this.applyAdvancedFilter(qb, alias, parentKey, {
+          operator: nestedKey,
+          value: nestedValue,
+        });
+      } else if (Array.isArray(nestedValue)) {
         qb.andWhere(`${alias}.${parentKey} IN (:...${fullKey})`, {
           [fullKey]: nestedValue,
         });
@@ -241,6 +251,15 @@ export class PaginationQueryDto {
           );
         }
         break;
+      case 'not':
+        qb.andWhere(`${alias}.${key} != :${paramKey}`, { [paramKey]: value });
+        break;
+      case 'exists':
+        if (value) {
+          qb.andWhere(`${alias}.${key} IS NOT NULL`);
+        } else {
+          qb.andWhere(`${alias}.${key} IS NULL`);
+        }
       default:
         qb.andWhere(`${alias}.${key} = :${paramKey}`, { [paramKey]: value });
     }
