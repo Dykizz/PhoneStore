@@ -148,10 +148,13 @@ export class ProductsService {
     const queryBuilder = this.productsRepository
       .createQueryBuilder('product')
       .leftJoinAndSelect('product.discountPolicy', 'discountPolicy')
-      .leftJoinAndSelect('product.variants', 'variants')
-      .where('product.isReleased = :isReleased', {
-        isReleased: !user || user.role === UserRole.USER,
+      .leftJoinAndSelect('product.variants', 'variants');
+
+    if (!user || user.role === UserRole.USER) {
+      queryBuilder.andWhere('product.isReleased = :isReleased', {
+        isReleased: true,
       });
+    }
 
     if (query.page < 1) query.page = 1;
     if (query.limit < 1) query.limit = 10;
@@ -313,5 +316,21 @@ export class ProductsService {
       return;
     }
     await this.productsRepository.delete(id);
+  }
+
+  async findVariantById(variantId: string): Promise<ProductVariant> {
+    const variant = await this.productVariantsRepository.findOne({
+      where: { id: variantId },
+      relations: [
+        'product',
+        'product.discountPolicy',
+        'product.brand',
+        'product.productType',
+      ],
+    });
+    if (!variant) {
+      throw new BadRequestException('Biến thể sản phẩm không tồn tại');
+    }
+    return variant;
   }
 }

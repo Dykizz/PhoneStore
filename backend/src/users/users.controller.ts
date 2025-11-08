@@ -44,6 +44,7 @@ export class UsersController {
   @Roles(UserRole.ADMIN)
   @ResponseMessage('Lấy thông tin người dùng thành công')
   async findOne(@Param('id') id: string) {
+    console.log('Controller: Fetching user with ID:', id);
     return await this.usersService.findOne(id);
   }
 

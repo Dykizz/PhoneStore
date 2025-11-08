@@ -1,21 +1,24 @@
-import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+"use client";
+
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import { Button } from "@/components/ui/button";
 import {
   Card,
-  CardContent,
-  // CardDescription
   CardHeader,
   CardTitle,
+  CardContent,
+  CardFooter,
 } from "@/components/ui/card";
-import { useCart } from "@/contexts/cartContexts";
-import type { BaseProduct } from "@/types/product.type";
 import { getProducts } from "@/apis/product.api";
 import { QueryBuilder } from "@/utils/queryBuilder";
 import { showToast } from "@/utils/toast";
+import type { BaseProduct } from "@/types/product.type";
+import { useCart } from "@/contexts/cartContexts";
 
 function formatPrice(price: number) {
-  return price.toLocaleString("en-US") + "₫";
+  return Number(price).toLocaleString("vi-VN") + "₫";
 }
 
 function calculateDiscountedPrice(price: number, discount: number): number {
@@ -27,8 +30,6 @@ export function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { addToCart } = useCart();
-  // // const { isAuthenticated } = useAuth();
-  // const navigate = useNavigate();
 
   const handleAddToCart = (
     e: React.MouseEvent,
@@ -39,29 +40,15 @@ export function Home() {
     e.stopPropagation();
     e.preventDefault();
 
-
-  // if (!isAuthenticated) {
-  //     showToast({
-  //       title: "Yêu cầu đăng nhập",
-  //       description: "Bạn cần đăng nhập để thêm sản phẩm vào giỏ hàng.",
-  //     });
-  //     navigate("/login"); 
-  //     return; 
-  //   }
-
     const selectedVariant = productToAdd.variants[selectedIndex];
     if (!selectedVariant) return;
 
-    const variantIdPart = selectedVariant.id || "default";
-    const variantDisplayInfo = `Phiên bản: ${selectedVariant.color}`;
-    const imageForCart = selectedVariant.image;
-
     const finalPrice = productToAdd.discount
       ? calculateDiscountedPrice(
-          productToAdd.price,
+          Number(productToAdd.price),
           productToAdd.discount.discountPercent
         )
-      : productToAdd.price;
+      : Number(productToAdd.price);
 
     addToCart(
       {
@@ -69,82 +56,91 @@ export function Home() {
         quantity: qty,
         name: productToAdd.name,
         price: finalPrice,
-        image: imageForCart,
-        variantInfo: variantDisplayInfo,
+        image: selectedVariant.image,
+        variantInfo: `Phiên bản: ${selectedVariant.color}`,
       },
-      variantIdPart
+      selectedVariant.id || "default"
     );
 
-    alert(
-      `Đã thêm ${qty} ${productToAdd.name} (${variantDisplayInfo}) vào giỏ hàng!`
-    );
+    showToast({
+      title: "Đã thêm vào giỏ hàng 🛒",
+      description: `${productToAdd.name} (${selectedVariant.color}) đã được thêm.`,
+    });
   };
 
   useEffect(() => {
     const loadProducts = async () => {
       setIsLoading(true);
-      setError(null);
-      console.log("Bắt đầu tải sản phẩm...");
-      console.log("tai sp");
       try {
         const query = QueryBuilder.create().page(1).limit(4).build();
-
         const response = await getProducts(query);
-        if (!response.success) {
-          throw new Error(response.message);
-        }
-        console.log("API response:", response);
+
+        if (!response.success) throw new Error(response.message);
         setProducts(response.data.data);
       } catch (error) {
         console.error("Lỗi khi tải sản phẩm:", error);
         setError(error instanceof Error ? error.message : "Lỗi không xác định");
         showToast({
           title: "Lỗi",
-          description: "Lỗi khi tải sản phẩm",
+          description: "Không thể tải sản phẩm, vui lòng thử lại sau.",
         });
       } finally {
         setIsLoading(false);
       }
     };
-
     loadProducts();
   }, []);
 
-  if (isLoading) {
+  if (isLoading)
     return (
-      <div className="container py-8 text-center">Đang tải sản phẩm...</div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="container py-8 text-center text-red-600">
-        Lỗi khi tải sản phẩm: {error}
+      <div className="flex justify-center items-center h-96 text-gray-600 text-lg">
+        Đang tải sản phẩm...
       </div>
     );
-  }
-  
+
+  if (error)
+    return (
+      <div className="flex justify-center items-center h-96 text-red-500 text-lg">
+        {error}
+      </div>
+    );
+
   return (
-    <div className="container py-8">
-      <section className="text-center py-12">
-        <h1 className="text-4xl font-bold tracking-tight lg:text-6xl">
-          Welcome to Phone Store
-        </h1>
-        <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
-          Discover the latest smartphones, accessories, and tech gadgets at
-          unbeatable prices.
-        </p>
-        <div className="mt-10">
-          <Button size="lg" className="mr-4">
+    <div className="p-6 max-w-7xl mx-auto">
+      {/* ==== HERO SECTION ==== */}
+      <section className="text-center py-16">
+        <motion.h1
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="text-4xl font-bold tracking-tight lg:text-6xl text-gray-900"
+        >
+          Welcome to <span className="text-black">Phone Store</span>
+        </motion.h1>
+        <motion.p
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.6 }}
+          className="mx-auto mt-6 max-w-2xl text-lg text-gray-600"
+        >
+          Khám phá những mẫu điện thoại và phụ kiện công nghệ mới nhất với mức giá tốt nhất.
+        </motion.p>
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4, duration: 0.6 }}
+          className="mt-10 flex justify-center gap-4"
+        >
+          <Button size="lg" className="rounded-full font-medium shadow-md">
             Mua ngay
           </Button>
-          <Button variant="outline" size="lg">
+          <Button variant="outline" size="lg" className="rounded-full font-medium">
             Xem thêm
           </Button>
-        </div>
+        </motion.div>
       </section>
 
-      {/* Phần sản phẩm nổi bật */}
+      {/* ==== SẢN PHẨM NỔI BẬT ==== */}
       <section className="py-12">
         <h2 className="text-3xl font-bold text-center mb-8">Sản phẩm nổi bật</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

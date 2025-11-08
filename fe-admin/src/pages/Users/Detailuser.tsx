@@ -23,7 +23,9 @@ const DetailUserPage: React.FC = () => {
       if (!id) return;
       try {
         setLoading(true);
+        console.log("Fetching user with ID:", id);
         const response = await getUser(id);
+        console.log("User fetch response:", response);
         if (response.success) {
           setUser(response.data);
         } else {
