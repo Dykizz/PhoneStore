@@ -142,99 +142,72 @@ export function Home() {
 
       {/* ==== SẢN PHẨM NỔI BẬT ==== */}
       <section className="py-12">
-        <h2 className="text-3xl font-bold text-center mb-10 text-gray-900">
-          Sản phẩm nổi bật
-        </h2>
+        <h2 className="text-3xl font-bold text-center mb-8">Sản phẩm nổi bật</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {products.map((product) => {
+            const firstVariant = product.variants && product.variants[0];
+            if (!firstVariant) {
+              return null;
+            }
 
-        <AnimatePresence mode="wait">
-          <motion.div
-            key="featured-products"
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
-          >
-            {products.map((product) => {
-              const firstVariant = product.variants?.[0];
-              if (!firstVariant) return null;
+            const discountPercent = product.discount?.discountPercent ?? 0;
+            const hasDiscount = discountPercent > 0;
 
-              const hasDiscount = !!product.discount;
-              const discountPercent = product.discount?.discountPercent ?? 0;
-              const finalPrice = hasDiscount
-                ? calculateDiscountedPrice(Number(product.price), discountPercent)
-                : Number(product.price);
+            const finalPrice = hasDiscount
+              ? calculateDiscountedPrice(product.price, discountPercent)
+              : product.price;
 
-              return (
-                <motion.div
-                  key={product.id}
-                  initial={{ opacity: 0, y: 15 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3 }}
+            return (
+              <Link to={`/product/${product.id}`} key={product.id} className="h-full flex flex-col">
+                <Card
+                  className="overflow-hidden hover:shadow-lg transition relative h-full flex flex-col"
                 >
-                  <Card
-                    className="overflow-hidden border border-gray-200 bg-white 
-                    rounded-2xl shadow-sm hover:shadow-[0_8px_24px_rgba(0,0,0,0.12)] 
-                    transition-all duration-300 relative group hover:-translate-y-1"
-                  >
-                    <Link to={`/products/${product.id}`}>
-                      {/* ẢNH */}
-                      <CardHeader className="p-0 relative flex items-center justify-center bg-white h-64 cursor-pointer">
-                        <div className="overflow-hidden w-full h-full flex items-center justify-center bg-white rounded-xl">
-                          <img
-                            src={firstVariant.image}
-                            alt={product.name}
-                            className="object-contain w-full h-full p-4 transition-transform duration-500 group-hover:scale-110"
-                          />
-                        </div>
+                  <CardHeader className="p-0 relative flex items-center justify-center bg-white h-64">
+                    <img
+                      src={firstVariant.image}
+                      alt={product.name}
+                      className="object-contain w-full h-full p-4 rounded-md shadow-sm transition-transform duration-300 hover:scale-105"
+                    />
+                    {hasDiscount && (
+                      <span className="absolute top-2 left-2 bg-red-600 text-white text-xs px-2 py-1 rounded">
+                        -{discountPercent}%
+                      </span>
+                    )}
+                    {!product.isReleased && (
+                      <span className="absolute top-2 right-2 bg-gray-800 text-white text-xs px-2 py-1 rounded">
+                        Sắp ra mắt
+                      </span>
+                    )}
+                  </CardHeader>
 
-                        {hasDiscount && (
-                          <span className="absolute top-2 left-2 bg-black text-white text-[11px] px-2 py-1 rounded-md shadow-sm">
-                            -{discountPercent}%
-                          </span>
-                        )}
-                        {!product.isReleased && (
-                          <span className="absolute top-2 right-2 bg-gray-800 text-white text-[11px] px-2 py-1 rounded-md">
-                            Sắp ra mắt
-                          </span>
-                        )}
-                      </CardHeader>
+                  {/* Nội dung */}
+                  <CardContent className="p-4 flex flex-col flex-grow">
+                    <CardTitle className="text-sm font-semibold mb-2 line-clamp-2">
+                      {product.name}
+                    </CardTitle>
+                    
+                    <div className="text-red-600 font-bold text-lg">
+                      {formatPrice(finalPrice)}
+                    </div>
+                    {hasDiscount && (
+                      <div className="text-gray-400 text-sm line-through">
+                        {formatPrice(product.price)}
+                      </div>
+                    )}
+                    
+                    <Button
+                      className="w-full mt-4 mt-auto"
+                      onClick={(e) => handleAddToCart(e, product, 1, 0)}
+                    >
+                      Thêm sản phẩm
+                    </Button>
 
-                      {/* NỘI DUNG */}
-                      <CardContent className="p-4 text-center">
-                        <CardTitle className="text-base font-semibold mb-2 line-clamp-2 text-gray-900 hover:text-black transition-colors">
-                          {product.name}
-                        </CardTitle>
-
-                        <div className="flex flex-col items-center">
-                          <span className="text-black font-bold text-xl">
-                            {formatPrice(finalPrice)}
-                          </span>
-                          {hasDiscount && (
-                            <span className="text-gray-400 text-sm line-through">
-                              {formatPrice(Number(product.price))}
-                            </span>
-                          )}
-                        </div>
-                      </CardContent>
-                    </Link>
-
-                    {/* NÚT */}
-                    <CardFooter className="px-4 pb-4">
-                      <Button
-                        className="w-full text-sm py-2.5 font-medium text-white bg-black 
-                        hover:bg-gray-900 transition-all duration-300 rounded-full 
-                        shadow-md hover:shadow-[0_4px_12px_rgba(0,0,0,0.2)]"
-                        onClick={(e) => handleAddToCart(e, product, 1, 0)}
-                      >
-                        Thêm vào giỏ hàng
-                      </Button>
-                    </CardFooter>
-                  </Card>
-                </motion.div>
-              );
-            })}
-          </motion.div>
-        </AnimatePresence>
+                  </CardContent>
+                </Card>
+              </Link>
+            );
+          })}
+        </div>
       </section>
     </div>
   );
