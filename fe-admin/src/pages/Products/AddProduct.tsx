@@ -24,6 +24,7 @@ import type { ProductType } from "@/types/productType.type";
 import type { Brand } from "@/types/brand.type";
 import type { DiscountPolicy } from "@/types/discountPolicy.type";
 import { getDiscountPolicies } from "@/apis/discountPolicy.api";
+import { formatCurrencyVND } from "@/utils/util";
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -123,7 +124,7 @@ const AddProductPage: React.FC = () => {
         values.colorImages?.map((item: any) => ({
           color: item.color,
           quantity: Number(item.quantity),
-          image: item.image[0].originFileObj,
+          image: item.image[0].originFileObj ?? item.image[0].url,
         })) || [];
 
       const data: CreateProduct = {
@@ -239,6 +240,67 @@ const AddProductPage: React.FC = () => {
                         </div>
                       </Upload>
                     </Form.Item>
+                    <Form.Item
+                      {...restField}
+                      name={[name, "imageUrl"]}
+                      label="Hoặc nhập URL ảnh"
+                      rules={[
+                        {
+                          validator: (_, value) => {
+                            // Nếu có file upload rồi thì không cần URL
+                            const imageFiles = form.getFieldValue([
+                              "colorImages",
+                              name,
+                              "image",
+                            ]);
+                            if (imageFiles && imageFiles.length > 0)
+                              return Promise.resolve();
+
+                            // Nếu không có file, phải có URL hợp lệ
+                            if (!value)
+                              return Promise.reject("Vui lòng nhập URL ảnh");
+
+                            try {
+                              new URL(value);
+                              return Promise.resolve();
+                            } catch {
+                              return Promise.reject("URL không hợp lệ");
+                            }
+                          },
+                        },
+                      ]}
+                    >
+                      <Input
+                        placeholder="Dán link ảnh (VD: https://example.com/image.jpg)"
+                        onChange={(e) => {
+                          const url = e.target.value;
+                          if (url) {
+                            try {
+                              new URL(url);
+                              // ✅ Tạo file object từ URL để preview
+                              const fileList = [
+                                {
+                                  uid: `url-${Date.now()}`,
+                                  name: "image-from-url",
+                                  status: "done" as const,
+                                  url: url,
+                                  thumbUrl: url,
+                                },
+                              ];
+                              form.setFieldsValue({
+                                colorImages: {
+                                  [name]: {
+                                    image: fileList,
+                                  },
+                                },
+                              });
+                            } catch {
+                              // Invalid URL, không làm gì
+                            }
+                          }
+                        }}
+                      />
+                    </Form.Item>
                   </Col>
 
                   <Col span={6}>
@@ -282,7 +344,7 @@ const AddProductPage: React.FC = () => {
 
         <Row gutter={16}>
           <Col span={12}>
-            <Form.Item name="isReleased" label="Hiện" valuePropName="checked">
+            <Form.Item name="isReleased" label="Bán ra" valuePropName="checked">
               <Switch />
             </Form.Item>
           </Col>
@@ -302,10 +364,6 @@ const AddProductPage: React.FC = () => {
               <InputNumber
                 min={0}
                 step={1000}
-                formatter={(value) => {
-                  if (!value) return "";
-                  return `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-                }}
                 parser={(value) => {
                   if (!value) return 0;
                   return Number(value.replace(/,/g, ""));

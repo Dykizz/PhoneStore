@@ -6,7 +6,7 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { Product } from './product.entity';
-@Entity('product-variants')
+@Entity('product_variants')
 export class ProductVariant {
   @PrimaryGeneratedColumn('uuid')
   id: string;

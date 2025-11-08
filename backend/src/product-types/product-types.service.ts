@@ -37,14 +37,14 @@ export class ProductTypesService {
     const validSortFields = ['name', 'createdAt', 'updatedAt'];
 
     const queryBuilder =
-      this.productTypesRepository.createQueryBuilder('product-types');
+      this.productTypesRepository.createQueryBuilder('product_types');
     if (query.page < 1) query.page = 1;
     if (query.limit < 1) query.limit = 10;
     const skip = (query.page - 1) * query.limit;
 
     query.applyToQueryBuilder(
       queryBuilder,
-      'product-types',
+      'product_types',
       searchFields,
       validSortFields,
     );

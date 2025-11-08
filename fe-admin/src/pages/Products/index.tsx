@@ -17,7 +17,6 @@ import {
   PlusOutlined,
   EditOutlined,
   DeleteOutlined,
-  ArrowLeftOutlined,
   EyeFilled,
 } from "@ant-design/icons";
 import { Link } from "react-router-dom";
@@ -31,6 +30,7 @@ import { getProductTypes } from "@/apis/productType.api";
 import type { ProductType } from "@/types/productType.type";
 import dayjs from "dayjs";
 import { Image } from "antd";
+import { formatCurrencyVND } from "@/utils/util";
 
 const { Option } = Select;
 const ProductsPage: React.FC = () => {
@@ -80,6 +80,7 @@ const ProductsPage: React.FC = () => {
         .filterIf(!!priceMax, "price", { lte: priceMax })
         .filterIf(!!brandId, "brandId", brandId)
         .filterIf(!!productTypeId, "productTypeId", productTypeId)
+        .filterIf(isReleased !== undefined, "isReleased", isReleased)
         .sortBy(sortBy, sortOrder)
         .build();
 
@@ -149,6 +150,7 @@ const ProductsPage: React.FC = () => {
     productTypeId,
     sortBy,
     sortOrder,
+    isReleased,
   ]);
 
   const handleSearch = () => {
@@ -243,8 +245,7 @@ const ProductsPage: React.FC = () => {
           : sortBy === "price"
           ? "ascend"
           : undefined,
-      render: (price: number) =>
-        `${price} VND`.replace(/\B(?=(\d{3})+(?!\d))/g, ","),
+      render: formatCurrencyVND,
     },
     {
       title: "Giảm giá",
@@ -313,14 +314,14 @@ const ProductsPage: React.FC = () => {
     },
 
     {
-      title: "Hiện",
+      title: "Bán ra",
       dataIndex: "isReleased",
       key: "isReleased",
       render: (isReleased: boolean) =>
         isReleased ? (
-          <Badge status="success" text="Hiện" />
+          <Badge status="success" text="Có" />
         ) : (
-          <Badge status="error" text="Ẩn" />
+          <Badge status="error" text="không" />
         ),
     },
 

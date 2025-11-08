@@ -16,10 +16,10 @@ import { ProductTypesModule } from './product-types/product-types.module';
 import { ProductsModule } from './products/products.module';
 import { DiscountPoliciesModule } from './discount-policies/discount-policies.module';
 import { GoodsReceiptsModule } from './goods-receipts/goods-receipts.module';
+import { OrdersModule } from './orders/orders.module';
 
 @Module({
   imports: [
-    // Config Module
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
@@ -40,6 +40,7 @@ import { GoodsReceiptsModule } from './goods-receipts/goods-receipts.module';
     ProductsModule,
     DiscountPoliciesModule,
     GoodsReceiptsModule,
+    OrdersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
