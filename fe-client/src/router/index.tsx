@@ -8,6 +8,8 @@ import ProductDetail from "@/pages/ProductDetail";
 import ProductsPage from "@/pages/Products";
 import RegisterPage from "@/pages/Register";
 import { createBrowserRouter  } from "react-router-dom";
+import OrdersPage from "@/pages/Oders/oders";
+import OrderDetailPage from "@/pages/Oders/ordersDetail";
 
 // const isAuthenticated = () => {
 //   return true;
@@ -86,6 +88,15 @@ export const router = createBrowserRouter([
         path: "checkout-page2",
         element: <CheckoutPage2/>
       },
+      {
+        path: "/orders",
+        element: <OrdersPage />,
+      },
+      {
+        path: "/orders/:id",
+        element: <OrderDetailPage />,
+      },
+      
     ],
   },
 ]);
