@@ -73,10 +73,15 @@ const CreateGoodsReceiptPage: React.FC = () => {
     try {
       const data: CreateGoodReceipt = {
         supplierId: values.supplierId,
-        products: values.products.map((p: any) => ({
+        products: values.products.map((p: BaseProduct) => ({
           productId: p.id,
           price: Number(p.price),
-          variants: p.variants,
+          variants: p.variants.map((v: VariantProduct) => ({
+            id: v.id,
+            quantity: v.quantity,
+            image: v.image,
+            color: v.color,
+          })),
         })),
         note: values.note,
       };
@@ -176,6 +181,7 @@ const CreateGoodsReceiptPage: React.FC = () => {
                                         price: selectedProduct.price || 0,
                                         variants: selectedProduct.variants.map(
                                           (v) => ({
+                                            id: v.id,
                                             color: v.color,
                                             image: v.image,
                                             quantity: 0,

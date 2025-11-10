@@ -28,55 +28,78 @@ export class GoodsReceiptsService {
       throw new Error('Danh sách sản phẩm không được để trống');
     }
 
-    let totalPrice = 0;
-    let totalQuantity = 0;
-    const totalUniqueProducts = products.length;
-    const quantityEachProduct = products.reduce((acc, product) => {
-      const totalQuantityForProduct = product.variants.reduce(
-        (sum, v) => sum + v.quantity,
-        0,
-      );
-      acc[product.productId] = totalQuantityForProduct;
-      return acc;
-    }, {});
+    const queryRunner =
+      this.goodsReceiptRepository.manager.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-    products.forEach(product => {
-      totalPrice += product.price * quantityEachProduct[product.productId];
-      totalQuantity += quantityEachProduct[product.productId];
-    });
-
-    products.forEach(async product => {
-      for (const variant of product.variants) {
-        await this.productsService.addQuantityToVariant(
-          variant.id,
-          variant.quantity,
+    try {
+      let totalPrice = 0;
+      let totalQuantity = 0;
+      const totalUniqueProducts = products.length;
+      const quantityEachProduct = products.reduce((acc, product) => {
+        const totalQuantityForProduct = product.variants.reduce(
+          (sum, v) => sum + v.quantity,
+          0,
         );
-      }
-    });
+        acc[product.productId] = totalQuantityForProduct;
+        return acc;
+      }, {});
 
-    const goodsReceipt = this.goodsReceiptRepository.create({
-      supplierId,
-      employeeRecordId: user.id,
-      note,
-      totalPrice,
-      totalQuantity,
-      totalUniqueProducts,
-    });
-
-    const savedReceipt = await this.goodsReceiptRepository.save(goodsReceipt);
-
-    const goodsReceiptDetails = products.map(product => {
-      return this.goodsReceiptDetailRepository.create({
-        goodsReceiptId: savedReceipt.id,
-        productId: product.productId,
-        quantity: quantityEachProduct[product.productId],
-        variants: product.variants,
-        price: product.price,
+      products.forEach(product => {
+        totalPrice += product.price * quantityEachProduct[product.productId];
+        totalQuantity += quantityEachProduct[product.productId];
       });
-    });
 
-    await this.goodsReceiptDetailRepository.save(goodsReceiptDetails);
-    return savedReceipt;
+      for (const product of products) {
+        for (const variant of product.variants) {
+          await queryRunner.manager.increment(
+            'product_variants',
+            { id: variant.id },
+            'quantity',
+            variant.quantity,
+          );
+
+          await queryRunner.manager.increment(
+            'products',
+            { id: product.productId },
+            'quantity',
+            variant.quantity,
+          );
+        }
+      }
+
+      const goodsReceipt = queryRunner.manager.create(GoodsReceipt, {
+        supplierId,
+        employeeRecordId: user.id,
+        note,
+        totalPrice,
+        totalQuantity,
+        totalUniqueProducts,
+      });
+
+      const savedReceipt = await queryRunner.manager.save(goodsReceipt);
+
+      const goodsReceiptDetails = products.map(product => {
+        return queryRunner.manager.create(GoodsReceiptDetail, {
+          goodsReceiptId: savedReceipt.id,
+          productId: product.productId,
+          quantity: quantityEachProduct[product.productId],
+          variants: product.variants,
+          price: product.price,
+        });
+      });
+
+      await queryRunner.manager.save(goodsReceiptDetails);
+
+      await queryRunner.commitTransaction();
+      return savedReceipt;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   async findAll(

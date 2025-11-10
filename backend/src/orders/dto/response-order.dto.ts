@@ -1,7 +1,7 @@
 import {
   OrderStatus,
   PaymentMethod,
-  PaymentStatus,
+  PaymentStatusOrder,
 } from '../entities/order.entity';
 
 export interface OrderItem {
@@ -17,25 +17,6 @@ export interface OrderItem {
   totalAmount: number;
 }
 
-export interface DetailOrder {
-  id: string;
-  customer: {
-    id: string;
-    userName: string;
-    email: string;
-  };
-  totalAmount: number;
-  status: OrderStatus;
-  paymentMethod: PaymentMethod;
-  paymentStatus: PaymentStatus;
-  addressShipping: string;
-  phoneNumber: string;
-  note?: string;
-  createdAt: Date;
-  updatedAt: Date;
-  items?: OrderItem[];
-}
-
 export interface BaseOrder {
   id: string;
   customerId: string;
@@ -44,9 +25,18 @@ export interface BaseOrder {
     userName: string;
     email: string;
   };
+  recipientName: string;
   totalAmount: number;
   status: OrderStatus;
   paymentMethod: PaymentMethod;
-  paymentStatus: PaymentStatus;
+  paymentStatus: PaymentStatusOrder;
   createdAt: Date;
+}
+
+export interface DetailOrder extends Omit<BaseOrder, 'customerId'> {
+  addressShipping: string;
+  phoneNumber: string;
+  note?: string;
+  updatedAt: Date;
+  items?: OrderItem[];
 }

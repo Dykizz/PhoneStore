@@ -17,6 +17,7 @@ import { ProductsModule } from './products/products.module';
 import { DiscountPoliciesModule } from './discount-policies/discount-policies.module';
 import { GoodsReceiptsModule } from './goods-receipts/goods-receipts.module';
 import { OrdersModule } from './orders/orders.module';
+import { PaymentModule } from './payment/payment.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { OrdersModule } from './orders/orders.module';
     DiscountPoliciesModule,
     GoodsReceiptsModule,
     OrdersModule,
+    PaymentModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -11,7 +11,7 @@ import {
   Min,
   ValidateNested,
 } from 'class-validator';
-import { PaymentMethod, PaymentStatus } from '../entities/order.entity';
+import { PaymentMethod, PaymentStatusOrder } from '../entities/order.entity';
 import { Type } from 'class-transformer';
 
 export class OrderItemDto {
@@ -35,6 +35,10 @@ export class CreateOrderDto {
   @IsNotEmpty({ message: 'Phương thức thanh toán không được để trống' })
   @IsEnum(PaymentMethod, { message: 'Phương thức thanh toán không hợp lệ' })
   paymentMethod: PaymentMethod;
+
+  @IsString({ message: 'Tên người nhận phải là chuỗi' })
+  @IsNotEmpty({ message: 'Tên người nhận không được để trống' })
+  recipientName: string;
 
   @IsString({ message: 'Địa chỉ giao hàng phải là chuỗi' })
   @IsNotEmpty({ message: 'Địa chỉ giao hàng không được để trống' })

@@ -17,6 +17,9 @@ export class ProductType {
   @Column({ type: 'text', nullable: true })
   description: string;
 
+  @Column('jsonb', { nullable: true })
+  defaultSpecifications?: string[];
+
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
 

@@ -1,253 +1,233 @@
-"use client";
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { productData, type BaseProduct } from "@/data";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-  CardFooter,
-} from "@/components/ui/card";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-import { SlidersHorizontal, ChevronDown } from "lucide-react";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-  PaginationEllipsis,
-} from "@/components/ui/pagination";
+import type { BaseProduct } from "@/types/product.type";
+import { showToast } from "@/utils/toast";
+import { QueryBuilder } from "@/utils/queryBuilder";
+import { getProductTypes } from "@/apis/productType.api";
+import type { ProductType } from "@/types/productType.type";
+import type { Brand } from "@/types/brand.type";
+import { getBrands } from "@/apis/brand.api";
+import { getProducts } from "@/apis/product.api";
+import type { MetaPagination } from "@/interfaces/pagination.interface";
+import ProductLoading from "./ProductLoading";
+import Product from "./Product";
+import ProductFilter from "./ProductFilter";
+import ProductEmpty from "./ProductEmpty";
+import ProductPagination from "./ProductPagination";
+
+const defautFilter = {
+  priceMin: undefined,
+  priceMax: undefined,
+  brandId: undefined,
+  productTypeId: undefined,
+  sortBy: "",
+  sortOrder: "DESC" as "ASC" | "DESC",
+  searchText: "",
+};
 
 export default function ProductsPage() {
-  const products: BaseProduct[] = productData;
+  const [products, setProducts] = useState<BaseProduct[]>([]);
+  const [brands, setBrands] = useState<{ id: string; name: string }[]>([]);
+  const [productTypes, setproductTypes] = useState<
+    { id: string; name: string }[]
+  >([]);
+  const [loading, setLoading] = useState(false);
+  const [pagination, setPagination] = useState<MetaPagination>({
+    total: 0,
+    page: 1,
+    limit: 8,
+    totalPages: 0,
+    hasNext: false,
+    hasPrev: false,
+  });
 
-  const itemsPerPage = 8;
-  const [currentPage, setCurrentPage] = useState(1);
-  const totalPages = Math.ceil(products.length / itemsPerPage);
+  const [searchText, setSearchText] = useState<string>(defautFilter.searchText);
+  const [priceMin, setPriceMin] = useState<number | undefined>(
+    defautFilter.priceMin
+  );
+  const [priceMax, setPriceMax] = useState<number | undefined>(
+    defautFilter.priceMax
+  );
+  const [brandId, setBrandId] = useState<string | undefined>(
+    defautFilter.brandId
+  );
+  const [productTypeId, setProductTypeId] = useState<string | undefined>(
+    defautFilter.productTypeId
+  );
+  const [sortBy, setSortBy] = useState<string>(defautFilter.sortBy);
+  const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">(
+    defautFilter.sortOrder
+  );
 
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const currentProducts = products.slice(startIndex, startIndex + itemsPerPage);
+  const handleDefaultFilter = () => {
+    setSearchText(defautFilter.searchText);
+    setPriceMin(defautFilter.priceMin);
+    setPriceMax(defautFilter.priceMax);
+    setBrandId(defautFilter.brandId);
+    setProductTypeId(defautFilter.productTypeId);
+    setSortBy(defautFilter.sortBy);
+    setSortOrder(defautFilter.sortOrder);
+  };
+  const mapBrands = useMemo(() => {
+    const map = new Map<string, string>();
+    brands.forEach((brand) => map.set(brand.id, brand.name));
+    return map;
+  }, [brands]);
 
-  const handlePageChange = (page: number) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
-      window.scrollTo({ top: 0, behavior: "smooth" });
+  const mapProductTypes = useMemo(() => {
+    const map = new Map<string, string>();
+    productTypes.forEach((type) => map.set(type.id, type.name));
+    return map;
+  }, [productTypes]);
+
+  const fetchProducts = async (page = 1) => {
+    setLoading(true);
+    try {
+      const query = QueryBuilder.create()
+        .page(page)
+        .limit(pagination.limit)
+        .search(searchText)
+        .filterIf(!!priceMin, "price", { gte: priceMin })
+        .filterIf(!!priceMax, "price", { lte: priceMax })
+        .filterIf(!!brandId, "brandId", brandId)
+        .filterIf(!!productTypeId, "productTypeId", productTypeId)
+        .sortBy(sortBy, sortOrder)
+        .build();
+
+      const response = await getProducts(query);
+
+      if (response.success) {
+        setProducts(response.data.data);
+        setPagination(response.data.meta);
+      } else {
+        showToast({
+          type: "error",
+          description: "Không thể tải danh sách sản phẩm",
+          title: "Lỗi",
+        });
+      }
+    } catch (error) {
+      showToast({
+        type: "error",
+        description: "Không thể tải danh sách sản phẩm",
+        title: "Lỗi",
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
+  const fetchBrands = async () => {
+    const query = QueryBuilder.create().page(1).limit(100).build();
+
+    const brandsData = await getBrands(query);
+    if (brandsData.success) {
+      const tmp: { id: string; name: string }[] = [];
+      brandsData.data.data.forEach((brand: Brand) => {
+        mapBrands.set(brand.id, brand.name);
+        tmp.push({ id: brand.id, name: brand.name });
+      });
+      setBrands(tmp);
+    } else {
+      showToast({
+        type: "error",
+        description: "Lỗi tải danh sách thương hiệu",
+        title: "Lỗi",
+      });
+    }
+  };
+
+  const fetchProductTypes = async () => {
+    const query = QueryBuilder.create().page(1).limit(100).build();
+    const response = await getProductTypes(query);
+    if (response.success) {
+      const tmp: { id: string; name: string }[] = [];
+      response.data.data.forEach((type: ProductType) => {
+        mapProductTypes.set(type.id, type.name);
+        tmp.push({ id: type.id, name: type.name });
+      });
+      setproductTypes(tmp);
+    } else {
+      showToast({
+        type: "error",
+        description: "Lỗi tải danh sách loại sản phẩm",
+        title: "Lỗi",
+      });
+    }
+  };
+
+  useEffect(() => {
+    fetchBrands();
+    fetchProductTypes();
+  }, []);
+
+  useEffect(() => {
+    fetchProducts(1);
+  }, [
+    searchText,
+    priceMin,
+    priceMax,
+    brandId,
+    productTypeId,
+    sortBy,
+    sortOrder,
+  ]);
+
+  useEffect(() => {
+    fetchProducts(pagination.page);
+  }, [pagination.page]);
+
   return (
     <div className="p-6 max-w-7xl mx-auto">
-      {/* ==== THANH BỘ LỌC ==== */}
-      <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-4 mb-10 flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-2">
-          <SlidersHorizontal className="w-5 h-5 text-black" />
-          <h2 className="font-semibold text-gray-900 text-lg">
-            Bộ lọc sản phẩm
-          </h2>
-        </div>
-        <Button
-          variant="outline"
-          className="text-sm font-medium rounded-full border-gray-300 text-gray-800 hover:bg-gray-100 hover:text-black transition-all"
-        >
-          Đặt lại
-        </Button>
+      <ProductFilter
+        brandId={brandId}
+        searchText={searchText}
+        priceMax={priceMax}
+        priceMin={priceMin}
+        setPriceMax={setPriceMax}
+        setPriceMin={setPriceMin}
+        setSearchText={setSearchText}
+        brands={brands}
+        productTypes={productTypes || []}
+        setBrandId={setBrandId}
+        setProductTypeId={setProductTypeId}
+        productTypeId={productTypeId}
+        sortBy={sortBy}
+        setSortBy={setSortBy}
+        sortOrder={sortOrder}
+        setSortOrder={setSortOrder}
+        mapBrands={mapBrands}
+        mapProductTypes={mapProductTypes}
+        handleDefaultFilter={handleDefaultFilter}
+      />
 
-        <div className="w-full flex flex-wrap items-center gap-3 mt-2">
-          {["Sẵn hàng", "Hàng mới về"].map((item) => (
-            <Button
-              key={item}
-              variant="secondary"
-              className="rounded-full text-sm bg-gray-100 text-gray-800 hover:bg-gray-200 hover:text-black transition-all"
-            >
-              {item}
-            </Button>
-          ))}
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                className="rounded-full text-sm border-gray-300 flex items-center justify-between hover:bg-gray-100 text-gray-800"
-              >
-                Xem theo giá
-                <ChevronDown className="w-4 h-4 ml-1" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-48">
-              <DropdownMenuItem>Dưới 15 triệu</DropdownMenuItem>
-              <DropdownMenuItem>15 - 25 triệu</DropdownMenuItem>
-              <DropdownMenuItem>Trên 25 triệu</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                className="rounded-full text-sm border-gray-300 flex items-center justify-between hover:bg-gray-100 text-gray-800"
-              >
-                Nhu cầu sử dụng
-                <ChevronDown className="w-4 h-4 ml-1" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-56">
-              <DropdownMenuItem>Chụp ảnh & quay video</DropdownMenuItem>
-              <DropdownMenuItem>Chơi game & hiệu năng</DropdownMenuItem>
-              <DropdownMenuItem>Pin lâu, dùng cơ bản</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </div>
-
-      {/* ==== DANH SÁCH SẢN PHẨM ==== */}
       <AnimatePresence mode="wait">
-        <motion.div
-          key={currentPage}
-          initial={{ opacity: 0, scale: 0.98, y: 10 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.98, y: -10 }}
-          transition={{ duration: 0.4, ease: "easeOut" }}
-          className="grid grid-cols-4 gap-6"
-        >
-          {currentProducts.map((p) => {
-            const hasDiscount = !!p.discountPercent;
-            const finalPrice = hasDiscount
-              ? Math.round(p.price * (1 - p.discountPercent! / 100))
-              : p.price;
-
-            return (
-              <motion.div
-                key={p.id}
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
-              >
-                <Card
-                  className="overflow-hidden border border-gray-200 bg-white hover:border-black rounded-2xl
-                   shadow-sm hover:shadow-[0_8px_20px_rgba(0,0,0,0.15)] transition-all duration-300 relative group hover:-translate-y-1"
-                >
-                  {/* ẢNH SẢN PHẨM */}
-                  <Link to={`/product/${p.id}`}>
-                    <CardHeader className="p-0 relative flex items-center justify-center bg-white h-64 cursor-pointer">
-                      <div className="overflow-hidden w-full h-full flex items-center justify-center bg-gray-50">
-                        <img
-                          src={p.image}
-                          alt={p.name}
-                          className="object-contain w-full h-full p-4 transition-transform duration-500 group-hover:scale-110"
-                        />
-                      </div>
-
-                      {hasDiscount && (
-                        <span
-                          className="absolute top-2 left-2 bg-black text-white 
-                               text-[11px] px-2 py-1 rounded-md shadow-sm"
-                        >
-                          -{p.discountPercent}%
-                        </span>
-                      )}
-                      {!p.isReleased && (
-                        <span className="absolute top-2 right-2 bg-gray-800 text-white text-[11px] px-2 py-1 rounded-md">
-                          Sắp ra mắt
-                        </span>
-                      )}
-                    </CardHeader>
-                  </Link>
-
-                  {/* THÔNG TIN SẢN PHẨM */}
-                  <CardContent className="p-4">
-                    <Link to={`/product/${p.id}`}>
-                      <CardTitle className="text-sm font-semibold mb-2 line-clamp-2 text-gray-900 group-hover:text-black transition-colors">
-                        {p.name}
-                      </CardTitle>
-                    </Link>
-
-                    <div className="flex flex-col">
-                      <span className="text-black font-bold text-lg">
-                        {finalPrice.toLocaleString()}₫
-                      </span>
-                      {hasDiscount && (
-                        <span className="text-gray-400 text-sm line-through">
-                          {p.price.toLocaleString()}₫
-                        </span>
-                      )}
-                    </div>
-                  </CardContent>
-
-                  {/* NÚT XEM CHI TIẾT */}
-                  <CardFooter className="px-4 pb-4">
-                    <Link to={`/product/${p.id}`} className="w-full">
-                      <Button
-                        className="w-full text-sm py-2 font-medium text-white bg-black hover:bg-gray-900 
-                         transition-all duration-300 rounded-full shadow-md hover:shadow-lg"
-                      >
-                        Xem chi tiết
-                      </Button>
-                    </Link>
-                  </CardFooter>
-                </Card>
-              </motion.div>
-            );
-          })}
-        </motion.div>
-      </AnimatePresence>
-
-      {/* ==== PHÂN TRANG ==== */}
-      <div className="mt-10">
-        <Pagination>
-          <PaginationContent className="flex justify-center gap-1">
-            <PaginationItem>
-              <PaginationPrevious
-                href="#"
-                onClick={() => handlePageChange(currentPage - 1)}
-                className={`border border-gray-300 text-gray-700 hover:bg-gray-100 ${
-                  currentPage === 1 ? "opacity-40 pointer-events-none" : ""
-                }`}
-              />
-            </PaginationItem>
-
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <PaginationItem key={page}>
-                <PaginationLink
-                  href="#"
-                  isActive={page === currentPage}
-                  onClick={() => handlePageChange(page)}
-                  className={`${
-                    page === currentPage
-                      ? "bg-black text-white hover:bg-gray-900"
-                      : "hover:bg-gray-100 text-gray-800"
-                  } border border-gray-300 rounded-md`}
-                >
-                  {page}
-                </PaginationLink>
-              </PaginationItem>
+        {loading ? (
+          <ProductLoading />
+        ) : products.length === 0 ? (
+          <ProductEmpty handleDefaultFilter={handleDefaultFilter} />
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.98, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.98, y: -10 }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
+          >
+            {products.map((p) => (
+              <Product key={p.id} product={p} />
             ))}
-
-            {totalPages > 5 && <PaginationEllipsis />}
-
-            <PaginationItem>
-              <PaginationNext
-                href="#"
-                onClick={() => handlePageChange(currentPage + 1)}
-                className={`border border-gray-300 text-gray-700 hover:bg-gray-100 ${
-                  currentPage === totalPages
-                    ? "opacity-40 pointer-events-none"
-                    : ""
-                }`}
-              />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
-      </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      {products.length > 0 && (
+        <div className="mt-10">
+          <ProductPagination
+            pagination={pagination}
+            setPagination={setPagination}
+          />
+        </div>
+      )}
     </div>
   );
 }

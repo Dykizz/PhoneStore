@@ -21,7 +21,7 @@ export async function createProductType(data: {
 
 export async function updateProductType(
   id: string,
-  data: { name: string; description?: string }
+  data: { name: string; description?: string; defaultSpecifications?: string[] }
 ): Promise<ApiResponse<ProductType>> {
   return await apiClient.patch<ProductType>(`/product-types/${id}`, data);
 }

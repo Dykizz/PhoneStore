@@ -10,20 +10,26 @@ import ip16_xanhmongket from "./assets/ip16_xanhmongket.webp";
 import ip17promax_bac from "./assets/ip17promax_bac.webp";
 import ip17promax_camvutru from "./assets/ip17promax_camvutru.webp";
 import ip17promax_xanhdam from "./assets/ip17promax_xanhdam.webp";
+import {
+  OrderStatus,
+  PaymentMethod,
+  PaymentStatus,
+  type DetailOrder,
+} from "./types/order.type";
 
 /* -------------------------- ProductType -------------------------- */
 export type ProductType = {
-  ptId: number;              // khóa chính
-  name: string;              // tên loại sản phẩm (ví dụ: iPhone, iPad,...)
+  ptId: number; // khóa chính
+  name: string; // tên loại sản phẩm (ví dụ: iPhone, iPad,...)
   description?: string;
 };
 
 /* -------------------------- DiscountPolicy ----------------------- */
 export type DiscountPolicy = {
-  dpId: number;              // khóa chính
-  discountPercent: number;   // phần trăm giảm giá
-  startDate: string;         // ngày bắt đầu
-  endDate: string;           // ngày kết thúc
+  dpId: number; // khóa chính
+  discountPercent: number; // phần trăm giảm giá
+  startDate: string; // ngày bắt đầu
+  endDate: string; // ngày kết thúc
 };
 
 /* -------------------------- Product ------------------------------ */
@@ -58,7 +64,6 @@ export interface DetailProduct
   productTypeName: string;
 }
 
-
 /* -------------------------- Supplier ----------------------------- */
 export type Brand = {
   brandId: number;
@@ -76,9 +81,9 @@ export type Supplier = {
 /* -------------------------- GoodsReceipt ------------------------- */
 export type GoodsReceipt = {
   grId: number;
-  importTime: string;         // ngày nhập
-  employeeRecord: string;     // nhân viên nhập
-  supplierId: number;         // khóa ngoại → Supplier
+  importTime: string; // ngày nhập
+  employeeRecord: string; // nhân viên nhập
+  supplierId: number; // khóa ngoại → Supplier
 };
 
 /* -------------------------- GoodsReceiptDetail ------------------- */
@@ -128,7 +133,12 @@ export const productTypes: ProductType[] = [
 ];
 
 export const discountPolicies: DiscountPolicy[] = [
-  { dpId: 1, discountPercent: 10, startDate: "2025-10-01", endDate: "2025-11-01" },
+  {
+    dpId: 1,
+    discountPercent: 10,
+    startDate: "2025-10-01",
+    endDate: "2025-11-01",
+  },
 ];
 
 export const productData: BaseProduct[] = [
@@ -295,7 +305,6 @@ export const productData: BaseProduct[] = [
   },
 ];
 
-
 export const detailProductData: DetailProduct[] = [
   // ==== iPhone 15 Series ====
   {
@@ -306,19 +315,20 @@ export const detailProductData: DetailProduct[] = [
     isReleased: true,
     quantitySold: 1000,
     quantity: 500,
-    detailDescription: "iPhone 15 với chip A16 Bionic mạnh mẽ, camera 48MP sắc nét và thiết kế Dynamic Island hiện đại.",
+    detailDescription:
+      "iPhone 15 với chip A16 Bionic mạnh mẽ, camera 48MP sắc nét và thiết kế Dynamic Island hiện đại.",
     highlights: [
       "Chip A16 Bionic hiệu năng vượt trội",
       "Camera chính 48MP chụp ảnh chuyên nghiệp",
       "Thiết kế Dynamic Island tinh tế",
-      "Sạc USB-C thế hệ mới"
+      "Sạc USB-C thế hệ mới",
     ],
     specifications: [
       { label: "Màn hình", value: "Super Retina XDR 6.1 inch" },
       { label: "Chip", value: "Apple A16 Bionic" },
       { label: "Camera", value: "48MP + 12MP" },
       { label: "Pin", value: "3.349 mAh, sạc nhanh 20W" },
-      { label: "Dung lượng", value: "128GB" }
+      { label: "Dung lượng", value: "128GB" },
     ],
     images: [ip15_xanhduong, ip15_den, ip15_hong, ip15_xanhla],
     colors: ["Xanh dương", "Đen", "Hồng", "Xanh lá"],
@@ -333,19 +343,20 @@ export const detailProductData: DetailProduct[] = [
     isReleased: true,
     quantitySold: 700,
     quantity: 400,
-    detailDescription: "Bản nâng cấp dung lượng 256GB giúp bạn thoải mái lưu trữ mọi khoảnh khắc với hiệu năng A16 Bionic đỉnh cao.",
+    detailDescription:
+      "Bản nâng cấp dung lượng 256GB giúp bạn thoải mái lưu trữ mọi khoảnh khắc với hiệu năng A16 Bionic đỉnh cao.",
     highlights: [
       "Dung lượng 256GB rộng rãi",
       "Màn hình OLED sắc nét, mượt mà",
       "Dynamic Island hiển thị thông minh",
-      "Cảm giác cầm nắm nhẹ, sang trọng"
+      "Cảm giác cầm nắm nhẹ, sang trọng",
     ],
     specifications: [
       { label: "Màn hình", value: "OLED 6.1 inch" },
       { label: "Chip", value: "Apple A16 Bionic" },
       { label: "Camera", value: "48MP + 12MP" },
       { label: "Dung lượng", value: "256GB" },
-      { label: "Sạc", value: "USB-C, 20W" }
+      { label: "Sạc", value: "USB-C, 20W" },
     ],
     images: [ip15_den, ip15_xanhduong, ip15_xanhla],
     colors: ["Đen", "Xanh dương", "Xanh lá"],
@@ -360,19 +371,20 @@ export const detailProductData: DetailProduct[] = [
     isReleased: true,
     quantitySold: 500,
     quantity: 300,
-    detailDescription: "Phiên bản 512GB mang đến trải nghiệm cao cấp, không lo hết dung lượng khi lưu trữ video 4K và ảnh RAW.",
+    detailDescription:
+      "Phiên bản 512GB mang đến trải nghiệm cao cấp, không lo hết dung lượng khi lưu trữ video 4K và ảnh RAW.",
     highlights: [
       "Dung lượng lưu trữ cực lớn 512GB",
       "Camera 48MP, hỗ trợ quay phim 4K",
       "Pin trâu hơn 20% so với iPhone 14",
-      "Thiết kế nhôm bền bỉ, tinh tế"
+      "Thiết kế nhôm bền bỉ, tinh tế",
     ],
     specifications: [
       { label: "Màn hình", value: "6.1 inch OLED Super Retina" },
       { label: "Chip", value: "A16 Bionic" },
       { label: "Camera", value: "48MP + 12MP" },
       { label: "Dung lượng", value: "512GB" },
-      { label: "Pin", value: "3.349 mAh" }
+      { label: "Pin", value: "3.349 mAh" },
     ],
     images: [ip15_hong, ip15_xanhduong, ip15_den],
     colors: ["Hồng", "Xanh dương", "Đen"],
@@ -387,19 +399,20 @@ export const detailProductData: DetailProduct[] = [
     isReleased: true,
     quantitySold: 600,
     quantity: 350,
-    detailDescription: "iPhone 15 Plus sở hữu màn hình 6.7 inch siêu lớn, pin bền bỉ cùng chip A16 mạnh mẽ.",
+    detailDescription:
+      "iPhone 15 Plus sở hữu màn hình 6.7 inch siêu lớn, pin bền bỉ cùng chip A16 mạnh mẽ.",
     highlights: [
       "Màn hình lớn 6.7 inch, hiển thị rõ ràng",
       "Chip A16 Bionic cực mạnh",
       "Camera 48MP sắc nét",
-      "Pin dùng cả ngày dài"
+      "Pin dùng cả ngày dài",
     ],
     specifications: [
       { label: "Màn hình", value: "6.7 inch Super Retina XDR" },
       { label: "Chip", value: "Apple A16 Bionic" },
       { label: "Camera", value: "48MP + 12MP" },
       { label: "Pin", value: "4.383 mAh" },
-      { label: "Dung lượng", value: "128GB" }
+      { label: "Dung lượng", value: "128GB" },
     ],
     images: [ip15_xanhla, ip15_xanhduong, ip15_den],
     colors: ["Xanh lá", "Xanh dương", "Đen"],
@@ -416,19 +429,20 @@ export const detailProductData: DetailProduct[] = [
     isReleased: true,
     quantitySold: 500,
     quantity: 300,
-    detailDescription: "iPhone 16 trang bị chip A17 Pro, hiệu năng vượt trội và camera Telephoto ấn tượng.",
+    detailDescription:
+      "iPhone 16 trang bị chip A17 Pro, hiệu năng vượt trội và camera Telephoto ấn tượng.",
     highlights: [
       "Chip A17 Pro cực mạnh",
       "Camera Ultra Wide góc rộng",
       "Thiết kế khung nhôm nguyên khối",
-      "Màn hình ProMotion 120Hz mượt mà"
+      "Màn hình ProMotion 120Hz mượt mà",
     ],
     specifications: [
       { label: "Màn hình", value: "6.1 inch ProMotion OLED" },
       { label: "Chip", value: "A17 Pro" },
       { label: "Camera", value: "48MP + 12MP" },
       { label: "Dung lượng", value: "128GB" },
-      { label: "Sạc", value: "USB-C 30W" }
+      { label: "Sạc", value: "USB-C 30W" },
     ],
     images: [ip16_xanhluuly, ip16_den, ip16_hong],
     colors: ["Xanh lưu ly", "Đen", "Hồng"],
@@ -443,19 +457,20 @@ export const detailProductData: DetailProduct[] = [
     isReleased: true,
     quantitySold: 450,
     quantity: 250,
-    detailDescription: "iPhone 16 bản 256GB cho phép bạn lưu trữ thoải mái và trải nghiệm mượt mà với chip A17 Pro.",
+    detailDescription:
+      "iPhone 16 bản 256GB cho phép bạn lưu trữ thoải mái và trải nghiệm mượt mà với chip A17 Pro.",
     highlights: [
       "Bộ nhớ 256GB thoải mái lưu trữ",
       "Màn hình OLED sắc nét",
       "Chip A17 Pro tiên tiến",
-      "Camera chính 48MP"
+      "Camera chính 48MP",
     ],
     specifications: [
       { label: "Màn hình", value: "6.1 inch Super Retina XDR" },
       { label: "Chip", value: "A17 Pro" },
       { label: "Camera", value: "48MP + 12MP" },
       { label: "Dung lượng", value: "256GB" },
-      { label: "Pin", value: "3.500 mAh" }
+      { label: "Pin", value: "3.500 mAh" },
     ],
     images: [ip16_trang, ip16_xanhluuly, ip16_den],
     colors: ["Trắng", "Xanh lưu ly", "Đen"],
@@ -470,19 +485,20 @@ export const detailProductData: DetailProduct[] = [
     isReleased: true,
     quantitySold: 300,
     quantity: 200,
-    detailDescription: "Phiên bản cao cấp với bộ nhớ 512GB, chip A17 Pro, camera nâng cấp mạnh mẽ.",
+    detailDescription:
+      "Phiên bản cao cấp với bộ nhớ 512GB, chip A17 Pro, camera nâng cấp mạnh mẽ.",
     highlights: [
       "Dung lượng 512GB cực lớn",
       "Chip A17 Pro mạnh mẽ",
       "Camera Telephoto zoom quang học",
-      "Hỗ trợ quay video 4K HDR"
+      "Hỗ trợ quay video 4K HDR",
     ],
     specifications: [
       { label: "Màn hình", value: "OLED 6.1 inch" },
       { label: "Chip", value: "A17 Pro" },
       { label: "Camera", value: "48MP + 12MP Tele" },
       { label: "Dung lượng", value: "512GB" },
-      { label: "Pin", value: "3.500 mAh" }
+      { label: "Pin", value: "3.500 mAh" },
     ],
     images: [ip16_den, ip16_trang, ip16_hong],
     colors: ["Đen", "Trắng", "Hồng"],
@@ -497,19 +513,20 @@ export const detailProductData: DetailProduct[] = [
     isReleased: true,
     quantitySold: 350,
     quantity: 180,
-    detailDescription: "iPhone 16 Pro với khung thép không gỉ, camera Tele 3x và hiệu năng đột phá.",
+    detailDescription:
+      "iPhone 16 Pro với khung thép không gỉ, camera Tele 3x và hiệu năng đột phá.",
     highlights: [
       "Khung thép không gỉ cao cấp",
       "Chip A17 Pro, GPU 6 nhân",
       "Camera Tele 3x zoom quang học",
-      "Màn hình ProMotion 120Hz"
+      "Màn hình ProMotion 120Hz",
     ],
     specifications: [
       { label: "Màn hình", value: "6.1 inch LTPO OLED" },
       { label: "Chip", value: "A17 Pro" },
       { label: "Camera", value: "48MP + 12MP Tele" },
       { label: "Dung lượng", value: "256GB" },
-      { label: "Chất liệu", value: "Thép không gỉ" }
+      { label: "Chất liệu", value: "Thép không gỉ" },
     ],
     images: [ip16_hong, ip16_trang, ip16_xanhluuly],
     colors: ["Hồng", "Trắng", "Xanh lưu ly"],
@@ -526,19 +543,20 @@ export const detailProductData: DetailProduct[] = [
     isReleased: false,
     quantitySold: 200,
     quantity: 50,
-    detailDescription: "Siêu phẩm iPhone 17 Pro Max với chip A18, camera 5 ống kính và công nghệ AI hỗ trợ hình ảnh.",
+    detailDescription:
+      "Siêu phẩm iPhone 17 Pro Max với chip A18, camera 5 ống kính và công nghệ AI hỗ trợ hình ảnh.",
     highlights: [
       "Chip A18 thế hệ mới",
       "Camera 5 ống kính đột phá",
       "Khung Titan siêu nhẹ",
-      "Màn hình 120Hz siêu sáng"
+      "Màn hình 120Hz siêu sáng",
     ],
     specifications: [
       { label: "Màn hình", value: "6.7 inch OLED ProMotion" },
       { label: "Chip", value: "A18 Bionic" },
       { label: "Camera", value: "5 ống kính AI" },
       { label: "Dung lượng", value: "256GB" },
-      { label: "Sạc", value: "USB-C, 35W" }
+      { label: "Sạc", value: "USB-C, 35W" },
     ],
     images: [ip17promax_camvutru, ip17promax_bac, ip17promax_xanhdam],
     colors: ["Cam vũ trụ", "Bạc", "Xanh đậm"],
@@ -553,19 +571,20 @@ export const detailProductData: DetailProduct[] = [
     isReleased: false,
     quantitySold: 100,
     quantity: 40,
-    detailDescription: "Phiên bản cao cấp nhất của Apple năm 2025 – iPhone 17 Pro Max 512GB.",
+    detailDescription:
+      "Phiên bản cao cấp nhất của Apple năm 2025 – iPhone 17 Pro Max 512GB.",
     highlights: [
       "Dung lượng 512GB khổng lồ",
       "Khung titan siêu bền",
       "Camera Tele 5x",
-      "Màn hình ProMotion sáng rực rỡ"
+      "Màn hình ProMotion sáng rực rỡ",
     ],
     specifications: [
       { label: "Màn hình", value: "6.7 inch OLED LTPO" },
       { label: "Chip", value: "A18 Bionic" },
       { label: "Camera", value: "48MP + 12MP + 12MP Tele" },
       { label: "Dung lượng", value: "512GB" },
-      { label: "Sạc", value: "USB-C 35W" }
+      { label: "Sạc", value: "USB-C 35W" },
     ],
     images: [ip17promax_bac, ip17promax_camvutru, ip17promax_xanhdam],
     colors: ["Bạc", "Cam vũ trụ", "Xanh đậm"],
@@ -580,19 +599,20 @@ export const detailProductData: DetailProduct[] = [
     isReleased: false,
     quantitySold: 180,
     quantity: 60,
-    detailDescription: "iPhone 17 Pro được trang bị chip A18 và camera cải tiến mạnh mẽ, hiệu năng vượt trội.",
+    detailDescription:
+      "iPhone 17 Pro được trang bị chip A18 và camera cải tiến mạnh mẽ, hiệu năng vượt trội.",
     highlights: [
       "Chip A18 hiệu năng cực cao",
       "Camera nâng cấp thuật toán AI",
       "Màn hình 120Hz ProMotion",
-      "Khung titan cao cấp"
+      "Khung titan cao cấp",
     ],
     specifications: [
       { label: "Màn hình", value: "6.1 inch OLED" },
       { label: "Chip", value: "A18 Bionic" },
       { label: "Camera", value: "48MP + 12MP Tele" },
       { label: "Dung lượng", value: "256GB" },
-      { label: "Chất liệu", value: "Titan cao cấp" }
+      { label: "Chất liệu", value: "Titan cao cấp" },
     ],
     images: [ip17promax_xanhdam, ip17promax_bac, ip17promax_camvutru],
     colors: ["Xanh đậm", "Bạc", "Cam vũ trụ"],
@@ -607,19 +627,20 @@ export const detailProductData: DetailProduct[] = [
     isReleased: false,
     quantitySold: 250,
     quantity: 100,
-    detailDescription: "iPhone 17 mở ra kỷ nguyên mới với thiết kế mỏng hơn và khả năng sạc không dây nhanh hơn.",
+    detailDescription:
+      "iPhone 17 mở ra kỷ nguyên mới với thiết kế mỏng hơn và khả năng sạc không dây nhanh hơn.",
     highlights: [
       "Thiết kế mới tinh tế, viền mỏng hơn",
       "Sạc không dây nhanh hơn 50%",
       "Camera sắc nét trong mọi điều kiện",
-      "Hiệu năng vượt trội với chip A18"
+      "Hiệu năng vượt trội với chip A18",
     ],
     specifications: [
       { label: "Màn hình", value: "6.1 inch OLED" },
       { label: "Chip", value: "A18 Bionic" },
       { label: "Camera", value: "48MP + 12MP" },
       { label: "Dung lượng", value: "128GB" },
-      { label: "Pin", value: "3.700 mAh" }
+      { label: "Pin", value: "3.700 mAh" },
     ],
     images: [ip16_xanhmongket, ip16_trang, ip17promax_bac],
     colors: ["Xanh mòng két", "Trắng", "Bạc"],
@@ -628,17 +649,29 @@ export const detailProductData: DetailProduct[] = [
   },
 ];
 
-
 export const brands: Brand[] = [
-  { brandId: 1, name: "Apple", description: "Thương hiệu công nghệ hàng đầu thế giới" },
+  {
+    brandId: 1,
+    name: "Apple",
+    description: "Thương hiệu công nghệ hàng đầu thế giới",
+  },
 ];
 
 export const suppliers: Supplier[] = [
-  { supplierId: 1, name: "Apple Vietnam", description: "Nhà cung cấp chính thức của Apple" },
+  {
+    supplierId: 1,
+    name: "Apple Vietnam",
+    description: "Nhà cung cấp chính thức của Apple",
+  },
 ];
 
 export const goodsReceipts: GoodsReceipt[] = [
-  { grId: 1, importTime: "2025-10-25", employeeRecord: "Nguyễn Văn A", supplierId: 1 },
+  {
+    grId: 1,
+    importTime: "2025-10-25",
+    employeeRecord: "Nguyễn Văn A",
+    supplierId: 1,
+  },
 ];
 
 export const goodsReceiptDetails: GoodsReceiptDetail[] = [
@@ -681,7 +714,6 @@ export const orderDetails: OrderDetail[] = [
   { orderId: 1, id: 1, amount: 1, price: 17390000 },
 ];
 
-
 // fe-client/src/data.ts
 
 // ... (Giữ nguyên toàn bộ code cũ của bạn ở trên) ...
@@ -710,3 +742,241 @@ export interface Product {
   // Dữ liệu tĩnh có discountPercent ở gốc, ta tạm giữ nó
   discountPercent?: number;
 }
+
+/* -------------------------- CART DATA -------------------------- */
+export interface CartItem {
+  id: string; // id sản phẩm
+  name: string; // tên
+  price: number; // giá gốc
+  image: string; // ảnh
+  discountPercent?: number; // giảm giá
+  quantity: number; // số lượng người dùng chọn
+  maxQuantity: number; // số lượng tồn kho
+}
+
+export const cartData: CartItem[] = [
+  {
+    id: "1",
+    name: "iPhone 15 128GB | Chính hãng VN/A",
+    price: 17390000,
+    image: ip15_den,
+    discountPercent: 10,
+    quantity: 1,
+    maxQuantity: 5,
+  },
+  {
+    id: "5",
+    name: "iPhone 16 128GB | Chính hãng VN/A",
+    price: 21390000,
+    image: ip16_den,
+    discountPercent: 10,
+    quantity: 2,
+    maxQuantity: 10,
+  },
+];
+/* -------------------------- CHECKOUT DATA -------------------------- */
+export interface CheckoutProduct {
+  id: string;
+  name: string;
+  image: string;
+  price: number;
+  originalPrice?: number;
+  quantity: number;
+}
+
+export interface CheckoutUser {
+  fullName: string;
+  membership?: string; // ví dụ: S-NULL, S-MEMBER
+  email: string;
+  phone: string;
+  receivePromotion?: boolean;
+}
+
+export interface CheckoutInfo {
+  id: number;
+  user: CheckoutUser;
+  products: CheckoutProduct[];
+  deliveryMethod: "store" | "delivery";
+  city: string;
+  district: string;
+  storeAddress?: string;
+  note?: string;
+  needCompanyInvoice: boolean;
+  subtotal: number;
+}
+
+/* -------------------------- DỮ LIỆU CHECKOUT MẪU -------------------------- */
+export const checkoutData: CheckoutInfo = {
+  id: 1,
+  user: {
+    fullName: "Nguyễn Thành Đức",
+    membership: "S-NULL",
+    email: "wtf5213@gmail.com",
+    phone: "0923219754",
+    receivePromotion: false,
+  },
+  products: [
+    {
+      id: "macbook14m4",
+      name: "MacBook Pro 14 M4 Pro 12CPU 16GPU 24GB 512GB | Chính hãng Apple Việt Nam - Đen",
+      image: ip16_den, // dùng tạm ảnh có sẵn
+      price: 49290000,
+      originalPrice: 51990000,
+      quantity: 1,
+    },
+  ],
+  deliveryMethod: "store",
+  city: "Hồ Chí Minh",
+  district: "Quận 1",
+  storeAddress: "CellphoneS - 55 Trần Quang Khải, Q.1, TP.HCM",
+  note: "",
+  needCompanyInvoice: false,
+  subtotal: 49290000,
+};
+
+export const ordersData: DetailOrder[] = [
+  {
+    id: "ORD001",
+    customer: {
+      id: "C001",
+      userName: "Ken",
+      email: "ken@example.com",
+    },
+    totalAmount: 29990000,
+    status: OrderStatus.DELIVERED,
+    paymentMethod: PaymentMethod.BANK_TRANSFER,
+    paymentStatus: PaymentStatus.COMPLETED,
+    addressShipping: "12 Nguyễn Huệ, Quận 1, TP. HCM",
+    phoneNumber: "0901234567",
+    note: "Giao trong giờ hành chính",
+    createdAt: new Date("2025-11-01"),
+    updatedAt: new Date("2025-11-03"),
+    items: [
+      {
+        id: "1",
+        productName: "iPhone 17 Pro Max 256GB",
+        productImage: ip17promax_camvutru,
+        price: 29990000,
+        quantity: 1,
+      },
+    ],
+  },
+  {
+    id: "ORD002",
+    customer: {
+      id: "C001",
+      userName: "Ken",
+      email: "ken@example.com",
+    },
+    totalAmount: 15990000,
+    status: OrderStatus.SHIPPED,
+    paymentMethod: PaymentMethod.CASH_ON_DELIVERY,
+    paymentStatus: PaymentStatus.PENDING,
+    addressShipping: "24 Đinh Tiên Hoàng, Quận Bình Thạnh, TP. HCM",
+    phoneNumber: "0987654321",
+    note: "Gọi trước khi giao",
+    createdAt: new Date("2025-11-05"),
+    updatedAt: new Date("2025-11-06"),
+    items: [
+      {
+        id: "2",
+        name: "iPhone 16 128GB | Chính hãng VN/A",
+        image: ip16_den,
+        price: 15990000,
+        quantity: 1,
+      },
+    ],
+  },
+  {
+    id: "ORD003",
+    customer: {
+      id: "C002",
+      userName: "Huy",
+      email: "huy.nguyen@example.com",
+    },
+    totalAmount: 45980000,
+    status: OrderStatus.PROCESSING,
+    paymentMethod: PaymentMethod.BANK_TRANSFER,
+    paymentStatus: PaymentStatus.PENDING,
+    addressShipping: "89 Lê Lợi, Quận 3, TP. HCM",
+    phoneNumber: "0911122233",
+    note: "Đóng gói kỹ, dễ vỡ",
+    createdAt: new Date("2025-11-07"),
+    updatedAt: new Date("2025-11-08"),
+    items: [
+      {
+        id: "3",
+        name: "iPhone 17 Pro Max 512GB",
+        image: ip17promax_bac,
+        price: 34990000,
+        quantity: 1,
+      },
+      {
+        id: "4",
+        name: "AirPods Pro 2 | MagSafe",
+        image: ip15_hong,
+        price: 10990000,
+        quantity: 1,
+      },
+    ],
+  },
+  {
+    id: "ORD004",
+    customer: {
+      id: "C003",
+      userName: "Linh",
+      email: "linh.tran@example.com",
+    },
+    totalAmount: 12990000,
+    status: OrderStatus.NEW,
+    paymentMethod: PaymentMethod.CASH_ON_DELIVERY,
+    paymentStatus: PaymentStatus.PENDING,
+    addressShipping: "102 Võ Văn Ngân, Thủ Đức, TP. HCM",
+    phoneNumber: "0933444555",
+    note: "Giao buổi chiều",
+    createdAt: new Date("2025-11-09"),
+    updatedAt: new Date("2025-11-09"),
+    items: [
+      {
+        id: "5",
+        name: "Apple Watch Series 10 | 41mm",
+        image: ip16_trang,
+        price: 12990000,
+        quantity: 1,
+      },
+    ],
+  },
+  {
+    id: "ORD005",
+    customer: {
+      id: "C004",
+      userName: "An",
+      email: "an.vo@example.com",
+    },
+    totalAmount: 53970000,
+    status: OrderStatus.CANCELLED,
+    paymentMethod: PaymentMethod.BANK_TRANSFER,
+    paymentStatus: PaymentStatus.FAILED,
+    addressShipping: "55 Nguyễn Trãi, Quận 5, TP. HCM",
+    phoneNumber: "0909090909",
+    note: "Đã huỷ do sai địa chỉ",
+    createdAt: new Date("2025-10-28"),
+    updatedAt: new Date("2025-11-01"),
+    items: [
+      {
+        id: "6",
+        name: "iPhone 16 Pro 256GB",
+        image: ip16_hong,
+        price: 28990000,
+        quantity: 1,
+      },
+      {
+        id: "7",
+        name: "iPad Air M2 11 inch 128GB",
+        image: ip16_xanhluuly,
+        price: 24980000,
+        quantity: 1,
+      },
+    ],
+  },
+];
