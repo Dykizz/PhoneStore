@@ -1,14 +1,21 @@
-import { StrictMode } from "react";
-import { createRoot } from "react-dom/client";
-// @ts-ignore
+import React from "react";
+import ReactDOM from "react-dom/client";
+import { RouterProvider } from "react-router-dom";
+import { router } from "./router";
+import { CartProvider } from "./contexts/cartContexts";
 import "./index.css";
-import App from "./App.tsx";
-import { AuthProvider } from "./providers/AuthProvider.tsx";
+import { AuthProvider } from "./providers/AuthProvider";
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+const queryClient = new QueryClient()
 
-createRoot(document.getElementById("root")!).render(
-  <StrictMode>
+ReactDOM.createRoot(document.getElementById("root")!).render(
+  <React.StrictMode>
+    <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <App />
+      <CartProvider>
+        <RouterProvider router={router} />
+      </CartProvider>
     </AuthProvider>
-  </StrictMode>
+    </QueryClientProvider>
+  </React.StrictMode>
 );

@@ -37,6 +37,17 @@ class ApiClient {
       if (this.accessToken) {
         config.headers = config.headers ?? {};
         config.headers["Authorization"] = `Bearer ${this.accessToken}`;
+      } else {
+        // Lấy accessToken từ localStorage nếu chưa có trong biến
+        const accessToken =
+          typeof window !== "undefined"
+            ? localStorage.getItem("access_token")
+            : null;
+        if (accessToken) {
+          this.accessToken = accessToken;
+          config.headers = config.headers ?? {};
+          config.headers["Authorization"] = `Bearer ${accessToken}`;
+        }
       }
       return config;
     });
@@ -45,7 +56,7 @@ class ApiClient {
     this.axiosInstance.interceptors.response.use(
       (response: AxiosResponse) => {
         // Kiểm tra response.data có cấu trúc của API và statusCode là 401
-        const responseData = response.data as any;
+        const responseData = response.data as { statusCode: number; [key: string]: unknown };
         if (
           responseData &&
           responseData.statusCode === 401 &&

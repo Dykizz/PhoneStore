@@ -1,11 +1,12 @@
 import type { ApiResponse } from "@/interfaces/apiResponse.interface";
 import axios from "axios";
 import type {
+  InternalAxiosRequestConfig,
   AxiosInstance,
   AxiosRequestConfig,
   AxiosResponse,
-  InternalAxiosRequestConfig,
 } from "axios";
+
 // Mở rộng interface AxiosRequestConfig để thêm thuộc tính _retry
 interface ExtendedAxiosRequestConfig extends AxiosRequestConfig {
   _retry?: boolean;
@@ -36,6 +37,17 @@ class ApiClient {
       if (this.accessToken) {
         config.headers = config.headers ?? {};
         config.headers["Authorization"] = `Bearer ${this.accessToken}`;
+      } else {
+        // Lấy accessToken từ localStorage nếu chưa có trong biến
+        const accessToken =
+          typeof window !== "undefined"
+            ? localStorage.getItem("access_token")
+            : null;
+        if (accessToken) {
+          this.accessToken = accessToken;
+          config.headers = config.headers ?? {};
+          config.headers["Authorization"] = `Bearer ${accessToken}`;
+        }
       }
       return config;
     });
@@ -146,6 +158,7 @@ class ApiClient {
         this.clearToken();
         if (typeof window !== "undefined") {
           localStorage.removeItem("user");
+          localStorage.removeItem("permissionCodes");
         }
 
         if (this.onAuthFailure) {

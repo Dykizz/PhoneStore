@@ -73,7 +73,7 @@ const RegisterPage = () => {
     try {
       const response = await register({
         email: data.email,
-        username: data.username,
+        userName: data.username,
         password: data.password,
       });
 

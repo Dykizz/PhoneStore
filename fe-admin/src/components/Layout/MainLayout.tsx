@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Layout, Menu, theme, Switch, Button } from "antd";
+import { Layout, Menu, theme } from "antd";
 import { Outlet, useNavigate, useLocation } from "react-router-dom";
 import {
   DashboardOutlined,
@@ -7,19 +7,36 @@ import {
   ShoppingCartOutlined,
   UserOutlined,
   SettingOutlined,
-  MenuFoldOutlined,
-  MenuUnfoldOutlined,
+  FileTextOutlined,
+  PercentageOutlined,
+  TrademarkOutlined,
+  AppstoreOutlined,
+  TeamOutlined,
+  LogoutOutlined,
 } from "@ant-design/icons";
 import { useTheme } from "../../providers/ThemeContext";
+import Header from "../Header";
+import apiClient from "@/utils/apiClient";
 
-const { Header, Sider, Content } = Layout;
+const { Sider, Content } = Layout;
 
 const MainLayout: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { isDark, toggleTheme } = useTheme();
-
+  const logout = async () => {
+    try {
+      await apiClient.post("/auth/logout");
+    } catch (error) {
+      console.error("Logout error:", error);
+    } finally {
+      localStorage.removeItem("user");
+      localStorage.removeItem("access_token");
+      apiClient.clearToken();
+      window.location.href = "/login";
+    }
+  };
   const {
     token: {
       colorBgContainer,
@@ -38,34 +55,84 @@ const MainLayout: React.FC = () => {
       label: "Dashboard",
     },
     {
+      key: "/suppliers",
+      icon: <TeamOutlined />,
+      label: "Nhà cung cấp",
+    },
+    {
+      key: "/product-types",
+      icon: <AppstoreOutlined />,
+      label: "Loại sản phẩm",
+    },
+    {
+      key: "/brands",
+      icon: <TrademarkOutlined />,
+      label: "Thương hiệu",
+    },
+    {
+      key: "/discount-policies",
+      icon: <PercentageOutlined />,
+      label: "Chính sách giảm giá",
+    },
+    {
       key: "/products",
       icon: <ShopOutlined />,
-      label: "Products",
+      label: "Sản phẩm",
       children: [
         {
           key: "/products",
-          label: "Product List",
+          label: "DS sản phẩm",
         },
         {
-          key: "/products/new",
-          label: "Add Product",
+          key: "/products/add",
+          label: "Thêm sản phẩm",
+        },
+      ],
+    },
+    {
+      key: "/goods-receipts",
+      icon: <FileTextOutlined />,
+      label: "Phiếu nhập hàng",
+      children: [
+        {
+          key: "/goods-receipts",
+          label: "DS phiếu nhập hàng",
+        },
+        {
+          key: "/goods-receipts/add",
+          label: "Tạo phiếu nhập hàng",
         },
       ],
     },
     {
       key: "/orders",
       icon: <ShoppingCartOutlined />,
-      label: "Orders",
+      label: "Đơn hàng",
     },
     {
       key: "/users",
       icon: <UserOutlined />,
-      label: "Users",
+      label: "Người dùng",
+      children: [
+        {
+          key: "/users",
+          label: "DS người dùng",
+        },
+        {
+          key: "/users/add",
+          label: "Tạo người dùng",
+        },
+      ],
+    },
+    {
+      key: "/",
+      icon: <LogoutOutlined />,
+      label: <div onClick={logout}>Đăng xuất</div>,
     },
     {
       key: "/settings",
       icon: <SettingOutlined />,
-      label: "Settings",
+      label: "Cài đặt",
     },
   ];
 
@@ -87,7 +154,7 @@ const MainLayout: React.FC = () => {
           left: 0,
           top: 0,
           bottom: 0,
-          backgroundColor: colorBgContainer, // Dùng cùng màu với Content
+          backgroundColor: colorBgContainer,
         }}
       >
         <div
@@ -136,42 +203,11 @@ const MainLayout: React.FC = () => {
         }}
       >
         <Header
-          style={{
-            height: "64px",
-            padding: "0 16px",
-            background: colorBgContainer,
-            borderBottom: `1px solid ${colorBorder}`,
-            position: "sticky",
-            top: 0,
-            zIndex: 1,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <Button
-            type="text"
-            icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-            onClick={() => setCollapsed(!collapsed)}
-            style={{
-              fontSize: "16px",
-              width: 40,
-              height: 40,
-            }}
-          />
-
-          <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-            <Switch
-              checked={isDark}
-              onChange={toggleTheme}
-              checkedChildren="🌙"
-              unCheckedChildren="☀️"
-              size="small"
-            />
-            <span>Admin User</span>
-          </div>
-        </Header>
-
+          isDark={isDark}
+          collapsed={collapsed}
+          setCollapsed={setCollapsed}
+          toggleTheme={toggleTheme}
+        />
         <Content
           style={{
             margin: "24px 16px",
