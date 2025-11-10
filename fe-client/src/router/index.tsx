@@ -20,7 +20,7 @@ import OrderDetailPage from "@/pages/Orders/OrderDetail";
 //   return true;
 // };
 
-// const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
+// const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 //   if (!isAuthenticated()) {
 //     return <Navigate to="/login" replace />;
 //   }
@@ -61,6 +61,14 @@ export const router = createBrowserRouter([
         path: "profile",
         element: <Profile />,
       },
+      // {
+      //   path: "checkout",
+      //   element: (
+      //     <ProtectedRoute>
+      //       <CheckoutPage />
+      //     </ProtectedRoute>
+      //   ),
+      // },
       {
         path: "about",
         element: (
@@ -76,10 +84,6 @@ export const router = createBrowserRouter([
             <h1>Contact</h1>
           </div>
         ),
-      },
-      {
-        path: "products",
-        element: <ProductsPage />,
       },
       {
         path: "cart",
