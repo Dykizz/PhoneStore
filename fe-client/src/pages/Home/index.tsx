@@ -19,34 +19,36 @@ export function Home() {
       try {
         const query = QueryBuilder.create().page(1).limit(8).build();
         const response = await getProducts(query);
-
-        if (!response.success) throw new Error(response.message);
+        if (!response.success) {
+          throw new Error(response.message);
+        }
+        console.log("API response:", response);
         setProducts(response.data.data);
       } catch (error) {
         console.error("Lỗi khi tải sản phẩm:", error);
         setError(error instanceof Error ? error.message : "Lỗi không xác định");
         showToast({
           title: "Lỗi",
-          description: "Không thể tải sản phẩm, vui lòng thử lại sau.",
+          description: "Lỗi khi tải sản phẩm",
         });
       } finally {
         setIsLoading(false);
       }
     };
+
     loadProducts();
   }, []);
 
-  if (isLoading)
+  if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-96 text-gray-600 text-lg">
-        Đang tải sản phẩm...
-      </div>
+      <div className="container py-8 text-center">Đang tải sản phẩm...</div>
     );
+  }
 
-  if (error)
+  if (error) {
     return (
-      <div className="flex justify-center items-center h-96 text-red-500 text-lg">
-        {error}
+      <div className="container py-8 text-center text-red-600">
+        Lỗi khi tải sản phẩm: {error}
       </div>
     );
   }
