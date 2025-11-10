@@ -46,7 +46,10 @@ export default function CheckoutPage2() {
           </div>
           <div className="flex justify-between text-gray-700 mb-4">
             <span>
-              Giảm giá <span className="bg-red-50 text-red-600 px-2 py-0.5 rounded text-xs">S-STUDENT</span>
+              Giảm giá{" "}
+              <span className="bg-red-50 text-red-600 px-2 py-0.5 rounded text-xs">
+                S-STUDENT
+              </span>
             </span>
             <span className="text-red-600">-500.000đ</span>
           </div>
@@ -75,9 +78,7 @@ export default function CheckoutPage2() {
                 <p className="font-medium text-gray-800">
                   Chọn phương thức thanh toán
                 </p>
-                <p className="text-gray-500 text-sm">
-                  Giảm thêm tới 200.000đ
-                </p>
+                <p className="text-gray-500 text-sm">Giảm thêm tới 200.000đ</p>
               </div>
             </div>
             <span className="text-red-500 font-semibold text-lg">›</span>

@@ -24,7 +24,6 @@ import type { ProductType } from "@/types/productType.type";
 import type { Brand } from "@/types/brand.type";
 import type { DiscountPolicy } from "@/types/discountPolicy.type";
 import { getDiscountPolicies } from "@/apis/discountPolicy.api";
-import { formatCurrencyVND } from "@/utils/util";
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -33,9 +32,7 @@ const AddProductPage: React.FC = () => {
   const [form] = Form.useForm();
   const [submitting, setSubmitting] = useState(false);
   const [brands, setBrands] = useState<{ id: string; name: string }[]>([]);
-  const [productTypes, setproductTypes] = useState<
-    { id: string; name: string }[]
-  >([]);
+  const [productTypes, setproductTypes] = useState<ProductType[]>([]);
   const [discountPolicies, setDiscountPolicies] = useState<
     { id: string; name: string }[]
   >([]);
@@ -47,11 +44,33 @@ const AddProductPage: React.FC = () => {
     return map;
   }, [brands]);
 
-  const mapProductTypes = useMemo(() => {
-    const map = new Map<string, string>();
-    productTypes.forEach((type) => map.set(type.id, type.name));
-    return map;
-  }, [productTypes]);
+  const handleProductTypeChange = async (productTypeId: string) => {
+    form.setFieldsValue({ productTypeId });
+    if (productTypeId) {
+      try {
+        const specsLabels =
+          productTypes.find((type) => type.id === productTypeId)
+            ?.defaultSpecifications || [];
+        const specsFields = specsLabels.map((label: string) => ({
+          label,
+          value: "",
+        }));
+
+        form.setFieldsValue({
+          specifications: specsFields,
+        });
+      } catch (error) {
+        console.error("Error fetching default specs:", error);
+        form.setFieldsValue({
+          specifications: [],
+        });
+      }
+    } else {
+      form.setFieldsValue({
+        specifications: [],
+      });
+    }
+  };
 
   const mapDiscountPolicies = useMemo(() => {
     const map = new Map<string, string>();
@@ -79,12 +98,7 @@ const AddProductPage: React.FC = () => {
     const query = QueryBuilder.create().page(1).limit(100).build();
     const response = await getProductTypes(query);
     if (response.success) {
-      const tmp: { id: string; name: string }[] = [];
-      response.data.data.forEach((type: ProductType) => {
-        mapProductTypes.set(type.id, type.name);
-        tmp.push({ id: type.id, name: type.name });
-      });
-      setproductTypes(tmp);
+      setproductTypes(response.data.data);
     } else {
       errorNotification("Lỗi tải danh sách loại sản phẩm", response.message);
     }
@@ -399,7 +413,10 @@ const AddProductPage: React.FC = () => {
                 { required: true, message: "Vui lòng chọn loại sản phẩm" },
               ]}
             >
-              <Select placeholder="Chọn loại sản phẩm">
+              <Select
+                placeholder="Chọn loại sản phẩm"
+                onChange={handleProductTypeChange}
+              >
                 {productTypes.map((type) => (
                   <Option key={type.id} value={type.id}>
                     {type.name}
@@ -420,6 +437,86 @@ const AddProductPage: React.FC = () => {
             </Form.Item>
           </Col>
         </Row>
+
+        <div style={{ marginTop: 24 }}>
+          <h3 style={{ marginBottom: 16 }}>Thông số kỹ thuật</h3>
+          <Form.List name="specifications">
+            {(fields, { add, remove }) => (
+              <>
+                <Row
+                  gutter={16}
+                  style={{
+                    marginBottom: 8,
+                    fontWeight: "bold",
+                    borderBottom: "1px solid #d9d9d9",
+                    paddingBottom: 8,
+                  }}
+                >
+                  <Col span={10}>Tên thông số</Col>
+                  <Col span={10}>Giá trị</Col>
+                  <Col span={4}>Thao tác</Col>
+                </Row>
+
+                {fields.map(({ key, name, ...restField }) => (
+                  <Row
+                    gutter={16}
+                    key={key}
+                    align="middle"
+                    style={{ marginBottom: 8 }}
+                  >
+                    <Col span={10}>
+                      <Form.Item
+                        {...restField}
+                        name={[name, "label"]}
+                        rules={[
+                          {
+                            required: true,
+                            message: "Vui lòng nhập tên thông số",
+                          },
+                        ]}
+                        style={{ marginBottom: 0 }}
+                      >
+                        <Input placeholder="VD: Màn hình" />
+                      </Form.Item>
+                    </Col>
+                    <Col span={10}>
+                      <Form.Item
+                        {...restField}
+                        name={[name, "value"]}
+                        rules={[
+                          { required: true, message: "Vui lòng nhập giá trị" },
+                        ]}
+                        style={{ marginBottom: 0 }}
+                      >
+                        <TextArea placeholder="VD: OLED, 6.1 inch" rows={2} />
+                      </Form.Item>
+                    </Col>
+                    <Col span={4}>
+                      <Button type="link" danger onClick={() => remove(name)}>
+                        Xóa
+                      </Button>
+                    </Col>
+                  </Row>
+                ))}
+
+                <Row gutter={16}>
+                  <Col span={24}>
+                    <Form.Item>
+                      <Button
+                        type="dashed"
+                        onClick={() => add({ label: "", value: "" })}
+                        block
+                        icon={<PlusOutlined />}
+                      >
+                        Thêm thông số
+                      </Button>
+                    </Form.Item>
+                  </Col>
+                </Row>
+              </>
+            )}
+          </Form.List>
+        </div>
 
         <Row gutter={16}>
           <Col span={24} style={{ textAlign: "right" }}>

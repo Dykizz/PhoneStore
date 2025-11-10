@@ -66,6 +66,12 @@ export class Product {
   @Column('uuid')
   brandId: string;
 
+  @Column('jsonb', { nullable: true })
+  specifications?: {
+    label: string;
+    value: string;
+  }[];
+
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
 

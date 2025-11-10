@@ -2,7 +2,11 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { InjectRepository, InjectDataSource } from '@nestjs/typeorm';
-import { Order, OrderStatus, PaymentStatus } from './entities/order.entity';
+import {
+  Order,
+  OrderStatus,
+  PaymentStatusOrder,
+} from './entities/order.entity';
 import { Repository, DeepPartial, DataSource } from 'typeorm';
 import { OrderDetail } from './entities/order-detail.entity';
 import { IUser } from 'src/users/entities/user.entity';
@@ -23,7 +27,10 @@ export class OrdersService {
     private readonly productService: ProductsService,
   ) {}
 
-  async create(createOrderDto: CreateOrderDto, user: IUser) {
+  async create(
+    createOrderDto: CreateOrderDto,
+    user: IUser,
+  ): Promise<BaseOrder> {
     const { items } = createOrderDto;
 
     // ✅ 1. Validate và load variants
@@ -31,7 +38,7 @@ export class OrdersService {
       items.map(item => this.productService.findVariantById(item.variantId)),
     );
 
-    // ✅ 2. Validate (KHÔNG check quantity vì chưa xác nhận)
+    // ✅ 2. Validate quantity (CHECK NGAY KHI TẠO)
     items.forEach(item => {
       const variant = variants.find(v => v.id === item.variantId);
       if (!variant) {
@@ -40,6 +47,12 @@ export class OrdersService {
       if (!variant.product.isReleased) {
         throw new BadRequestException(
           `Sản phẩm "${variant.product.name}" chưa được phát hành`,
+        );
+      }
+      // ✅ CHECK QUANTITY
+      if (variant.quantity < item.quantity) {
+        throw new BadRequestException(
+          `Sản phẩm "${variant.product.name} - ${variant.color}" chỉ còn ${variant.quantity} sản phẩm`,
         );
       }
     });
@@ -56,6 +69,7 @@ export class OrdersService {
 
       totalAmount += itemTotal;
       const price = Number(variant.product.price);
+
       return {
         variant,
         item,
@@ -78,8 +92,9 @@ export class OrdersService {
         note: createOrderDto.note,
         totalAmount,
         paymentMethod: createOrderDto.paymentMethod,
-        paymentStatus: PaymentStatus.PENDING,
+        paymentStatus: PaymentStatusOrder.PENDING,
         status: OrderStatus.NEW,
+        recipientName: createOrderDto.recipientName,
       });
       const savedOrder = await queryRunner.manager.save(order);
 
@@ -106,7 +121,22 @@ export class OrdersService {
       );
       await queryRunner.manager.save(orderDetails);
 
-      // ✅ 6. KHÔNG TRỪ QUANTITY Ở ĐÂY - Chờ xác nhận
+      // ✅ 6. TRỪ QUANTITY NGAY KHI TẠO ĐơN
+      for (const { item, variant } of orderDetailsData) {
+        await queryRunner.manager.decrement(
+          'product_variants',
+          { id: variant.id },
+          'quantity',
+          item.quantity,
+        );
+
+        await queryRunner.manager.decrement(
+          'products',
+          { id: variant.product.id },
+          'quantity',
+          item.quantity,
+        );
+      }
 
       // ✅ 7. Commit transaction
       await queryRunner.commitTransaction();
@@ -117,17 +147,95 @@ export class OrdersService {
         relations: ['customer'],
       });
 
-      return {
-        orderId: result.id,
-        totalAmount: result.totalAmount,
-        status: result.status,
-        paymentMethod: result.paymentMethod,
-        paymentStatus: result.paymentStatus,
+      const response: BaseOrder = {
+        id: order.id,
+        customerId: order.customerId,
+        customer: {
+          id: user.id,
+          userName: user.userName,
+          email: user.email,
+        },
+        totalAmount: order.totalAmount,
+        status: order.status,
+        paymentMethod: order.paymentMethod,
+        paymentStatus: order.paymentStatus,
+        createdAt: order.createdAt,
+        recipientName: order.recipientName,
       };
+
+      return response;
     } catch (error) {
       await queryRunner.rollbackTransaction();
       console.error('Error creating order:', error);
       throw new BadRequestException('Lỗi tạo đơn hàng: ' + error.message);
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async updateStatus(id: string, status: OrderStatus): Promise<void> {
+    const order = await this.ordersRepository.findOne({
+      where: { id },
+      relations: ['items'],
+    });
+
+    if (!order) {
+      throw new BadRequestException('Đơn hàng không tồn tại');
+    }
+
+    // ✅ Validate business logic
+    const validTransitions: Record<OrderStatus, OrderStatus[]> = {
+      new: [OrderStatus.PROCESSING, OrderStatus.CANCELLED],
+      processing: [OrderStatus.SHIPPED, OrderStatus.CANCELLED],
+      shipped: [OrderStatus.DELIVERED],
+      delivered: [],
+      cancelled: [],
+    };
+
+    if (!validTransitions[order.status].includes(status)) {
+      throw new BadRequestException(
+        `Không thể chuyển từ trạng thái "${order.status}" sang "${status}"`,
+      );
+    }
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      // ✅ CHỈ HỦY ĐƠN MỚI HOẶC ĐANG XỬ LÝ THÌ CỘNG LẠI QUANTITY
+      if (status === OrderStatus.CANCELLED) {
+        const orderDetails = await queryRunner.manager.find(OrderDetail, {
+          where: { orderId: order.id },
+        });
+
+        for (const detail of orderDetails) {
+          await queryRunner.manager.increment(
+            'product_variants',
+            { id: detail.variantId },
+            'quantity',
+            detail.quantity,
+          );
+
+          await queryRunner.manager.increment(
+            'products',
+            { id: detail.productId },
+            'quantity',
+            detail.quantity,
+          );
+        }
+      }
+
+      order.status = status;
+      await queryRunner.manager.save(order);
+
+      await queryRunner.commitTransaction();
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      console.error('Error updating order status:', error);
+      throw new BadRequestException(
+        'Lỗi cập nhật trạng thái đơn hàng: ' + error.message,
+      );
     } finally {
       await queryRunner.release();
     }
@@ -169,6 +277,7 @@ export class OrdersService {
       paymentMethod: order.paymentMethod,
       paymentStatus: order.paymentStatus,
       createdAt: order.createdAt,
+      recipientName: order.recipientName,
     }));
 
     return new PaginatedResponseDto(
@@ -200,6 +309,7 @@ export class OrdersService {
       paymentStatus: order.paymentStatus,
       addressShipping: order.addressShipping,
       phoneNumber: order.phoneNumber,
+      recipientName: order.recipientName,
       note: order.note,
       createdAt: order.createdAt,
       updatedAt: order.updatedAt,
@@ -219,111 +329,68 @@ export class OrdersService {
     return detailOrder;
   }
 
-  async updateStatus(id: string, status: OrderStatus): Promise<void> {
-    const order = await this.ordersRepository.findOne({
-      where: { id },
-      relations: ['items'],
-    });
-
+  async updatePaymentSatus(id: string, paymentStatus: PaymentStatusOrder) {
+    const order = await this.ordersRepository.findOne({ where: { id } });
     if (!order) {
       throw new BadRequestException('Đơn hàng không tồn tại');
     }
+    order.paymentStatus = paymentStatus;
+    await this.ordersRepository.save(order);
+  }
 
-    // ✅ Validate business logic - Không cho chuyển status tùy tiện
-    const validTransitions: Record<OrderStatus, OrderStatus[]> = {
-      new: [OrderStatus.PROCESSING, OrderStatus.CANCELLED],
-      processing: [OrderStatus.SHIPPED, OrderStatus.CANCELLED],
-      shipped: [OrderStatus.DELIVERED],
-      delivered: [],
-      cancelled: [],
-    };
+  async findMyOrders(
+    query: PaginationQueryDto,
+    user: IUser,
+  ): Promise<PaginatedResponseDto<BaseOrder>> {
+    // ✅ Tạo custom query có filter customerId
+    const customQuery = { ...query, customerId: user.id };
 
-    if (!validTransitions[order.status].includes(status)) {
-      throw new BadRequestException(
-        `Không thể chuyển từ trạng thái "${order.status}" sang "${status}"`,
+    const validSortFields = ['totalAmount', 'createdAt', 'updatedAt'];
+    const queryBuilder = this.ordersRepository
+      .createQueryBuilder('orders')
+      .leftJoinAndSelect('orders.customer', 'customer')
+      .where('orders.customerId = :customerId', { customerId: user.id });
+
+    if (query.page < 1) query.page = 1;
+    if (query.limit < 1) query.limit = 10;
+    const skip = (query.page - 1) * query.limit;
+
+    query.applyToQueryBuilder(queryBuilder, 'orders', [], validSortFields);
+
+    if (query.search) {
+      queryBuilder.andWhere(
+        'customer.userName ILIKE :search OR customer.email ILIKE :search OR orders.recipientName ILIKE :search OR orders.phoneNumber ILIKE :search',
+        { search: `%${query.search}%` },
       );
     }
 
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
+    const [items, total] = await queryBuilder
+      .skip(skip)
+      .take(query.limit)
+      .getManyAndCount();
 
-    try {
-      if (
-        status === OrderStatus.PROCESSING &&
-        order.status === OrderStatus.NEW
-      ) {
-        const orderDetails = await queryRunner.manager.find(OrderDetail, {
-          where: { orderId: order.id },
-        });
+    const resultItems: BaseOrder[] = items.map(order => ({
+      id: order.id,
+      customerId: order.customerId,
+      customer: {
+        id: order.customer.id,
+        userName: order.customer.userName,
+        email: order.customer.email,
+      },
+      totalAmount: order.totalAmount,
+      status: order.status,
+      paymentMethod: order.paymentMethod,
+      paymentStatus: order.paymentStatus,
+      createdAt: order.createdAt,
+      recipientName: order.recipientName,
+    }));
 
-        for (const detail of orderDetails) {
-          const variant = await this.productService.findVariantById(
-            detail.variantId,
-          );
-
-          if (variant.quantity < detail.quantity) {
-            throw new BadRequestException(
-              `Sản phẩm "${detail.snapshotProdct.productName} - ${detail.snapshotProdct.variantColor}" chỉ còn ${variant.quantity} sản phẩm. Không đủ để xác nhận đơn hàng.`,
-            );
-          }
-        }
-
-        for (const detail of orderDetails) {
-          await queryRunner.manager.decrement(
-            'product_variants',
-            { id: detail.variantId },
-            'quantity',
-            detail.quantity,
-          );
-
-          await queryRunner.manager.decrement(
-            'products',
-            { id: detail.productId },
-            'quantity',
-            detail.quantity,
-          );
-        }
-      }
-
-      if (
-        status === OrderStatus.CANCELLED &&
-        order.status === OrderStatus.PROCESSING
-      ) {
-        const orderDetails = await queryRunner.manager.find(OrderDetail, {
-          where: { orderId: order.id },
-        });
-
-        for (const detail of orderDetails) {
-          await queryRunner.manager.increment(
-            'product_variants',
-            { id: detail.variantId },
-            'quantity',
-            detail.quantity,
-          );
-
-          await queryRunner.manager.increment(
-            'products',
-            { id: detail.productId },
-            'quantity',
-            detail.quantity,
-          );
-        }
-      }
-
-      order.status = status;
-      await queryRunner.manager.save(order);
-
-      await queryRunner.commitTransaction();
-    } catch (error) {
-      await queryRunner.rollbackTransaction();
-      console.error('Error updating order status:', error);
-      throw new BadRequestException(
-        'Lỗi cập nhật trạng thái đơn hàng: ' + error.message,
-      );
-    } finally {
-      await queryRunner.release();
-    }
+    return new PaginatedResponseDto(
+      resultItems,
+      total,
+      query.page,
+      query.limit,
+    );
   }
 
   update(id: number, updateOrderDto: UpdateOrderDto) {

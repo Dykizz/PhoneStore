@@ -232,6 +232,7 @@ export class ProductsService {
       detailDescription: product.detailDescription,
       productTypeId: product.productTypeId,
       brandId: product.brandId,
+      specifications: product.specifications,
     };
 
     if (!user || user.role === UserRole.USER) return response;
@@ -332,5 +333,48 @@ export class ProductsService {
       throw new BadRequestException('Biến thể sản phẩm không tồn tại');
     }
     return variant;
+  }
+
+  async findVariantsByIds(variantIds: string[]): Promise<
+    {
+      variantId: string;
+      productId: string;
+      name: string;
+      price: number;
+      finalPrice: number;
+      quantity: number;
+      image: string;
+      color: string;
+      maxQuantity: number;
+    }[]
+  > {
+    const variants = await this.productVariantsRepository.find({
+      where: { id: In(variantIds) },
+      relations: ['product'],
+    });
+
+    const result = variants.map(variant => {
+      let finalPrice = variant.product.price;
+      const discountPolicy = variant.product.discountPolicy;
+      if (discountPolicy) {
+        const now = new Date();
+        if (discountPolicy.startDate <= now && discountPolicy.endDate >= now) {
+          finalPrice =
+            (finalPrice * (100 - discountPolicy.discountPercent)) / 100;
+        }
+      }
+      return {
+        variantId: variant.id,
+        productId: variant.productId,
+        name: variant.product.name,
+        price: variant.product.price,
+        finalPrice,
+        quantity: variant.quantity,
+        image: variant.image,
+        color: variant.color,
+        maxQuantity: variant.quantity,
+      };
+    });
+    return result;
   }
 }

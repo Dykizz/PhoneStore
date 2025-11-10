@@ -23,6 +23,16 @@ export class VariantDto {
   image: string;
 }
 
+export class SpecificationDto {
+  @IsString({ message: 'Label phải là chuỗi ký tự' })
+  @IsNotEmpty({ message: 'Label không được rỗng' })
+  label: string;
+
+  @IsString({ message: 'Value phải là chuỗi ký tự' })
+  @IsNotEmpty({ message: 'Value không được rỗng' })
+  value: string;
+}
+
 export class CreateProductDto {
   @IsString({ message: 'Tên sản phẩm phải là chuỗi ký tự' })
   @IsNotEmpty()
@@ -35,6 +45,12 @@ export class CreateProductDto {
   @IsOptional()
   @IsString({ message: 'Mô tả chi tiết phải là chuỗi ký tự' })
   detailDescription?: string;
+
+  @IsOptional()
+  @IsArray({ message: 'Thông số kỹ thuật phải là một mảng' })
+  @ValidateNested({ each: true })
+  @Type(() => SpecificationDto)
+  specifications?: SpecificationDto[];
 
   @IsOptional()
   @IsArray({ message: 'Variants phải là một mảng' })

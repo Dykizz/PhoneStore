@@ -1,10 +1,21 @@
 import React, { useState, useEffect } from "react";
-import { Table, Input, Button, Space, Popconfirm, Modal, Form } from "antd";
+import {
+  Table,
+  Input,
+  Button,
+  Space,
+  Popconfirm,
+  Modal,
+  Form,
+  Row,
+  Col,
+} from "antd";
 import {
   SearchOutlined,
   PlusOutlined,
   EditOutlined,
   DeleteOutlined,
+  MinusCircleOutlined,
 } from "@ant-design/icons";
 import { QueryBuilder } from "@/utils/queryBuilder";
 import {
@@ -15,7 +26,6 @@ import {
 } from "@/apis/productType.api";
 import type { ProductType } from "@/types/productType.type";
 import { useNotificationContext } from "@/providers/NotificationProvider";
-import { th } from "zod/locales";
 
 const ProductTypesPage: React.FC = () => {
   const [productTypes, setProductTypes] = useState<ProductType[]>([]);
@@ -101,7 +111,16 @@ const ProductTypesPage: React.FC = () => {
   const handleSubmit = async (values: any) => {
     try {
       if (editingProductType) {
-        await updateProductType(editingProductType.id, values);
+        const filteredSpecs =
+          values.defaultSpecifications?.filter(
+            (spec: string) => spec && spec.trim() !== ""
+          ) || [];
+
+        const data = {
+          ...values,
+          defaultSpecifications: filteredSpecs,
+        };
+        await updateProductType(editingProductType.id, data);
         successNotification("Cập nhật loại sản phẩm thành công");
       } else {
         await createProductType(values);
@@ -248,6 +267,59 @@ const ProductTypesPage: React.FC = () => {
 
           <Form.Item name="description" label="Mô tả">
             <Input.TextArea placeholder="Nhập mô tả loại sản phẩm" rows={4} />
+          </Form.Item>
+          <Form.Item label="Thông số kỹ thuật mặc định">
+            <Form.List name="defaultSpecifications">
+              {(fields, { add, remove }) => (
+                <>
+                  {fields.map(({ key, name, ...restField }) => (
+                    <Row
+                      gutter={16}
+                      key={key}
+                      align="middle"
+                      style={{ marginBottom: 8 }}
+                    >
+                      <Col span={20}>
+                        <Form.Item
+                          {...restField}
+                          name={name}
+                          rules={[
+                            {
+                              required: true,
+                              message: "Vui lòng nhập tên thông số",
+                            },
+                          ]}
+                          style={{ marginBottom: 0 }}
+                        >
+                          <Input placeholder="VD: Màn hình, RAM, Camera..." />
+                        </Form.Item>
+                      </Col>
+                      <Col span={4}>
+                        <Button
+                          type="text"
+                          danger
+                          icon={<MinusCircleOutlined />}
+                          onClick={() => remove(name)}
+                          style={{ width: "100%" }}
+                        >
+                          Xóa
+                        </Button>
+                      </Col>
+                    </Row>
+                  ))}
+                  <Form.Item>
+                    <Button
+                      type="dashed"
+                      onClick={() => add("")}
+                      block
+                      icon={<PlusOutlined />}
+                    >
+                      Thêm thông số
+                    </Button>
+                  </Form.Item>
+                </>
+              )}
+            </Form.List>
           </Form.Item>
 
           <Form.Item style={{ textAlign: "right" }}>

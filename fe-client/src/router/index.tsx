@@ -1,13 +1,20 @@
 import { MainLayout } from "@/components/layout/MainLayout";
 import CartPage from "@/pages/CartPage";
-import CheckoutPage1 from "@/pages/CheckoutPage/checkout1";
+
 import CheckoutPage2 from "@/pages/CheckoutPage/checkout2";
 import { Home } from "@/pages/Home";
 import LoginPage from "@/pages/Login";
 import ProductDetail from "@/pages/ProductDetail";
 import ProductsPage from "@/pages/Products";
 import RegisterPage from "@/pages/Register";
-import { createBrowserRouter  } from "react-router-dom";
+import { createBrowserRouter } from "react-router-dom";
+// import { ProductDetail } from "@/pages/ProductDetail";
+// import { CheckoutPage } from "@/pages/CheckoutPage/checkout1";
+import Profile from "@/pages/Profile";
+import CheckoutPage from "@/pages/CheckoutPage";
+import PaymentResult from "@/pages/PaymentResult";
+import OrdersPage from "@/pages/Orders";
+import OrderDetailPage from "@/pages/Orders/OrderDetail";
 
 // const isAuthenticated = () => {
 //   return true;
@@ -43,12 +50,16 @@ export const router = createBrowserRouter([
         element: <RegisterPage />,
       },
       {
-        path:"products",
-        element: <ProductsPage/>
-      },
-      {
-        path: "product/:id",
+        path: "products/:id",
         element: <ProductDetail />,
+      },
+      // {
+      //   path: "checkout",
+      //   element: <CheckoutPage />,
+      // },
+      {
+        path: "profile",
+        element: <Profile />,
       },
       // {
       //   path: "checkout",
@@ -76,15 +87,31 @@ export const router = createBrowserRouter([
       },
       {
         path: "cart",
-        element: <CartPage/>
+        element: <CartPage />,
       },
       {
-        path: "checkout-page1",
-        element: <CheckoutPage1/>
+        path: "checkout",
+        element: <CheckoutPage />,
       },
       {
         path: "checkout-page2",
-        element: <CheckoutPage2/>
+        element: <CheckoutPage2 />,
+      },
+      {
+        path: "/product/:id",
+        element: <ProductDetail />,
+      },
+      {
+        path: "payment/result",
+        element: <PaymentResult />,
+      },
+      {
+        path: "orders",
+        element: <OrdersPage />,
+      },
+      {
+        path: "orders/:id",
+        element: <OrderDetailPage />,
       },
     ],
   },
