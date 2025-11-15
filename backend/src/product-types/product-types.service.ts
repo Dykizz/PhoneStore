@@ -13,7 +13,7 @@ export class ProductTypesService {
     @InjectRepository(ProductType)
     private readonly productTypesRepository: Repository<ProductType>,
   ) {}
-  async create(createProductTypeDto: CreateProductTypeDto) {
+  async createProductType(createProductTypeDto: CreateProductTypeDto) {
     const { name, description, defaultSpecifications } = createProductTypeDto;
     const existingProductType = await this.productTypesRepository.findOne({
       where: { name },
@@ -57,7 +57,7 @@ export class ProductTypesService {
     return new PaginatedResponseDto(items, total, query.page, query.limit);
   }
 
-  async update(
+  async updateProductType(
     id: string,
     updateProductTypeDto: UpdateProductTypeDto,
   ): Promise<ProductType> {
@@ -72,7 +72,7 @@ export class ProductTypesService {
     return productType;
   }
 
-  async remove(id: string): Promise<void> {
+  async removeProductType(id: string): Promise<void> {
     const productType = await this.productTypesRepository.findOne({
       where: { id },
     });

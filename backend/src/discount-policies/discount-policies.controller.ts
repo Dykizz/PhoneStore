@@ -23,7 +23,9 @@ export class DiscountPoliciesController {
   @Post()
   @ResponseMessage('Chính sách giảm giá đã được tạo thành công')
   async create(@Body() createDiscountPolicyDto: CreateDiscountPolicyDto) {
-    return await this.discountPoliciesService.create(createDiscountPolicyDto);
+    return await this.discountPoliciesService.createDiscountPolicy(
+      createDiscountPolicyDto,
+    );
   }
 
   @Get()
@@ -38,7 +40,7 @@ export class DiscountPoliciesController {
     @Param('id') id: string,
     @Body() updateDiscountPolicyDto: UpdateDiscountPolicyDto,
   ) {
-    return await this.discountPoliciesService.update(
+    return await this.discountPoliciesService.updateDiscountPolicy(
       id,
       updateDiscountPolicyDto,
     );
@@ -46,6 +48,6 @@ export class DiscountPoliciesController {
 
   @Delete(':id')
   async remove(@Param('id') id: string) {
-    return await this.discountPoliciesService.remove(id);
+    return await this.discountPoliciesService.removeDiscountPolicy(id);
   }
 }

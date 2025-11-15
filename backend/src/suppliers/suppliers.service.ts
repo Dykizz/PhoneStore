@@ -13,7 +13,7 @@ export class SuppliersService {
     @InjectRepository(Supplier)
     private readonly suppliersRepository: Repository<Supplier>,
   ) {}
-  async create(createSupplierDto: CreateSupplierDto) {
+  async createSupplier(createSupplierDto: CreateSupplierDto) {
     const { name, description } = createSupplierDto;
     const existingSupplier = await this.suppliersRepository.findOne({
       where: { name },
@@ -56,7 +56,7 @@ export class SuppliersService {
     return new PaginatedResponseDto(items, total, query.page, query.limit);
   }
 
-  async update(
+  async updateSupplier(
     id: string,
     updateSupplierDto: UpdateSupplierDto,
   ): Promise<Supplier> {

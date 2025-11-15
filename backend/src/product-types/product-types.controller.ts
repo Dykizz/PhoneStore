@@ -24,7 +24,9 @@ export class ProductTypesController {
   @Roles(UserRole.ADMIN)
   @ResponseMessage('Tạo loại sản phẩm thành công')
   async create(@Body() createProductTypeDto: CreateProductTypeDto) {
-    return await this.productTypesService.create(createProductTypeDto);
+    return await this.productTypesService.createProductType(
+      createProductTypeDto,
+    );
   }
 
   @Get()
@@ -40,12 +42,12 @@ export class ProductTypesController {
     @Param('id') id: string,
     @Body() updateProductTypeDto: UpdateProductTypeDto,
   ) {
-    return this.productTypesService.update(id, updateProductTypeDto);
+    return this.productTypesService.updateProductType(id, updateProductTypeDto);
   }
 
   @Delete(':id')
   @Roles(UserRole.ADMIN)
   remove(@Param('id') id: string) {
-    return this.productTypesService.remove(id);
+    return this.productTypesService.removeProductType(id);
   }
 }

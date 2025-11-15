@@ -16,7 +16,7 @@ export class BrandsService {
     private readonly uploadService: UploadService,
   ) {}
 
-  async create(createBrandDto: CreateBrandDto): Promise<Brand> {
+  async createBand(createBrandDto: CreateBrandDto): Promise<Brand> {
     const { name, description, image } = createBrandDto;
     const existingBrand = await this.brandsRepository.findOne({
       where: { name },
@@ -69,7 +69,7 @@ export class BrandsService {
     return brand;
   }
 
-  async update(id: string, updateBrandDto: UpdateBrandDto): Promise<Brand> {
+  async updateBand(id: string, updateBrandDto: UpdateBrandDto): Promise<Brand> {
     const brand = await this.brandsRepository.findOne({ where: { id } });
     if (!brand) {
       throw new BadRequestException('Thương hiệu không tồn tại');
@@ -82,7 +82,7 @@ export class BrandsService {
     return brand;
   }
 
-  async remove(id: string): Promise<void> {
+  async removeBand(id: string): Promise<void> {
     const brand = await this.brandsRepository.findOne({ where: { id } });
     if (!brand) {
       throw new BadRequestException('Thương hiệu không tồn tại');

@@ -27,6 +27,7 @@ const AddUserPage: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [fileList, setFileList] = useState<UploadFile[]>([]);
   const [cityOptions, setCityOptions] = useState<any[]>([]);
+
   const navigate = useNavigate();
   const { successNotification, errorNotification } = useNotificationContext();
 
@@ -126,7 +127,7 @@ const AddUserPage: React.FC = () => {
       <Button
         icon={<ArrowLeftOutlined />}
         onClick={() => {
-          window.history.back();
+          navigate(-1);
         }}
       >
         Quay lại

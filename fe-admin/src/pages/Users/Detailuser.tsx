@@ -77,7 +77,7 @@ const DetailUserPage: React.FC = () => {
           justifyContent: "space-between",
         }}
       >
-        <Button icon={<ArrowLeftOutlined />} onClick={() => navigate("/users")}>
+        <Button icon={<ArrowLeftOutlined />} onClick={() => navigate(-1)}>
           Quay lại
         </Button>
         <Button

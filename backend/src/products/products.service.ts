@@ -84,7 +84,7 @@ export class ProductsService {
     }
   }
 
-  async create(createProductDto: CreateProductDto, user: IUser) {
+  async createProduct(createProductDto: CreateProductDto, user: IUser) {
     const existingProduct = await this.productsRepository.findOne({
       where: { name: createProductDto.name },
     });
@@ -247,7 +247,10 @@ export class ProductsService {
     };
   }
 
-  async update(id: string, updateProductDto: UpdateProductDto): Promise<void> {
+  async updateProduct(
+    id: string,
+    updateProductDto: UpdateProductDto,
+  ): Promise<void> {
     const product = await this.productsRepository.findOne({
       where: { id },
       relations: ['variants'],
@@ -306,7 +309,7 @@ export class ProductsService {
     await this.productsRepository.update(id, updateProductDto);
   }
 
-  async remove(id: string): Promise<void> {
+  async removeProduct(id: string): Promise<void> {
     const product = await this.productsRepository.findOne({ where: { id } });
     if (!product) {
       throw new BadRequestException('Sản phẩm không tồn tại');

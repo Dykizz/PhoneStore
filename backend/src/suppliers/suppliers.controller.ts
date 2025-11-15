@@ -7,16 +7,14 @@ import {
   Param,
   Delete,
   Query,
-  BadRequestException,
 } from '@nestjs/common';
 import { SuppliersService } from './suppliers.service';
 import { CreateSupplierDto } from './dto/create-supplier.dto';
 import { UpdateSupplierDto } from './dto/update-supplier.dto';
 import { ResponseMessage } from 'src/common/decorators/response-message.decorator';
 import { PaginationQueryDto } from 'src/common/dtos/pagination-query.dto';
-import { IUser, UserRole } from 'src/users/entities/user.entity';
+import { UserRole } from 'src/users/entities/user.entity';
 import { Roles } from 'src/common/decorators/roles.decorator';
-import { User } from 'src/common/decorators/user.decorator';
 
 @Controller('suppliers')
 export class SuppliersController {
@@ -26,7 +24,7 @@ export class SuppliersController {
   @Roles(UserRole.ADMIN)
   @ResponseMessage('Tạo nhà cung cấp thành công')
   async create(@Body() createSupplierDto: CreateSupplierDto) {
-    return await this.suppliersService.create(createSupplierDto);
+    return await this.suppliersService.createSupplier(createSupplierDto);
   }
 
   @Get()
@@ -42,7 +40,7 @@ export class SuppliersController {
     @Param('id') id: string,
     @Body() updateSupplierDto: UpdateSupplierDto,
   ) {
-    return this.suppliersService.update(id, updateSupplierDto);
+    return this.suppliersService.updateSupplier(id, updateSupplierDto);
   }
 
   @Delete(':id')
