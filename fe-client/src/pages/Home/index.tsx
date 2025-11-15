@@ -52,7 +52,6 @@ export function Home() {
       </div>
     );
   }
-
   return (
     <div className="container py-8">
       <section className="text-center py-12">
@@ -84,9 +83,9 @@ export function Home() {
           Sản phẩm nổi bật
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          {products.map((product) => {
-            return <Product product={product} key={product.id} />;
-          })}
+          {products.map((product) => (
+            <Product product={product} key={product.id} />
+          ))}
         </div>
       </section>
     </div>

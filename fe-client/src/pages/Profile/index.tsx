@@ -1,376 +1,245 @@
-import { useState, useRef } from 'react'
-import type { ChangeEvent } from 'react'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { showToast } from '@/utils/toast'
-import { getMyProfile, updateProfile, changePassword } from '@/apis/user.api'
-import { uploadImages } from '@/apis/upload.api'
-import {
-  ProfileSchema,
-  ChangePasswordSchema
-} from '@/types/user.type' 
-import type { DetailUser } from '@/types/user.type'
-import type {
-  ApiResponseSuccess
-} from '@/interfaces/apiResponse.interface'
-import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle
-} from '@/components/ui/card'
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage
-} from '@/components/ui/form'
-import { Input } from '@/components/ui/input'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { Camera, KeyRound, User } from 'lucide-react'
+"use client"
 
-type ProfileView = 'profile' | 'password'
+import { useState } from "react"
+import { users } from "@/data"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Button } from "@/components/ui/button"
+import { Lock } from "lucide-react"
 
-// =================== Profile Form ===================
-function ProfileForm() {
-  const queryClient = useQueryClient()
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+const customer = users.find((u) => u.role === "customer")!
 
-  const { data: profileData, isLoading } = useQuery({
-    queryKey: ['profile'],
-    queryFn: getMyProfile
-  })
-  const user = profileData?.data
-
-  const form = useForm<z.infer<typeof ProfileSchema>>({
-    resolver: zodResolver(ProfileSchema),
-    values: user ? { userName: user.userName } : { userName: '' },
-    defaultValues: {
-      userName: ''
-    }
-  })
-
-  const uploadAvatarMutation = useMutation({
-    mutationFn: uploadImages, 
-    onError: () => {
-      showToast({
-        type: 'error',
-        title: 'Tải ảnh thất bại',
-        description: 'Không thể tải ảnh lên.'
-      })
-    }
-  })
-
-  const updateProfileMutation = useMutation({
-    mutationFn: updateProfile,
-    onSuccess: (res: ApiResponseSuccess<DetailUser>) => {
-      showToast({
-        type: 'success',
-        title: 'Cập nhật thành công!',
-        description: 'Cập nhật thông tin thành công.'
-      })
-      queryClient.setQueryData(['profile'], res)
-      setPreviewUrl(null)
-      setSelectedFile(null)
-    },
-    onError: () => {
-      showToast({
-        type: 'error',
-        title: 'Cập nhật thất bại!',
-        description: 'Cập nhật thông tin thất bại.'
-      })
-    }
-  })
-
-  const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0]
-      setSelectedFile(file)
-      setPreviewUrl(URL.createObjectURL(file))
-    }
-  }
-
-  const handleAvatarClick = () => {
-    fileInputRef.current?.click()
-  }
-
-  const onSubmit = async (values: z.infer<typeof ProfileSchema>) => {
-    let avatarUrl = user?.avatar 
-
-    if (selectedFile) {
-      try {
-        const urls = await uploadAvatarMutation.mutateAsync([selectedFile])
-
-        if (!urls || urls.length === 0) {
-          throw new Error('Không nhận được URL sau khi tải lên')
-        }
-        
-        avatarUrl = urls[0] 
-      } catch (error) {
-        showToast({
-          type: 'error',
-          title: 'Lỗi tải ảnh',
-          description: (error as Error).message
-        })
-        return 
-      }
-    }
-
-    updateProfileMutation.mutate({
-      userName: values.userName,
-      avatar: avatarUrl
-    })
-  }
-
-  if (isLoading) {
-    return (
-      <Card>
-        <CardHeader>
-          <Skeleton className='h-8 w-1/3' />
-          <Skeleton className='h-4 w-2/3' />
-        </CardHeader>
-        <CardContent className='space-y-4'>
-          <Skeleton className='h-24 w-24 rounded-full' />
-          <Skeleton className='h-10 w-full' />
-          <Skeleton className='h-10 w-full' />
-        </CardContent>
-      </Card>
-    )
-  }
-
-  if (!user) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Lỗi</CardTitle>
-          <CardDescription>
-            Không thể tải thông tin hồ sơ.
-          </CardDescription>
-        </CardHeader>
-      </Card>
-    )
-  }
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Hồ sơ công khai</CardTitle>
-        <CardDescription>
-          Thông tin này sẽ được hiển thị trên trang.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-6'>
-            <input
-              type='file'
-              ref={fileInputRef}
-              onChange={handleFileChange}
-              className='hidden'
-              accept='image/png, image/jpeg, image/webp'
-            />
-
-            <FormItem className='flex justify-center'>
-              <button
-                type='button'
-                onClick={handleAvatarClick}
-                className='relative group rounded-full'
-              >
-                <Avatar className='h-24 w-24'>
-                  <AvatarImage
-                    src={previewUrl || user.avatar}
-                    alt={user.userName}
-                  />
-                  <AvatarFallback>
-                    {user.userName?.[0].toUpperCase() || 'U'}
-                  </AvatarFallback>
-                </Avatar>
-                <div className='absolute inset-0 h-full w-full rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity'>
-                  <Camera className='h-8 w-8 text-white' />
-                </div>
-              </button>
-            </FormItem>
-
-            <FormField
-              control={form.control}
-              name='userName'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Tên người dùng</FormLabel>
-                  <FormControl>
-                    <Input placeholder='Tên người dùng' {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormItem>
-              <FormLabel>Email</FormLabel>
-              <FormControl>
-                <Input readOnly disabled value={user.email || ''} />
-              </FormControl>
-            </FormItem>
-
-            <Button
-              type='submit'
-              disabled={
-                updateProfileMutation.isPending ||
-                uploadAvatarMutation.isPending
-              }
-            >
-              {updateProfileMutation.isPending ||
-              uploadAvatarMutation.isPending
-                ? 'Đang lưu...'
-                : 'Lưu thay đổi'}
-            </Button>
-          </form>
-        </Form>
-      </CardContent>
-    </Card>
-  )
-}
-
-// =================== Password Form ===================
-function PasswordForm() {
-  const form = useForm<z.infer<typeof ChangePasswordSchema>>({
-    resolver: zodResolver(ChangePasswordSchema),
-    defaultValues: {
-      oldPassword: '',
-      newPassword: '',
-      confirmPassword: ''
-    }
-  })
-
-  const changePasswordMutation = useMutation({
-    mutationFn: changePassword,
-    onSuccess: () => {
-      showToast({
-        type: 'success',
-        title: 'Đổi mật khẩu thành công!',
-        description: 'Đã đổi mật khẩu thành công!'
-      })
-      form.reset()
-    },
-    onError: () => {
-      showToast({
-        type: 'error',
-        title: 'Đổi mật khẩu thất bại!',
-        description: 'Đổi mật khẩu không thành công!'
-      })
-    }
-  })
-
-  function onSubmit(values: z.infer<typeof ChangePasswordSchema>) {
-    changePasswordMutation.mutate(values)
-  }
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Mật khẩu</CardTitle>
-        <CardDescription>
-          Thay đổi mật khẩu của bạn.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
-            <FormField
-              control={form.control}
-              name='oldPassword'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Mật khẩu cũ</FormLabel>
-                  <FormControl>
-                    <Input type='password' {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name='newPassword'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Mật khẩu mới</FormLabel>
-                  <FormControl>
-                    <Input type='password' {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name='confirmPassword'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Xác nhận mật khẩu mới</FormLabel>
-                  <FormControl>
-                    <Input type='password' {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <Button
-              type='submit'
-              disabled={changePasswordMutation.isPending}
-            >
-              {changePasswordMutation.isPending
-                ? 'Đang lưu...'
-                : 'Đổi mật khẩu'}
-            </Button>
-          </form>
-        </Form>
-      </CardContent>
-    </Card>
-  )
-}
-
-// =================== Main Page ===================
 export default function ProfilePage() {
-  const [view, setView] = useState<ProfileView>('profile')
+  const [form, setForm] = useState({
+    userName: customer.userName,
+    email: customer.email,
+    defaultAddress: customer.defaultAddress ?? "",
+    contactPhoneNumber: "",
+  })
+
+  const [showPasswordForm, setShowPasswordForm] = useState(false)
+  const [passwords, setPasswords] = useState({
+    old: "",
+    newPw: "",
+    confirm: "",
+  })
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm({ ...form, [e.target.name]: e.target.value })
+  }
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPasswords({ ...passwords, [e.target.name]: e.target.value })
+  }
 
   return (
-    <div className='container mx-auto max-w-6xl py-10'>
-      <div className='grid grid-cols-1 md:grid-cols-4 gap-8'>
-        {/* Cột Menu bên trái */}
-        <nav className='md:col-span-1 flex flex-col space-y-1'>
-          <Button
-            variant={view === 'profile' ? 'secondary' : 'ghost'}
-            onClick={() => setView('profile')}
-            className='justify-start'
-          >
-            <User className='mr-2 h-4 w-4' />
-            Hồ sơ
-          </Button>
-          <Button
-            variant={view === 'password' ? 'secondary' : 'ghost'}
-            onClick={() => setView('password')}
-            className='justify-start'
-          >
-            <KeyRound className='mr-2 h-4 w-4' />
-            Mật khẩu
-          </Button>
-        </nav>
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-white to-slate-200 text-slate-900 transition-all duration-500">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 md:px-10 py-8 md:py-14">
 
-        <div className='md:col-span-3'>
-          {view === 'profile' && <ProfileForm />}
-          {view === 'password' && <PasswordForm />}
+        {/* HEADER */}
+        <div className="mb-12 md:mb-16">
+          <h1 className="text-4xl md:text-5xl font-semibold tracking-tight text-center">
+            Tài khoản Phone Store
+          </h1>
+          <p className="text-center text-slate-600 mt-2 text-base md:text-lg">
+            Quản lý thông tin cá nhân và bảo mật tài khoản của bạn.
+          </p>
+        </div>
+
+        {/* MAIN LAYOUT */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-10">
+
+          {/* LEFT — AVATAR + BASIC INFO */}
+          <div className="bg-white/70 border border-white/40 rounded-3xl p-6 md:p-8 backdrop-blur-xl shadow-[0_18px_60px_rgba(0,0,0,0.12)] hover:shadow-[0_22px_80px_rgba(0,0,0,0.18)] hover:-translate-y-1 transition-all duration-300 animate-slideUp">
+            
+            {/* Avatar */}
+            <div className="flex flex-col items-center mb-8">
+              <div className="relative">
+                <img
+                  src="https://cdn-icons-png.flaticon.com/512/847/847969.png"
+                  alt="Avatar"
+                  className="w-28 h-28 md:w-32 md:h-32 rounded-full border border-white/70 shadow-lg object-cover"
+                />
+                <div className="absolute -bottom-1 -right-1 px-2 py-1 rounded-full bg-emerald-500 text-[10px] font-medium text-white shadow-md">
+                  Hoạt động
+                </div>
+              </div>
+
+              <p className="mt-4 text-lg font-medium">{customer.userName}</p>
+              <p className="text-sm text-slate-500">Thành viên Phone Store</p>
+
+              <Button
+                type="button"
+                variant="outline"
+                className="mt-4 rounded-full border-slate-300 bg-white/80 text-sm hover:bg-slate-50"
+              >
+                Đổi Avatar
+              </Button>
+            </div>
+
+            {/* INFO */}
+            <h2 className="text-lg md:text-xl font-semibold mb-4">
+              Thông tin khách hàng
+            </h2>
+
+            <div className="space-y-4 text-sm md:text-base leading-relaxed">
+              <InfoRow label="Họ tên" value={customer.userName} />
+              <InfoRow label="Email" value={customer.email} />
+              <InfoRow
+                label="Địa chỉ"
+                value={customer.defaultAddress ?? "Chưa cập nhật"}
+              />
+              <InfoRow label="Quyền" value={customer.role} />
+            </div>
+          </div>
+
+          {/* RIGHT — EDIT INFO + PASSWORD */}
+          <div className="lg:col-span-2 space-y-10">
+
+            {/* EDIT INFO */}
+            <div className="bg-white/80 border border-white/60 rounded-3xl p-6 md:p-8 backdrop-blur-xl shadow-[0_18px_60px_rgba(0,0,0,0.12)] hover:shadow-[0_22px_80px_rgba(0,0,0,0.18)] hover:-translate-y-1 transition-all duration-300 animate-slideUp delay-200">
+              <h2 className="text-lg md:text-xl font-semibold mb-6">
+                Chỉnh sửa thông tin
+              </h2>
+
+              <div className="space-y-6">
+                <FormRow label="Họ tên">
+                  <Input
+                    name="userName"
+                    value={form.userName}
+                    onChange={handleChange}
+                    className="bg-slate-100/70 border-none"
+                  />
+                </FormRow>
+
+                <FormRow label="Email">
+                  <Input
+                    name="email"
+                    type="email"
+                    value={form.email}
+                    onChange={handleChange}
+                    className="bg-slate-100/70 border-none"
+                  />
+                </FormRow>
+
+                <FormRow label="Địa chỉ mặc định">
+                  <Input
+                    name="defaultAddress"
+                    value={form.defaultAddress}
+                    onChange={handleChange}
+                    className="bg-slate-100/70 border-none"
+                  />
+                </FormRow>
+
+                <FormRow label="Số điện thoại">
+                  <Input
+                    name="contactPhoneNumber"
+                    value={form.contactPhoneNumber}
+                    onChange={handleChange}
+                    className="bg-slate-100/70 border-none"
+                  />
+                </FormRow>
+
+                <Button className="bg-black text-white w-full md:w-auto px-8 py-5 text-sm rounded-full hover:bg-gray-900">
+                  Lưu thay đổi
+                </Button>
+              </div>
+            </div>
+
+            {/* PASSWORD */}
+            <div className="bg-white/80 border border-white/60 rounded-3xl p-6 md:p-8 backdrop-blur-xl shadow-[0_18px_60px_rgba(0,0,0,0.12)] hover:shadow-[0_22px_80px_rgba(0,0,0,0.18)] hover:-translate-y-1 transition-all duration-300 animate-slideUp delay-300">
+
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-9 h-9 rounded-2xl bg-black text-white flex items-center justify-center shadow-md">
+                  <Lock className="w-4 h-4" />
+                </div>
+
+                <div>
+                  <h2 className="text-lg md:text-xl font-semibold">
+                    Bảo mật tài khoản
+                  </h2>
+                  <p className="text-sm text-slate-500">
+                    Đổi mật khẩu để bảo vệ tài khoản của bạn.
+                  </p>
+                </div>
+              </div>
+
+              <Button
+                type="button"
+                className="bg-black text-white w-full md:w-auto px-6 py-3 text-sm rounded-full"
+                onClick={() => setShowPasswordForm((prev) => !prev)}
+              >
+                {showPasswordForm ? "Đóng" : "Đổi mật khẩu"}
+              </Button>
+
+              {showPasswordForm && (
+                <div className="mt-6 space-y-5 animate-fadeIn">
+                  <FormRow label="Mật khẩu hiện tại">
+                    <Input
+                      type="password"
+                      name="old"
+                      value={passwords.old}
+                      onChange={handlePasswordChange}
+                      className="bg-slate-100/70 border-none"
+                    />
+                  </FormRow>
+
+                  <FormRow label="Mật khẩu mới">
+                    <Input
+                      type="password"
+                      name="newPw"
+                      value={passwords.newPw}
+                      onChange={handlePasswordChange}
+                      className="bg-slate-100/70 border-none"
+                    />
+                  </FormRow>
+
+                  <FormRow label="Nhập lại mật khẩu mới">
+                    <Input
+                      type="password"
+                      name="confirm"
+                      value={passwords.confirm}
+                      onChange={handlePasswordChange}
+                      className="bg-slate-100/70 border-none"
+                    />
+                  </FormRow>
+
+                  <Button className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 text-sm rounded-full">
+                    Xác nhận đổi mật khẩu
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+
         </div>
       </div>
+    </div>
+  )
+}
+
+/* ------------------ COMPONENT: INFO ROW ------------------ */
+function InfoRow({ label, value }: { label: string; value: string }) {
+  return (
+    <p className="flex justify-between gap-4 border-b border-white/60 pb-2 text-sm md:text-base">
+      <span className="text-slate-600">{label}:</span>
+      <span className="font-medium text-right">{value}</span>
+    </p>
+  )
+}
+
+/* ------------------ COMPONENT: FORM ROW ------------------ */
+function FormRow({
+  label,
+  children,
+}: {
+  label: string
+  children: React.ReactNode
+}) {
+  return (
+    <div className="space-y-1">
+      <Label className="text-sm text-slate-700">{label}</Label>
+      {children}
     </div>
   )
 }

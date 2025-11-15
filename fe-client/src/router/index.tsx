@@ -1,20 +1,16 @@
 import { MainLayout } from "@/components/layout/MainLayout";
 import CartPage from "@/pages/CartPage";
-
-import CheckoutPage2 from "@/pages/CheckoutPage/checkout2";
+import CheckoutPage from "@/pages/CheckoutPage";
 import { Home } from "@/pages/Home";
 import LoginPage from "@/pages/Login";
+import OrdersPage from "@/pages/Orders";
+import OrderDetailPage from "@/pages/Orders/OrderDetail";
+import PaymentResult from "@/pages/PaymentResult";
 import ProductDetail from "@/pages/ProductDetail";
 import ProductsPage from "@/pages/Products";
 import RegisterPage from "@/pages/Register";
-import { createBrowserRouter } from "react-router-dom";
-// import { ProductDetail } from "@/pages/ProductDetail";
-// import { CheckoutPage } from "@/pages/CheckoutPage/checkout1";
-import Profile from "@/pages/Profile";
-import CheckoutPage from "@/pages/CheckoutPage";
-import PaymentResult from "@/pages/PaymentResult";
-import OrdersPage from "@/pages/Orders";
-import OrderDetailPage from "@/pages/Orders/OrderDetail";
+import { createBrowserRouter  } from "react-router-dom";
+import CustomerProfilePage from "../pages/Profile";
 
 // const isAuthenticated = () => {
 //   return true;
@@ -50,17 +46,29 @@ export const router = createBrowserRouter([
         element: <RegisterPage />,
       },
       {
-        path: "products/:id",
+        path:"products",
+        element: <ProductsPage/>
+      },
+      {
+        path: "product/:id",
         element: <ProductDetail />,
       },
       // {
       //   path: "checkout",
       //   element: <CheckoutPage />,
       // },
-      {
-        path: "profile",
-        element: <Profile />,
-      },
+      // {
+      //   path: "profile",
+      //   element: <Profile />,
+      // },
+      // {
+      //   path: "checkout",
+      //   element: (
+      //     <ProtectedRoute>
+      //       <CheckoutPage />
+      //     </ProtectedRoute>
+      //   ),
+      // },
       {
         path: "about",
         element: (
@@ -86,24 +94,12 @@ export const router = createBrowserRouter([
         element: <CartPage />,
       },
       {
-        path: "checkout",
-        element: <CheckoutPage />,
-      },
-      {
-        path: "checkout-page2",
-        element: <CheckoutPage2 />,
-      },
-      {
         path: "/product/:id",
         element: <ProductDetail />,
       },
       {
         path: "payment/result",
         element: <PaymentResult />,
-      },
-      {
-        path: "orders",
-        element: <OrdersPage />,
       },
       {
         path: "orders/:id",
@@ -114,9 +110,13 @@ export const router = createBrowserRouter([
         element: <OrdersPage />,
       },
       {
-        path: "/orders/:id",
-        element: <OrderDetailPage />,
+        path: "/checkout",
+        element: <CheckoutPage />
       },
+      {
+        path: "/profile",
+        element: <CustomerProfilePage />
+      }
       
     ],
   },
