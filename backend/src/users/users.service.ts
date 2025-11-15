@@ -9,6 +9,7 @@ import { PaginatedResponseDto } from 'src/common/dtos/paginated-response.dto';
 import { BaseUserDto, DetailUserDto } from './dto/response-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
+import { ChangePasswordDto } from './dto/change-password.dto';
 
 @Injectable()
 export class UsersService {
@@ -58,6 +59,26 @@ export class UsersService {
       isBlocked: user.isBlocked,
       defaultAddress: user.defaultAddress,
     };
+  }
+
+  async changePassword(id: string, changePasswordDto: ChangePasswordDto) {
+    const { currentPassword, newPassword } = changePasswordDto;
+
+    const user = await this.usersRepository.findOne({ where: { id } });
+    if (!user) {
+      throw new BadRequestException('Không tìm thấy người dùng');
+    }
+    const isPasswordMatching = await bcrypt.compare(
+      currentPassword,
+      user.password,
+    );
+
+    if (!isPasswordMatching) {
+      throw new BadRequestException('Mật khẩu hiện tại không chính xác');
+    }
+
+    user.password = newPassword;
+    await this.usersRepository.save(user);
   }
 
   //Chỉ dùng trong hệ thống
@@ -156,7 +177,6 @@ export class UsersService {
     };
   }
   async update(id: string, updateUserDto: UpdateUserDto) {
-    console.log('UpdateUserDto:', updateUserDto);
     const user = await this.usersRepository.findOne({ where: { id } });
     if (!user) {
       throw new BadRequestException('Không tìm thấy người dùng');
@@ -171,10 +191,6 @@ export class UsersService {
       } catch (error) {
         console.error('Error deleting old avatar:', error);
       }
-    }
-
-    if (!newAvatar) {
-      delete updateUserDto.avatar;
     }
 
     Object.assign(user, updateUserDto);

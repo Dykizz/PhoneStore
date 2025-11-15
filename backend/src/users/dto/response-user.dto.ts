@@ -7,7 +7,7 @@ export class BaseUserDto {
   avatar?: string;
   role: UserRole;
   phoneNumber?: string;
-  isBlocked: boolean;
+  isBlocked: boolean; 
 }
 
 export class DetailUserDto extends BaseUserDto {
