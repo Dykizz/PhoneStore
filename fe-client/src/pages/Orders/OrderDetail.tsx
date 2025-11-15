@@ -1,12 +1,6 @@
 "use client";
+import { useState, useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
-import {
-  ordersData,
-  OrderStatus,
-  PaymentStatus,
-  PaymentMethod,
-} from "@/data";
-import type { DetailOrder } from "@/data";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -20,17 +14,73 @@ import {
   Truck,
   Ban,
   Package,
+  Loader2,
 } from "lucide-react";
+import {
+  OrderStatus,
+  PaymentMethod,
+  PaymentStatus,
+  type DetailOrder,
+} from "@/types/order.type";
+import { getOrder } from "@/apis/order.api";
+import { showToast } from "@/utils/toast";
+import { formatCurrencyVND } from "@/utils/util";
 
 export default function OrderDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const order: DetailOrder | undefined = ordersData.find((o) => o.id === id);
+  const [order, setOrder] = useState<DetailOrder | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  if (!order) {
+  useEffect(() => {
+    const fetchOrder = async () => {
+      if (!id) {
+        setError("ID đơn hàng không hợp lệ");
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const response = await getOrder(id);
+        if (response.success) {
+          setOrder(response.data);
+        } else {
+          setError("Không tìm thấy đơn hàng");
+          showToast({
+            type: "error",
+            description: "Không tìm thấy đơn hàng",
+            title: "Lỗi",
+          });
+        }
+      } catch (err) {
+        setError("Có lỗi xảy ra khi tải đơn hàng");
+        showToast({
+          type: "error",
+          description: "Có lỗi xảy ra khi tải đơn hàng",
+          title: "Lỗi",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrder();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-32 text-gray-600">
+        <Loader2 size={48} className="animate-spin text-blue-500 mb-3" />
+        <p>Đang tải đơn hàng...</p>
+      </div>
+    );
+  }
+
+  if (error || !order) {
     return (
       <div className="flex flex-col items-center justify-center py-32 text-gray-600">
         <Ban size={48} className="text-red-400 mb-3" />
-        <p>Không tìm thấy đơn hàng.</p>
+        <p>{error || "Không tìm thấy đơn hàng."}</p>
         <Link to="/orders">
           <Button variant="outline" className="mt-4">
             Quay lại danh sách đơn hàng
@@ -46,7 +96,9 @@ export default function OrderDetailPage() {
       case OrderStatus.NEW:
         return <Badge className="bg-gray-200 text-gray-700">Mới</Badge>;
       case OrderStatus.PROCESSING:
-        return <Badge className="bg-yellow-100 text-yellow-700">Đang xử lý</Badge>;
+        return (
+          <Badge className="bg-yellow-100 text-yellow-700">Đang xử lý</Badge>
+        );
       case OrderStatus.SHIPPED:
         return (
           <Badge className="bg-blue-100 text-blue-700 flex items-center gap-1">
@@ -72,11 +124,17 @@ export default function OrderDetailPage() {
   const getPaymentStatus = (status: PaymentStatus) => {
     switch (status) {
       case PaymentStatus.COMPLETED:
-        return <span className="text-green-600 font-medium">Đã thanh toán</span>;
+        return (
+          <span className="text-green-600 font-medium">Đã thanh toán</span>
+        );
       case PaymentStatus.PENDING:
-        return <span className="text-yellow-600 font-medium">Đang chờ xử lý</span>;
+        return (
+          <span className="text-yellow-600 font-medium">Đang chờ xử lý</span>
+        );
       case PaymentStatus.FAILED:
-        return <span className="text-red-600 font-medium">Thanh toán thất bại</span>;
+        return (
+          <span className="text-red-600 font-medium">Thanh toán thất bại</span>
+        );
     }
   };
 
@@ -87,7 +145,9 @@ export default function OrderDetailPage() {
       return (
         <div className="flex flex-col items-center justify-center py-10">
           <Ban size={40} className="text-red-500 mb-3" />
-          <p className="text-red-600 font-semibold text-lg">Đơn hàng đã bị huỷ</p>
+          <p className="text-red-600 font-semibold text-lg">
+            Đơn hàng đã bị huỷ
+          </p>
         </div>
       );
     }
@@ -144,6 +204,9 @@ export default function OrderDetailPage() {
     );
   };
 
+  const getPaymentLabel = (method: PaymentMethod) =>
+    method === PaymentMethod.CASH_ON_DELIVERY ? "COD" : "Chuyển khoản";
+
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-6 animate-fadeIn">
       <div className="max-w-6xl mx-auto space-y-10">
@@ -177,11 +240,12 @@ export default function OrderDetailPage() {
             </h2>
             <div className="space-y-3 text-gray-700">
               <p>
-                <span className="font-medium">Khách hàng:</span>{" "}
-                {order.customer.userName}
+                <span className="font-medium">Người nhận:</span>{" "}
+                {order.recipientName}
               </p>
               <p className="flex items-center gap-2">
-                <Phone size={16} className="text-gray-500" /> {order.phoneNumber}
+                <Phone size={16} className="text-gray-500" />{" "}
+                {order.phoneNumber}
               </p>
               <p className="flex items-start gap-2">
                 <MapPin size={16} className="text-gray-500 mt-1" />
@@ -189,7 +253,7 @@ export default function OrderDetailPage() {
               </p>
               {order.note && (
                 <p className="italic text-gray-500 border-l-4 border-gray-200 pl-3">
-                  Ghi chú: “{order.note}”
+                  Ghi chú: "{order.note}"
                 </p>
               )}
             </div>
@@ -200,16 +264,15 @@ export default function OrderDetailPage() {
             <div className="space-y-3 mt-3">
               <p className="flex items-center gap-2 text-gray-700">
                 <CreditCard size={16} className="text-gray-500" />
-                {order.paymentMethod === PaymentMethod.CASH_ON_DELIVERY
-                  ? "Thanh toán khi nhận hàng"
-                  : "Chuyển khoản ngân hàng"}
+                {getPaymentLabel(order.paymentMethod)}
               </p>
               <p>{getPaymentStatus(order.paymentStatus)}</p>
               <p className="text-blue-600 font-semibold">
-                Tổng tiền: {order.totalAmount.toLocaleString()}₫
+                Tổng tiền: {formatCurrencyVND(order.totalAmount)}
               </p>
               <p className="text-xs text-gray-400">
-                Cập nhật: {new Date(order.updatedAt).toLocaleDateString("vi-VN")}
+                Cập nhật:{" "}
+                {new Date(order.updatedAt).toLocaleDateString("vi-VN")}
               </p>
             </div>
           </div>
@@ -220,27 +283,45 @@ export default function OrderDetailPage() {
               Sản phẩm trong đơn
             </h2>
             <div className="divide-y divide-gray-100">
-              {order.items?.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex gap-4 py-4 hover:bg-gray-50 rounded-xl transition"
-                >
-                  <img
-                    src={item.image}
-                    alt={item.name}
-                    className="w-20 h-20 object-cover rounded-lg border border-gray-200"
-                  />
-                  <div className="flex-1">
-                    <p className="font-medium text-gray-900">{item.name}</p>
-                    <p className="text-xs text-gray-500">
-                      SL: {item.quantity} × {item.price.toLocaleString()}₫
-                    </p>
-                    <p className="text-blue-600 font-semibold mt-1">
-                      {(item.price * item.quantity).toLocaleString()}₫
-                    </p>
+              {order.items?.map((item) => {
+                const finalPrice =
+                  (item.price * (100 - item.discountPercent)) / 100;
+                const hasDiscount = item.discountPercent > 0;
+
+                return (
+                  <div
+                    key={item.id}
+                    className="flex gap-4 py-4 hover:bg-gray-50 rounded-xl transition"
+                  >
+                    <img
+                      src={item.productImage}
+                      alt={item.productName}
+                      className="w-20 h-20 object-cover rounded-lg border border-gray-200"
+                    />
+                    <div className="flex-1">
+                      <p className="font-medium text-gray-900">
+                        {item.productName}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        SL: {item.quantity} × {formatCurrencyVND(finalPrice)}
+                        {hasDiscount && (
+                          <span className="ml-2 text-red-500">
+                            (-{item.discountPercent}%)
+                          </span>
+                        )}
+                      </p>
+                      {hasDiscount && (
+                        <p className="text-xs text-gray-400 line-through">
+                          Giá gốc: {formatCurrencyVND(item.price)}
+                        </p>
+                      )}
+                      <p className="text-blue-600 font-semibold mt-1">
+                        {formatCurrencyVND(item.totalAmount)}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>

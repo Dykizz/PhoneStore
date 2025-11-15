@@ -33,6 +33,12 @@ export class OrdersController {
     return await this.ordersService.findAll(query);
   }
 
+  @Get('my-orders')
+  @ResponseMessage('Lấy danh sách đơn hàng của bạn thành công')
+  async findMyOrders(@User() user: IUser, @Query() query: PaginationQueryDto) {
+    return await this.ordersService.findMyOrders(query, user);
+  }
+
   @Get(':id')
   @ResponseMessage('Lấy chi tiết đơn hàng thành công')
   async findOne(@Param('id') id: string) {

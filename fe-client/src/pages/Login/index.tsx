@@ -86,8 +86,7 @@ const LoginPage = () => {
         return;
       }
 
-      // authLogin(response.data.user, response.data.accessToken);
-      authLogin(response.data);
+      authLogin(response.data.user, response.data.accessToken);
 
       showToast({
         type: "success",

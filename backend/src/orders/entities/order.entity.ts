@@ -11,15 +11,13 @@ import {
 import { User } from 'src/users/entities/user.entity';
 import { OrderDetail } from './order-detail.entity';
 
-export enum PaymentStatus {
+export enum PaymentStatusOrder {
   PENDING = 'pending',
   COMPLETED = 'completed',
   FAILED = 'failed',
 }
 
 export enum PaymentMethod {
-  CREDIT_CARD = 'credit_card',
-  PAYPAL = 'paypal',
   BANK_TRANSFER = 'bank_transfer',
   CASH_ON_DELIVERY = 'cash_on_delivery',
 }
@@ -55,10 +53,10 @@ export class Order {
 
   @Column({
     type: 'enum',
-    enum: PaymentStatus,
-    default: PaymentStatus.PENDING,
+    enum: PaymentStatusOrder,
+    default: PaymentStatusOrder.PENDING,
   })
-  paymentStatus: PaymentStatus;
+  paymentStatus: PaymentStatusOrder;
 
   @Column({
     type: 'enum',
@@ -81,6 +79,9 @@ export class Order {
 
   @Column({ length: 20 })
   phoneNumber: string;
+
+  @Column({ length: 100 })
+  recipientName: string;
 
   @OneToMany(() => OrderDetail, orderDetail => orderDetail.order, {
     cascade: true,

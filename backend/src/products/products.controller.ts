@@ -39,6 +39,11 @@ export class ProductsController {
     return this.productsService.findAll(query, user);
   }
 
+  @Post('variants')
+  async findVariant(@Body('ids') ids: string[]) {
+    return this.productsService.findVariantsByIds(ids);
+  }
+
   @Get(':id')
   @Public()
   @ResponseMessage('Lấy thông tin sản phẩm thành công')

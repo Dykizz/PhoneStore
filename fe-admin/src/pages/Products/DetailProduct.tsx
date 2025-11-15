@@ -11,6 +11,7 @@ import {
   Divider,
   Row,
   Col,
+  Table,
 } from "antd";
 import { ArrowLeftOutlined, EditOutlined } from "@ant-design/icons";
 import type { DetailProduct } from "@/types/product.type";
@@ -233,8 +234,56 @@ const ProductDetailPage: React.FC = () => {
             <Paragraph>{product.baseDescription || "Không có"}</Paragraph>
 
             <Title level={5}>Mô tả chi tiết</Title>
-            <Paragraph>{product.detailDescription || "Không có"}</Paragraph>
+            <div style={{ whiteSpace: "pre-wrap" }}>
+              {product.detailDescription || "Không có"}
+            </div>
           </Col>
+        </Row>
+        <Row>
+          {product.specifications && product.specifications.length > 0 && (
+            <Col span={24}>
+              <Divider />
+              <Title level={5}>Thông số kỹ thuật</Title>
+              <Table
+                dataSource={product.specifications}
+                columns={[
+                  {
+                    title: "Tên thông số",
+                    dataIndex: "label",
+                    key: "label",
+                    render: (text: string) => (
+                      <div
+                        style={{
+                          whiteSpace: "pre-wrap",
+                          wordBreak: "break-word",
+                        }}
+                      >
+                        {text}
+                      </div>
+                    ),
+                  },
+                  {
+                    title: "Giá trị",
+                    dataIndex: "value",
+                    key: "value",
+                    render: (text: string) => (
+                      <div
+                        style={{
+                          whiteSpace: "pre-wrap",
+                          wordBreak: "break-word",
+                        }}
+                      >
+                        {text}
+                      </div>
+                    ),
+                  },
+                ]}
+                pagination={false}
+                size="small"
+                bordered
+              />
+            </Col>
+          )}
         </Row>
       </Card>
     </div>

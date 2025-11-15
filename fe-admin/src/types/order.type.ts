@@ -5,8 +5,6 @@ export enum PaymentStatus {
 }
 
 export enum PaymentMethod {
-  CREDIT_CARD = "credit_card",
-  PAYPAL = "paypal",
   BANK_TRANSFER = "bank_transfer",
   CASH_ON_DELIVERY = "cash_on_delivery",
 }
@@ -64,4 +62,16 @@ export interface BaseOrder {
   paymentMethod: PaymentMethod;
   paymentStatus: PaymentStatus;
   createdAt: Date;
+}
+
+export interface CreateOrder {
+  items: {
+    variantId: string;
+    quantity: number;
+  };
+  paymentMethod: PaymentMethod;
+  recipientName: string;
+  addressShipping: string;
+  phoneNumber: string;
+  note?: string;
 }

@@ -63,6 +63,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = (userData: BaseUser, accessToken: string) => {
+    if (!accessToken) {
+      console.error("Access token is required for login");
+    }
     localStorage.setItem("access_token", accessToken);
     localStorage.setItem("user", JSON.stringify(userData));
     apiClient.setAccessToken(accessToken);

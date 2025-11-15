@@ -1,10 +1,9 @@
 "use client";
-import { useState } from "react";
-import { useNavigate } from "react-router-dom"; // ✅ Dùng cho React Router
+
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Trash2, Minus, Plus, ArrowLeft } from "lucide-react";
-import { cartData, type CartItem } from "@/data";
 
 import {
   AlertDialog,
@@ -17,67 +16,26 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { useCart } from "@/contexts/cartContexts";
+import { formatCurrencyVND } from "@/utils/util";
+import { showToast } from "@/utils/toast";
 
 export default function CartPage() {
-  const [cartItems, setCartItems] = useState<CartItem[]>(cartData);
-  const [selectedItems, setSelectedItems] = useState<string[]>(
-    cartData.map((p) => p.id)
-  );
+  const {
+    cartItems,
+    removeFromCart,
+    toggleSelectItem,
+    countSelectedItems,
+    toggleSelectItemAll,
+    updateQuantity,
 
-  const navigate = useNavigate(); // ✅ Dùng để quay lại trang chủ
+    totalPriceSelected,
+  } = useCart();
 
-  // ✅ Tính tổng tiền
-  const total = cartItems
-    .filter((x) => selectedItems.includes(x.id))
-    .reduce((acc, item) => {
-      const finalPrice = item.discountPercent
-        ? item.price * (1 - item.discountPercent / 100)
-        : item.price;
-      return acc + finalPrice * item.quantity;
-    }, 0);
-
-  // ✅ Chọn / bỏ chọn 1 sản phẩm
-  const handleToggleSelect = (id: string) => {
-    setSelectedItems((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    );
-  };
-
-  // ✅ Chọn / bỏ chọn tất cả
-  const handleToggleSelectAll = (checked: boolean) => {
-    if (checked) {
-      setSelectedItems(cartItems.map((item) => item.id));
-    } else {
-      setSelectedItems([]);
-    }
-  };
-
-  // ✅ Tăng / giảm số lượng
-  const handleQuantityChange = (id: string, delta: number) => {
-    setCartItems((prev) =>
-      prev.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              quantity: Math.max(
-                1,
-                Math.min(item.maxQuantity, item.quantity + delta)
-              ),
-            }
-          : item
-      )
-    );
-  };
-
-  // ✅ Xóa sản phẩm
-  const handleDelete = (id: string) => {
-    setCartItems((prev) => prev.filter((item) => item.id !== id));
-    setSelectedItems((prev) => prev.filter((x) => x !== id));
-  };
+  const navigate = useNavigate();
 
   return (
     <div className="max-w-6xl mx-auto p-6 relative">
-      {/* ====== Nút quay lại ====== */}
       <Button
         variant="ghost"
         onClick={() => navigate("/")}
@@ -87,34 +45,32 @@ export default function CartPage() {
         <span>Quay lại trang chủ</span>
       </Button>
 
-      <h1 className="text-2xl font-bold mb-4 text-center mt-10">Giỏ hàng của bạn</h1>
-      {/* ====== Checkbox chọn tất cả ====== */}
+      <h1 className="text-2xl font-bold mb-4 text-center mt-10">
+        Giỏ hàng của bạn
+      </h1>
+
       <div className="flex items-center gap-2 mb-4">
         <Checkbox
-          checked={selectedItems.length === cartItems.length && cartItems.length > 0}
-          onCheckedChange={(checked) => handleToggleSelectAll(!!checked)}
+          checked={
+            cartItems.every((item) => item.selected) && cartItems.length > 0
+          }
+          onCheckedChange={(checked) => toggleSelectItemAll(!!checked)}
         />
         <span className="text-gray-700 font-medium">Chọn tất cả</span>
         <span className="text-gray-400 text-sm">
-          ({selectedItems.length}/{cartItems.length})
+          ({countSelectedItems()}/{cartItems.length})
         </span>
       </div>
 
       {/* ====== Danh sách sản phẩm ====== */}
       <div className="bg-white rounded-xl shadow-sm border divide-y">
         {cartItems.map((item) => {
-          const hasDiscount = !!item.discountPercent;
-          const finalPrice = hasDiscount
-            ? Math.round(item.price * (1 - (item?.discountPercent || 0) / 100))
-            : item.price;
-
           return (
-            <div key={item.id} className="p-4 flex gap-4">
-              {/* Checkbox giữa dòng */}
+            <div key={item.variantId} className="p-4 flex gap-4">
               <div className="flex items-center">
                 <Checkbox
-                  checked={selectedItems.includes(item.id)}
-                  onCheckedChange={() => handleToggleSelect(item.id)}
+                  checked={item.selected}
+                  onCheckedChange={() => toggleSelectItem(item.variantId)}
                 />
               </div>
 
@@ -153,7 +109,7 @@ export default function CartPage() {
                         <AlertDialogFooter>
                           <AlertDialogCancel>Hủy</AlertDialogCancel>
                           <AlertDialogAction
-                            onClick={() => handleDelete(item.id)}
+                            onClick={() => removeFromCart(item.variantId)}
                             className="bg-red-600 hover:bg-red-700 text-white"
                           >
                             Xóa
@@ -165,21 +121,22 @@ export default function CartPage() {
 
                   <div className="flex items-center gap-2 mt-2">
                     <span className="text-red-600 font-bold text-lg">
-                      {finalPrice.toLocaleString()}đ
+                      {formatCurrencyVND(item.finalPrice)}
                     </span>
-                    {hasDiscount && (
+                    {item.price != item.finalPrice && (
                       <span className="text-gray-400 line-through text-sm">
                         {item.price.toLocaleString()}đ
                       </span>
                     )}
                   </div>
 
-                  {/* Số lượng */}
                   <div className="mt-3 flex items-center gap-2">
                     <Button
                       variant="outline"
                       size="icon"
-                      onClick={() => handleQuantityChange(item.id, -1)}
+                      onClick={() =>
+                        updateQuantity(item.variantId, item.quantity - 1)
+                      }
                     >
                       <Minus className="w-4 h-4" />
                     </Button>
@@ -189,7 +146,10 @@ export default function CartPage() {
                     <Button
                       variant="outline"
                       size="icon"
-                      onClick={() => handleQuantityChange(item.id, 1)}
+                      disabled={item.quantity >= item.maxQuantity}
+                      onClick={() =>
+                        updateQuantity(item.variantId, item.quantity + 1)
+                      }
                     >
                       <Plus className="w-4 h-4" />
                     </Button>
@@ -201,16 +161,29 @@ export default function CartPage() {
         })}
       </div>
 
-      {/* ====== Tổng tiền ====== */}
       <div className="flex justify-between items-center bg-white mt-6 p-4 rounded-xl shadow-sm">
         <div>
           <div className="text-gray-600 text-sm">Tạm tính:</div>
           <div className="text-red-600 font-bold text-2xl">
-            {total.toLocaleString()}đ
+            {formatCurrencyVND(totalPriceSelected)}
           </div>
         </div>
-        <Button className="bg-red-600 text-white text-lg px-10 py-5 rounded-xl">
-          Mua ngay ({selectedItems.length})
+
+        <Button
+          onClick={() => {
+            if (countSelectedItems() === 0) {
+              showToast({
+                type: "info",
+                description: "Vui lòng chọn ít nhất một sản phẩm để mua hàng.",
+                title: "Chưa có sản phẩm nào được chọn",
+              });
+              return;
+            }
+            navigate("/checkout");
+          }}
+          className="bg-red-600 text-white text-lg px-10 py-5 rounded-xl"
+        >
+          Mua ngay ({countSelectedItems()})
         </Button>
       </div>
     </div>

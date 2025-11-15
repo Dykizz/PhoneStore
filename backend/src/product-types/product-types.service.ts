@@ -14,7 +14,7 @@ export class ProductTypesService {
     private readonly productTypesRepository: Repository<ProductType>,
   ) {}
   async create(createProductTypeDto: CreateProductTypeDto) {
-    const { name, description } = createProductTypeDto;
+    const { name, description, defaultSpecifications } = createProductTypeDto;
     const existingProductType = await this.productTypesRepository.findOne({
       where: { name },
     });
@@ -26,6 +26,7 @@ export class ProductTypesService {
     const productType = this.productTypesRepository.create({
       name,
       description,
+      defaultSpecifications,
     });
     return await this.productTypesRepository.save(productType);
   }

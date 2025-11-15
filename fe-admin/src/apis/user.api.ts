@@ -12,7 +12,7 @@ export async function getMyProfile(): Promise<ApiResponse<DetailUser>> {
   return await apiClient.get<DetailUser>("/users/my-profile");
 }
 
-export async function getUsers(
+export async function getUsers( 
   query: string
 ): Promise<ApiResponse<PaginatedResponse<BaseUser>>> {
   return await apiClient.get<PaginatedResponse<BaseUser>>("/users" + query);

@@ -34,18 +34,8 @@ export interface DetailProduct extends BaseProduct {
   createdAt?: Date;
   updatedAt?: Date;
   productTypeName: string;
+  specifications?: {
+    label: string;
+    value: string;
+  }[];
 }
-
-export interface CreateProduct {
-  name: string;
-  baseDescription: string;
-  detailDescription: string;
-  price: number;
-  isReleased: true;
-  productTypeId: string;
-  brandId: string;
-  variants: { color: string; image: File | string }[];
-  discountPolicyId?: string;
-}
-
-export type UpdateProduct = Partial<CreateProduct>;

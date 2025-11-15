@@ -1,106 +1,78 @@
 "use client";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { useCart } from "@/contexts/cartContexts";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  detailProductData,
-  productData,
-  brands,
-  type DetailProduct,
-  type BaseProduct,
-} from "@/data";
-
-// 👉 Format giá
-function formatPrice(price: number) {
-  return price.toLocaleString("vi-VN") + "₫";
-}
-
-// 👉 Giá sau giảm
-function calculateDiscountedPrice(price: number, discount: number): number {
-  return price - (price * discount) / 100;
-}
+import { useCart, type CartItem } from "@/contexts/cartContexts";
+import { formatCurrencyVND } from "@/utils/util";
+import { getProduct, getProducts } from "@/apis/product.api";
+import type { BaseProduct, DetailProduct } from "@/types/product.type";
+import { QueryBuilder } from "@/utils/queryBuilder";
+import Product from "../Products/Product";
+import { showToast } from "@/utils/toast";
 
 export default function ProductDetail() {
   const { id } = useParams();
   const [product, setProduct] = useState<DetailProduct | null>(null);
-  const [selectedImage, setSelectedImage] = useState<string>("");
-  const [selectedColorIndex, setSelectedColorIndex] = useState<number>(0);
+  const [selectedVariantIdx, setSelectedVariantIdx] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [relatedProducts, setRelatedProducts] = useState<BaseProduct[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isAdding, setIsAdding] = useState(false);
+  const navigeta = useNavigate();
 
-  const { addToCart } = useCart();
+  const { addToCart, cartItems } = useCart();
 
   useEffect(() => {
-    if (!id) return;
-    setLoading(true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    const fetchRelatedProducts = async (
+      productTypeId: string,
+      brandId: string
+    ) => {
+      const query = QueryBuilder.create()
+        .page(1)
+        .limit(4)
+        .filterIf(!!brandId, "brandId", brandId)
+        .filterIf(!!productTypeId, "productTypeId", productTypeId)
+        .filterNot("id", id!)
+        .build();
 
-    const found = detailProductData.find((p) => p.id.toString() === String(id));
-    setProduct(found || null);
-
-    if (found?.images?.length) {
-      setSelectedImage(found.images[0]);
-      setSelectedColorIndex(0);
-    }
-
-    if (found) {
-      const brand = brands.find((b) => b.name === found.brandName);
-      if (brand) {
-        const related = productData.filter(
-          (p) => p.brandId === String(brand.brandId) && p.id !== found.id
-        );
-        setRelatedProducts(related);
+      const response = await getProducts(query);
+      if (response.success) {
+        setRelatedProducts(response.data.data);
       }
-    }
+    };
 
-    setQuantity(1);
-    setLoading(false);
+    const fetchProduct = async () => {
+      const response = await getProduct(id!);
+      if (response.success) {
+        setProduct(response.data);
+        if (response.data.quantity <= 0) {
+          setQuantity(0);
+        }
+        fetchRelatedProducts(
+          response.data.productTypeId,
+          response.data.brandId
+        );
+      }
+    };
+
+    try {
+      setLoading(true);
+      fetchProduct();
+    } catch (error) {
+      console.error("Lỗi tải sản phẩm:", error);
+    } finally {
+      setLoading(false);
+    }
   }, [id]);
-
-  const handleSelectColor = (index: number) => {
-    if (product?.images && product.images[index]) {
-      setSelectedImage(product.images[index]);
-      setSelectedColorIndex(index);
-    }
-  };
-
-  const handleAddToCart = (productToAdd: DetailProduct, qty: number) => {
-    const selectedColor =
-      productToAdd.colors?.[selectedColorIndex] ?? "Mặc định";
-    const image =
-      productToAdd.images?.[selectedColorIndex] ?? productToAdd.images?.[0];
-
-    const finalPrice =
-      productToAdd.discountPercent && productToAdd.discountPercent > 0
-        ? calculateDiscountedPrice(
-            productToAdd.price,
-            productToAdd.discountPercent
-          )
-        : productToAdd.price;
-
-    addToCart(
-      {
-        productId: productToAdd.id,
-        quantity: qty,
-        name: productToAdd.name,
-        price: finalPrice,
-        image: image || "",
-        variantInfo: `Màu: ${selectedColor}`,
-      },
-      `variant-${selectedColorIndex}`
+  useEffect(() => {
+    setQuantity((prev) =>
+      Math.min(
+        Math.max(prev, 1),
+        product ? product.variants[selectedVariantIdx].quantity : 1
+      )
     );
-
-    alert(
-      `Đã thêm ${qty} ${productToAdd.name} (${selectedColor}) vào giỏ hàng!`
-    );
-  };
+  }, [selectedVariantIdx]);
 
   if (loading)
     return (
@@ -123,31 +95,77 @@ export default function ProductDetail() {
       </div>
     );
 
-  const displayPrice =
-    product.discountPercent && product.discountPercent > 0
-      ? calculateDiscountedPrice(product.price, product.discountPercent)
-      : product.price;
+  const displayPrice = product.discount?.discountPercent
+    ? ((100 - product.discount.discountPercent) * product.price) / 100
+    : product.price;
+
+  const handleAddToCart = () => {
+    if (isAdding) return;
+    const selectedVariant = product.variants[selectedVariantIdx];
+    const selectedVariantId = selectedVariant.id!;
+    const availableQuantity = selectedVariant.quantity;
+
+    const existingItem = cartItems.find(
+      (item) => item.variantId === selectedVariantId
+    );
+    const totalInCart = existingItem ? existingItem.quantity : 0;
+    const canAdd = availableQuantity - totalInCart;
+    setIsAdding(true);
+    if (totalInCart + quantity > availableQuantity) {
+      showToast({
+        type: "error",
+        title: "Không đủ hàng",
+        description: `Bạn đã có ${totalInCart} sản phẩm trong giỏ. ${
+          canAdd > 0
+            ? `Chỉ thêm được ${canAdd} sản phẩm!`
+            : `Không thể thêm được nữa!`
+        } `,
+      });
+      setIsAdding(false);
+      return;
+    }
+
+    const cartItem: CartItem = {
+      variantId: selectedVariantId,
+      productId: product.id,
+      quantity,
+      name: product.name,
+      price: product.price,
+      finalPrice: displayPrice,
+      image: selectedVariant.image,
+      color: selectedVariant.color,
+      maxQuantity: selectedVariant.quantity,
+    };
+
+    addToCart(cartItem);
+
+    showToast({
+      type: "success",
+      title: "Thêm vào giỏ hàng",
+      description: `Đã thêm ${quantity} ${product.name} ${selectedVariant.color} vào giỏ hàng!`,
+    });
+    setTimeout(() => setIsAdding(false), 300);
+  };
 
   return (
     <div className="container py-10">
       {/* ==== ẢNH & THÔNG TIN ==== */}
       <div className="flex flex-col lg:flex-row gap-10 bg-white rounded-2xl shadow-md p-6 border border-gray-200">
-        {/* Ảnh */}
         <div className="flex flex-col lg:flex-row gap-6 w-full lg:w-2/3">
           <div className="flex lg:flex-col gap-3 order-2 lg:order-1">
-            {product.images?.map((img, idx) => (
+            {product.variants?.map((variant, idx) => (
               <button
                 key={idx}
-                onClick={() => handleSelectColor(idx)}
+                onClick={() => setSelectedVariantIdx(idx)}
                 className={`border rounded-xl overflow-hidden w-20 h-20 transition-all duration-300 ${
-                  selectedColorIndex === idx
+                  idx === selectedVariantIdx
                     ? "border-black ring-2 ring-gray-300 scale-105"
                     : "border-gray-300 hover:border-black"
                 }`}
               >
                 <img
-                  src={img}
-                  alt={`Màu ${idx + 1}`}
+                  src={variant.image}
+                  alt={variant.color}
                   className="w-full h-full object-cover"
                 />
               </button>
@@ -156,7 +174,7 @@ export default function ProductDetail() {
 
           <div className="flex-1 flex justify-center items-center border rounded-2xl bg-gray-50 shadow-inner order-1 lg:order-2">
             <img
-              src={selectedImage}
+              src={product.variants[selectedVariantIdx].image}
               alt={product.name}
               className="max-h-[480px] object-contain p-4 transition-transform duration-500 hover:scale-105"
             />
@@ -166,42 +184,58 @@ export default function ProductDetail() {
         {/* Thông tin */}
         <div className="flex-1 space-y-5">
           <h1 className="text-3xl font-bold text-gray-900">{product.name}</h1>
-          <p className="text-gray-600">{product.detailDescription}</p>
+          <p className="text-gray-600">{product.baseDescription}</p>
 
           {/* Giá */}
           <div>
-            {product.discountPercent ? (
+            {product.discount?.discountPercent ? (
               <>
                 <div className="text-4xl font-bold text-gray-900">
-                  {formatPrice(displayPrice)}
+                  {formatCurrencyVND(displayPrice)}
                 </div>
                 <div className="text-lg text-gray-400 line-through">
-                  {formatPrice(product.price)}
+                  {formatCurrencyVND(product.price)}
                 </div>
               </>
             ) : (
               <div className="text-4xl font-bold text-gray-900">
-                {formatPrice(product.price)}
+                {formatCurrencyVND(product.price)}
               </div>
             )}
           </div>
 
+          <div className="flex items-center gap-6 text-sm text-gray-600">
+            {product.variants[selectedVariantIdx].quantity > 0 ? (
+              <span>
+                <strong>Kho:</strong>{" "}
+                {product.variants[selectedVariantIdx].quantity}
+              </span>
+            ) : (
+              <span className="text-red-500 font-bold">Hết hàng</span>
+            )}
+
+            <span>
+              <strong>Đã bán:</strong>{" "}
+              {product.variants[selectedVariantIdx].quantitySold}
+            </span>
+          </div>
+
           {/* Màu */}
-          {product.colors && (
+          {product.variants && (
             <div>
               <h3 className="font-semibold mb-2 text-gray-800">Chọn màu:</h3>
               <div className="flex gap-3 flex-wrap">
-                {product.colors.map((color, idx) => (
+                {product.variants.map((variant, idx) => (
                   <button
                     key={idx}
-                    onClick={() => handleSelectColor(idx)}
+                    onClick={() => setSelectedVariantIdx(idx)}
                     className={`px-4 py-2 border rounded-full text-sm transition-all ${
-                      selectedColorIndex === idx
+                      idx === selectedVariantIdx
                         ? "border-black bg-gray-100 text-black ring-2 ring-gray-300"
                         : "border-gray-300 hover:border-black text-gray-700"
                     }`}
                   >
-                    {color}
+                    {variant.color}
                   </button>
                 ))}
               </div>
@@ -226,7 +260,14 @@ export default function ProductDetail() {
             <Button
               variant="outline"
               size="icon"
-              onClick={() => setQuantity((q) => q + 1)}
+              disabled={
+                quantity >= product.variants[selectedVariantIdx].quantity
+              }
+              onClick={() =>
+                setQuantity((q) =>
+                  Math.min(q + 1, product.variants[selectedVariantIdx].quantity)
+                )
+              }
               className="h-8 w-8 border-gray-300"
             >
               +
@@ -238,13 +279,18 @@ export default function ProductDetail() {
             <Button
               variant="outline"
               className="flex-1 border-2 border-gray-800 text-gray-800 hover:bg-gray-100 hover:shadow-md transition-all"
-              onClick={() => product && handleAddToCart(product, quantity)}
+              onClick={handleAddToCart}
+              disabled={product.variants[selectedVariantIdx].quantity <= 0}
             >
-              🛒 Thêm vào giỏ hàng
+              {isAdding ? "Đang thêm..." : "🛒 Thêm vào giỏ hàng"}
             </Button>
             <Button
               className="flex-1 bg-black hover:bg-gray-900 text-white shadow-md transition-all"
-              onClick={() => alert('Chuyển đến trang thanh toán (chưa xử lý)')}
+              onClick={() => {
+                handleAddToCart();
+                navigeta("/cart");
+              }}
+              disabled={product.variants[selectedVariantIdx].quantity <= 0}
             >
               Mua ngay
             </Button>
@@ -293,49 +339,7 @@ export default function ProductDetail() {
           </h2>
           <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
             {relatedProducts.map((item) => {
-              const priceDisplay =
-                item.discountPercent && item.discountPercent > 0
-                  ? calculateDiscountedPrice(item.price, item.discountPercent)
-                  : item.price;
-
-              return (
-                <Card
-                  key={item.id}
-                  className="flex flex-col group overflow-hidden border border-gray-200 hover:border-black shadow-sm hover:shadow-lg transition-all rounded-2xl"
-                >
-                  <Link to={`/product/${item.id}`}>
-                    <CardHeader className="p-0 relative">
-                      <div className="aspect-square bg-gray-50 flex items-center justify-center">
-                        <img
-                          src={item.image}
-                          alt={item.name}
-                          className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
-                        />
-                      </div>
-                    </CardHeader>
-                  </Link>
-
-                  <CardContent className="p-4 flex flex-col flex-grow">
-                    <Link to={`/product/${item.id}`}>
-                      <CardTitle className="text-base font-semibold mb-2 hover:text-black transition">
-                        {item.name}
-                      </CardTitle>
-                    </Link>
-                    <div className="mt-auto space-y-2">
-                      <p className="text-black font-bold">
-                        {formatPrice(priceDisplay)}
-                      </p>
-                      <Button
-                        size="sm"
-                        className="w-full bg-black text-white hover:bg-gray-800 transition"
-                        onClick={() => handleAddToCart(product, 1)}
-                      >
-                        Thêm vào giỏ
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
+              return <Product key={item.id} product={item} />;
             })}
           </div>
         </section>
