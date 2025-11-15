@@ -10,12 +10,13 @@ import ProductDetail from "@/pages/ProductDetail";
 import ProductsPage from "@/pages/Products";
 import RegisterPage from "@/pages/Register";
 import { createBrowserRouter  } from "react-router-dom";
+import CustomerProfilePage from "../pages/Profile";
 
 // const isAuthenticated = () => {
 //   return true;
 // };
 
-// const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+// const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
 //   if (!isAuthenticated()) {
 //     return <Navigate to="/login" replace />;
 //   }
@@ -85,6 +86,10 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: "products",
+        element: <ProductsPage />,
+      },
+      {
         path: "cart",
         element: <CartPage />,
       },
@@ -107,6 +112,10 @@ export const router = createBrowserRouter([
       {
         path: "/checkout",
         element: <CheckoutPage />
+      },
+      {
+        path: "/profile",
+        element: <CustomerProfilePage />
       }
       
     ],

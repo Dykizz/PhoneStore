@@ -222,7 +222,7 @@ const EditUserPage: React.FC = () => {
       <Button
         icon={<ArrowLeftOutlined />}
         onClick={() => {
-          window.history.back();
+          navigate(-1);
         }}
       >
         Quay lại

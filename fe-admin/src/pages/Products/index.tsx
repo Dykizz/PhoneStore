@@ -163,6 +163,12 @@ const ProductsPage: React.FC = () => {
     const field = sorter.field || "createdAt";
     setSortBy(field);
     setSortOrder(order);
+    setPagination({
+      ...pagination,
+      current: pagination.current,
+      pageSize: pagination.pageSize,
+      total: pagination.total,
+    });
     fetchProducts(pagination.current);
   };
 
@@ -457,7 +463,9 @@ const ProductsPage: React.FC = () => {
         rowKey="id"
         loading={loading}
         pagination={{
-          ...pagination,
+          current: pagination.current,
+          pageSize: pagination.pageSize,
+          total: pagination.total,
           showSizeChanger: true,
           showQuickJumper: true,
           showTotal: (total, range) =>

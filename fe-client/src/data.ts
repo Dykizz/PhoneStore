@@ -112,6 +112,7 @@ export type Order = {
   totalprice: number;
 };
 
+
 /* -------------------------- OrderDetail ------------------------ */
 export type OrderDetail = {
   orderId: number;
@@ -119,6 +120,8 @@ export type OrderDetail = {
   amount: number;
   price: number;
 };
+
+/* -------------------------- ORDER STATUS ENUM ------------------------- */
 
 /* -------------------------- DỮ LIỆU MẪU ------------------------- */
 export const productTypes: ProductType[] = [
@@ -707,10 +710,6 @@ export const orders: Order[] = [
 export const orderDetails: OrderDetail[] = [
   { orderId: 1, id: 1, amount: 1, price: 17390000 },
 ];
-
-// fe-client/src/data.ts
-
-// ... (Giữ nguyên toàn bộ code cũ của bạn ở trên) ...
 
 /* -------------------------- CÁC KIỂU DỮ LIỆU ĐỘNG ------------------------- */
 

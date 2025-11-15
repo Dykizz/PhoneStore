@@ -29,7 +29,7 @@ export class ProductsController {
     @Body() createProductDto: CreateProductDto,
     @User() user: IUser,
   ) {
-    return this.productsService.create(createProductDto, user);
+    return this.productsService.createProduct(createProductDto, user);
   }
 
   @Get()
@@ -58,13 +58,13 @@ export class ProductsController {
     @Param('id') id: string,
     @Body() updateProductDto: UpdateProductDto,
   ) {
-    return await this.productsService.update(id, updateProductDto);
+    return await this.productsService.updateProduct(id, updateProductDto);
   }
 
   @Delete(':id')
   @Roles(UserRole.ADMIN, UserRole.EMPLOYEE)
   @ResponseMessage('Xóa sản phẩm thành công')
   async remove(@Param('id') id: string) {
-    return await this.productsService.remove(id);
+    return await this.productsService.removeProduct(id);
   }
 }

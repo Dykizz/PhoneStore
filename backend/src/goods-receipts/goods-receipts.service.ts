@@ -18,10 +18,9 @@ export class GoodsReceiptsService {
     private readonly goodsReceiptRepository: Repository<GoodsReceipt>,
     @InjectRepository(GoodsReceiptDetail)
     private readonly goodsReceiptDetailRepository: Repository<GoodsReceiptDetail>,
-    private readonly productsService: ProductsService,
   ) {}
 
-  async create(createGoodsReceiptDto: CreateGoodsReceiptDto, user: IUser) {
+  async createGoodsReceipt(createGoodsReceiptDto: CreateGoodsReceiptDto, user: IUser) {
     const { products, supplierId, note } = createGoodsReceiptDto;
 
     if (!products || products.length === 0) {
@@ -168,7 +167,7 @@ export class GoodsReceiptsService {
     return detailGoodsReceipt;
   }
 
-  async update(id: string, updateGoodsReceiptDto: UpdateGoodsReceiptDto) {
+  async updateGoodsReceipt(id: string, updateGoodsReceiptDto: UpdateGoodsReceiptDto) {
     const { products } = updateGoodsReceiptDto;
     if (products && products.length > 0) {
     }

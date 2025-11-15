@@ -24,7 +24,7 @@ export class BrandsController {
   @Roles(UserRole.ADMIN)
   @ResponseMessage('Thương hiệu được tạo thành công')
   async create(@Body() createBrandDto: CreateBrandDto) {
-    return await this.brandsService.create(createBrandDto);
+    return await this.brandsService.createBand(createBrandDto);
   }
 
   @Get()
@@ -48,13 +48,13 @@ export class BrandsController {
     @Param('id') id: string,
     @Body() updateBrandDto: UpdateBrandDto,
   ) {
-    return await this.brandsService.update(id, updateBrandDto);
+    return await this.brandsService.updateBand(id, updateBrandDto);
   }
 
   @Delete(':id')
   @Roles(UserRole.ADMIN)
   @ResponseMessage('Xóa thương hiệu thành công')
   async remove(@Param('id') id: string) {
-    return await this.brandsService.remove(id);
+    return await this.brandsService.removeBand(id);
   }
 }
