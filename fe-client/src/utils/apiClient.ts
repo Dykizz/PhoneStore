@@ -28,7 +28,7 @@ class ApiClient {
   constructor(baseURL: string) {
     this.axiosInstance = axios.create({
       baseURL,
-      withCredentials: true, // <== quan trọng để gửi cookie cùng request
+      withCredentials: true,
       timeout: 20000, // 20 giây timeout
     });
 
