@@ -193,10 +193,7 @@ const DetailOrderPage: React.FC = () => {
   if (!order) {
     return (
       <div style={{ padding: "24px" }}>
-        <Button
-          icon={<ArrowLeftOutlined />}
-          onClick={() => navigate("/orders")}
-        >
+        <Button icon={<ArrowLeftOutlined />} onClick={() => navigate(-1)}>
           Quay lại
         </Button>
         <div style={{ marginTop: "24px", textAlign: "center" }}>
@@ -211,10 +208,7 @@ const DetailOrderPage: React.FC = () => {
       <Card style={{ marginBottom: "16px" }}>
         <Space style={{ width: "100%", justifyContent: "space-between" }}>
           <Space>
-            <Button
-              icon={<ArrowLeftOutlined />}
-              onClick={() => navigate("/orders")}
-            >
+            <Button icon={<ArrowLeftOutlined />} onClick={() => navigate(-1)}>
               Quay lại
             </Button>
             <Title level={4} style={{ margin: 0 }}>

@@ -26,7 +26,10 @@ export class GoodsReceiptsController {
     @Body() createGoodsReceiptDto: CreateGoodsReceiptDto,
     @User() user: IUser,
   ) {
-    return await this.goodsReceiptsService.create(createGoodsReceiptDto, user);
+    return await this.goodsReceiptsService.createGoodsReceipt(
+      createGoodsReceiptDto,
+      user,
+    );
   }
 
   @Get()
@@ -46,11 +49,9 @@ export class GoodsReceiptsController {
     @Param('id') id: string,
     @Body() updateGoodsReceiptDto: UpdateGoodsReceiptDto,
   ) {
-    return this.goodsReceiptsService.update(id, updateGoodsReceiptDto);
+    return this.goodsReceiptsService.updateGoodsReceipt(
+      id,
+      updateGoodsReceiptDto,
+    );
   }
-
-  // @Delete(':id')
-  // remove(@Param('id') id: string) {
-  //   return this.goodsReceiptsService.remove(id);
-  // }
 }
