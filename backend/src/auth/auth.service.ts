@@ -66,7 +66,7 @@ export class AuthService {
 
     await this.updateRefreshToken(user.id, refreshToken);
     const profileUser = await this.usersService.getProfile(user.id);
-    console.log('Profile user fetched:', profileUser);
+
     return {
       accessToken,
       refreshToken,

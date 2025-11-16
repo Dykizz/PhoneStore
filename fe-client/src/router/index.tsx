@@ -11,6 +11,8 @@ import ProductsPage from "@/pages/Products";
 import RegisterPage from "@/pages/Register";
 import { createBrowserRouter } from "react-router-dom";
 import CustomerProfilePage from "../pages/Profile";
+import ForgotPasswordPage from "@/pages/ForgotPassword";
+import ResetPasswordPage from "@/pages/ResetPassword";
 
 export const router = createBrowserRouter([
   {
@@ -68,6 +70,14 @@ export const router = createBrowserRouter([
       {
         path: "/profile",
         element: <CustomerProfilePage />,
+      },
+      {
+        path: "forgot-password",
+        element: <ForgotPasswordPage />,
+      },
+      {
+        path: "reset-password",
+        element: <ResetPasswordPage />,
       },
     ],
   },
