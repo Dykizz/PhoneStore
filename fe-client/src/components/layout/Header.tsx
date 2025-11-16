@@ -9,17 +9,21 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-import { Menu, User, Search, LogOut, ShoppingCart } from "lucide-react";
+// SỬA 1: Xóa ShoppingCart khỏi đây nếu CartPopover không dùng nó
+import { Menu, User, Search, LogOut, ShoppingCart, X } from "lucide-react";
 import { showToast } from "@/utils/toast";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 
+// SỬA 2: Import CartPopover
 import { CartPopover } from "@/components/cartPopover";
 
 export function Header() {
-  const [isOpen, setIsOpen] = useState(false);
-  const { user, logout } = useAuth();
+  const [isOpen, setIsOpen] = useState(false); // State cho mobile menu
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchText, setSearchText] = useState("");
+
+  const { user, logout } = useAuth(); // Lấy thông tin user và hàm logout
 
   const handleLogout = async () => {
     try {
@@ -65,9 +69,57 @@ export function Header() {
         </nav>
 
         <div className="flex items-center space-x-2">
-          <Button variant="ghost" size="icon">
-            <Search className="h-4 w-4" />
-          </Button>
+          {/* Nút tìm kiếm (ví dụ) */}
+          <div className="relative flex items-center">
+            {/* Ô search blur glass */}
+            <div
+              className={`
+      flex items-center gap-2
+      absolute right-10 h-10
+      px-3
+      rounded-full
+      border border-gray-200
+      bg-white/60 backdrop-blur-xl shadow-md
+      transition-all duration-300 ease-out
+      ${showSearch ? "w-80 opacity-100" : "w-0 opacity-0 pointer-events-none"}
+    `}
+            >
+              <Search className="h-4 w-4 text-gray-500 shrink-0" />
+
+              <input
+                type="text"
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                autoFocus={showSearch}
+                placeholder="Tìm iPhone, phụ kiện..."
+                className="flex-1 bg-transparent border-none outline-none text-sm text-gray-800 placeholder:text-gray-400"
+              />
+
+              {searchText && (
+                <button
+                  type="button"
+                  onClick={() => setSearchText("")}
+                  className="p-1 rounded-full hover:bg-black/5 transition"
+                >
+                  <X className="h-3.5 w-3.5 text-gray-500" />
+                </button>
+              )}
+            </div>
+
+            {/* Icon search để toggle */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => {
+                // nếu đang mở và không có text -> đóng
+                if (showSearch && !searchText) setShowSearch(false);
+                else setShowSearch(true);
+              }}
+              className="relative z-20"
+            >
+              <Search className="h-5 w-5" />
+            </Button>
+          </div>
 
           <CartPopover />
 
