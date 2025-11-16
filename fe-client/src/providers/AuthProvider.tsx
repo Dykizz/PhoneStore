@@ -3,10 +3,21 @@ import type { BaseUser } from "@/types/user.type";
 import apiClient from "@/utils/apiClient";
 import { getMyProfile } from "@/apis/user.api";
 import { AuthContext } from "@/hooks/useAuth";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<BaseUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showLoginDialog, setShowLoginDialog] = useState(false);
 
   const fetchUser = async () => {
     try {
@@ -57,9 +68,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       loading,
       login,
       logout,
+      setShowLoginDialog,
     }),
     [user, loading]
   );
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      <Dialog open={showLoginDialog} onOpenChange={setShowLoginDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Bạn chưa đăng nhập</DialogTitle>
+            <DialogDescription>
+              Vui lòng đăng nhập để tiếp tục sử dụng tính năng này.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="default"
+              onClick={() => (window.location.href = "/login")}
+            >
+              Đăng nhập
+            </Button>
+            <DialogClose asChild>
+              <Button variant="outline">Hủy</Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      {<div>{children}</div>}
+    </AuthContext.Provider>
+  );
 }

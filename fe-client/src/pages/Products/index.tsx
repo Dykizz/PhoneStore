@@ -14,6 +14,7 @@ import Product from "./Product";
 import ProductFilter from "./ProductFilter";
 import ProductEmpty from "./ProductEmpty";
 import ProductPagination from "./ProductPagination";
+import { useSearchParams } from "react-router-dom";
 
 const defautFilter = {
   priceMin: undefined,
@@ -40,8 +41,12 @@ export default function ProductsPage() {
     hasNext: false,
     hasPrev: false,
   });
+  const [searchParams, setSearchParams] = useSearchParams();
+  const search = searchParams.get("search") || "";
 
-  const [searchText, setSearchText] = useState<string>(defautFilter.searchText);
+  const [searchText, setSearchText] = useState<string>(
+    search || defautFilter.searchText
+  );
   const [priceMin, setPriceMin] = useState<number | undefined>(
     defautFilter.priceMin
   );
@@ -155,6 +160,12 @@ export default function ProductsPage() {
       });
     }
   };
+  useEffect(() => {
+    setSearchText(search);
+  }, [search]);
+  useEffect(() => {
+    setSearchParams({ search: searchText });
+  }, [searchText]);
 
   useEffect(() => {
     fetchBrands();

@@ -9,19 +9,8 @@ import PaymentResult from "@/pages/PaymentResult";
 import ProductDetail from "@/pages/ProductDetail";
 import ProductsPage from "@/pages/Products";
 import RegisterPage from "@/pages/Register";
-import { createBrowserRouter  } from "react-router-dom";
+import { createBrowserRouter } from "react-router-dom";
 import CustomerProfilePage from "../pages/Profile";
-
-// const isAuthenticated = () => {
-//   return true;
-// };
-
-// const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
-//   if (!isAuthenticated()) {
-//     return <Navigate to="/login" replace />;
-//   }
-//   return children; // Nếu đã đăng nhập, cho phép truy cập
-// };
 
 export const router = createBrowserRouter([
   {
@@ -35,55 +24,18 @@ export const router = createBrowserRouter([
       {
         path: "login",
         element: <LoginPage />,
-        children: [
-          {
-            path: "con",
-          },
-        ],
       },
       {
         path: "register",
         element: <RegisterPage />,
       },
       {
-        path:"products",
-        element: <ProductsPage/>
+        path: "products",
+        element: <ProductsPage />,
       },
       {
         path: "product/:id",
         element: <ProductDetail />,
-      },
-      // {
-      //   path: "checkout",
-      //   element: <CheckoutPage />,
-      // },
-      // {
-      //   path: "profile",
-      //   element: <Profile />,
-      // },
-      // {
-      //   path: "checkout",
-      //   element: (
-      //     <ProtectedRoute>
-      //       <CheckoutPage />
-      //     </ProtectedRoute>
-      //   ),
-      // },
-      {
-        path: "about",
-        element: (
-          <div className="container py-8">
-            <h1>About</h1>
-          </div>
-        ),
-      },
-      {
-        path: "contact",
-        element: (
-          <div className="container py-8">
-            <h1>Contact</h1>
-          </div>
-        ),
       },
       {
         path: "products",
@@ -111,13 +63,12 @@ export const router = createBrowserRouter([
       },
       {
         path: "/checkout",
-        element: <CheckoutPage />
+        element: <CheckoutPage />,
       },
       {
         path: "/profile",
-        element: <CustomerProfilePage />
-      }
-      
+        element: <CustomerProfilePage />,
+      },
     ],
   },
 ]);

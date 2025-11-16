@@ -18,7 +18,7 @@ const AddressSelect = ({
     <div>
       <Label className="text-sm text-gray-600">{label}</Label>
       <Select {...props}>
-        <SelectTrigger className="rounded-xl border-gray-200 focus:ring-2 focus:ring-red-500">
+        <SelectTrigger className="rounded-xl border-gray-200 focus:ring-1 focus:border-primary">
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
         <SelectContent className="max-h-60 overflow-y-auto">
