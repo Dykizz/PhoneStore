@@ -10,16 +10,19 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 // SỬA 1: Xóa ShoppingCart khỏi đây nếu CartPopover không dùng nó
-import { Menu, User, Search, LogOut, ShoppingCart } from "lucide-react";
+import { Menu, User, Search, LogOut, ShoppingCart, X } from "lucide-react";
 import { showToast } from "@/utils/toast";
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 
 // SỬA 2: Import CartPopover
-import { CartPopover } from '@/components/cartPopover';
+import { CartPopover } from "@/components/cartPopover";
 
 export function Header() {
   const [isOpen, setIsOpen] = useState(false); // State cho mobile menu
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchText, setSearchText] = useState("");
+
   const { user, logout } = useAuth(); // Lấy thông tin user và hàm logout
 
   // Hàm xử lý đăng xuất
@@ -75,9 +78,56 @@ export function Header() {
         {/* Các nút hành động bên phải */}
         <div className="flex items-center space-x-2">
           {/* Nút tìm kiếm (ví dụ) */}
-          <Button variant="ghost" size="icon">
-            <Search className="h-4 w-4" />
-          </Button>
+          <div className="relative flex items-center">
+            {/* Ô search blur glass */}
+            <div
+              className={`
+      flex items-center gap-2
+      absolute right-10 h-10
+      px-3
+      rounded-full
+      border border-gray-200
+      bg-white/60 backdrop-blur-xl shadow-md
+      transition-all duration-300 ease-out
+      ${showSearch ? "w-80 opacity-100" : "w-0 opacity-0 pointer-events-none"}
+    `}
+            >
+              <Search className="h-4 w-4 text-gray-500 shrink-0" />
+
+              <input
+                type="text"
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                autoFocus={showSearch}
+                placeholder="Tìm iPhone, phụ kiện..."
+                className="flex-1 bg-transparent border-none outline-none text-sm text-gray-800 placeholder:text-gray-400"
+              />
+
+              {searchText && (
+                <button
+                  type="button"
+                  onClick={() => setSearchText("")}
+                  className="p-1 rounded-full hover:bg-black/5 transition"
+                >
+                  <X className="h-3.5 w-3.5 text-gray-500" />
+                </button>
+              )}
+            </div>
+
+            {/* Icon search để toggle */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => {
+                // nếu đang mở và không có text -> đóng
+                if (showSearch && !searchText) setShowSearch(false);
+                else setShowSearch(true);
+              }}
+              className="relative z-20"
+            >
+              <Search className="h-5 w-5" />
+            </Button>
+          </div>
 
           {/* SỬA 3: Thay thế nút giỏ hàng cũ bằng CartPopover */}
           {/* Nút giỏ hàng cũ đã bị xóa */}
@@ -138,7 +188,9 @@ export function Header() {
             </DropdownMenu>
           ) : (
             // Nếu chưa đăng nhập -> Hiển thị nút Đăng nhập / Đăng ký
-            <div className="hidden md:flex items-center space-x-2"> {/* Ẩn trên mobile vì đã có trong sheet */}
+            <div className="hidden md:flex items-center space-x-2">
+              {" "}
+              {/* Ẩn trên mobile vì đã có trong sheet */}
               <Button variant="ghost" asChild>
                 <Link to="/login">Đăng nhập</Link>
               </Button>
@@ -151,13 +203,17 @@ export function Header() {
           {/* Nút mở Menu Mobile (chỉ hiển thị trên màn hình nhỏ) */}
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="md:hidden"> {/* md:hidden để ẩn trên desktop */}
+              <Button variant="ghost" size="icon" className="md:hidden">
+                {" "}
+                {/* md:hidden để ẩn trên desktop */}
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
             {/* Nội dung Menu Mobile (Sheet) */}
             <SheetContent side="right" className="w-[300px] sm:w-[400px]">
-              <nav className="flex flex-col space-y-4 pt-6"> {/* Thêm padding top */}
+              <nav className="flex flex-col space-y-4 pt-6">
+                {" "}
+                {/* Thêm padding top */}
                 {/* Lặp qua các mục điều hướng */}
                 {navigation.map((item) => (
                   <Link
@@ -189,7 +245,9 @@ export function Header() {
                   <div className="flex flex-col space-y-1 pt-4 border-t">
                     {/* Thông tin user */}
                     <div className="flex items-center space-x-2 p-2 mb-2">
-                      <Avatar className="h-9 w-9"> {/* Tăng cỡ Avatar */}
+                      <Avatar className="h-9 w-9">
+                        {" "}
+                        {/* Tăng cỡ Avatar */}
                         <AvatarImage src={user?.avatar} alt="User Avatar" />
                         <AvatarFallback>
                           {user?.userName?.charAt(0)?.toUpperCase() || "U"}
