@@ -15,6 +15,7 @@ import { ResponseMessage } from 'src/common/decorators/response-message.decorato
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { UserRole } from 'src/users/entities/user.entity';
 import { PaginationQueryDto } from 'src/common/dtos/pagination-query.dto';
+import { Public } from 'src/common/decorators/public.decorator';
 
 @Controller('product-types')
 export class ProductTypesController {
@@ -30,7 +31,7 @@ export class ProductTypesController {
   }
 
   @Get()
-  @Roles(UserRole.ADMIN)
+  @Public()
   @ResponseMessage('Lấy danh sách loại sản phẩm thành công')
   async findAll(@Query() query: PaginationQueryDto) {
     return await this.productTypesService.findAll(query);

@@ -6,6 +6,7 @@ interface AuthContextType {
   loading: boolean;
   login: (userData: BaseUser, accessToken: string) => void;
   logout: () => Promise<void>;
+  setShowLoginDialog: (show: boolean) => void;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(
@@ -19,4 +20,3 @@ export const useAuth = () => {
   }
   return context;
 };
-

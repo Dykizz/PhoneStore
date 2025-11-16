@@ -1,11 +1,10 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Eye, EyeOff, Mail, Lock, Phone, User } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, User, Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 
-// Shadcn components
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -26,7 +25,6 @@ import {
 import { showToast } from "@/utils/toast";
 import { register } from "@/apis/auth.api";
 
-// Validation schema
 const registerSchema = z
   .object({
     email: z.string().min(1, "Email là bắt buộc").email("Email không hợp lệ"),
@@ -65,7 +63,6 @@ const RegisterPage = () => {
     mode: "onChange",
   });
 
-  // Watch password để hiển thị confirm password validation
   const password = form.watch("password");
 
   const onSubmit = async (data: RegisterFormValues) => {
@@ -92,7 +89,6 @@ const RegisterPage = () => {
         description: "Chào mừng bạn đến với PhoneStore!",
       });
 
-      // Redirect to login
       navigate("/login", {
         state: { message: "Đăng ký thành công! Vui lòng đăng nhập." },
       });
@@ -109,19 +105,23 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-green-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-muted flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        {/* Header */}
         <div className="text-center mb-8">
-          <div className="flex items-center justify-center mb-4">
-            <Phone className="h-10 w-10 text-green-600 mr-2" />
-            <h1 className="text-3xl font-bold text-gray-900">PhoneStore</h1>
+          <div className="flex items-center justify-center space-x-2 mb-4">
+            <Link to="/" className="flex items-center space-x-2">
+              <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center">
+                <span className="text-primary-foreground font-bold">PS</span>
+              </div>
+              <span className="font-bold text-2xl text-foreground">
+                Phone Store
+              </span>
+            </Link>
           </div>
-          <p className="text-gray-600">Tạo tài khoản mới</p>
+          <p className="text-muted-foreground">Tạo tài khoản mới</p>
         </div>
 
-        {/* Register Card */}
-        <Card className="shadow-lg border-0">
+        <Card className="shadow-sm">
           <CardHeader className="space-y-1 pb-6">
             <CardTitle className="text-2xl font-semibold text-center">
               Đăng ký
@@ -134,22 +134,19 @@ const RegisterPage = () => {
                 onSubmit={form.handleSubmit(onSubmit)}
                 className="space-y-4"
               >
-                {/* Email Field */}
                 <FormField
                   control={form.control}
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-sm font-medium">
-                        Email
-                      </FormLabel>
+                      <FormLabel>Email</FormLabel>
                       <FormControl>
                         <div className="relative">
-                          <Mail className="absolute left-3 top-1/3 h-4 w-4 text-gray-400" />
+                          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                           <Input
                             type="email"
                             placeholder="example@phonestore.com"
-                            className="pl-10 h-12"
+                            className="pl-10"
                             {...field}
                           />
                         </div>
@@ -159,22 +156,19 @@ const RegisterPage = () => {
                   )}
                 />
 
-                {/* Username Field */}
                 <FormField
                   control={form.control}
                   name="username"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-sm font-medium">
-                        Tên đăng nhập
-                      </FormLabel>
+                      <FormLabel>Tên đăng nhập</FormLabel>
                       <FormControl>
                         <div className="relative">
-                          <User className="absolute left-3 top-1/3 h-4 w-4 text-gray-400" />
+                          <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                           <Input
                             type="text"
                             placeholder="Nhập tên đăng nhập"
-                            className="pl-10 h-12"
+                            className="pl-10"
                             {...field}
                           />
                         </div>
@@ -184,22 +178,19 @@ const RegisterPage = () => {
                   )}
                 />
 
-                {/* Password Field */}
                 <FormField
                   control={form.control}
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-sm font-medium">
-                        Mật khẩu
-                      </FormLabel>
+                      <FormLabel>Mật khẩu</FormLabel>
                       <FormControl>
                         <div className="relative">
-                          <Lock className="absolute left-3 top-1/3 h-4 w-4 text-gray-400" />
+                          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                           <Input
                             type={showPassword ? "text" : "password"}
                             placeholder="••••••••"
-                            className="pl-10 pr-10 h-12"
+                            className="pl-10 pr-10"
                             {...field}
                           />
                           <button
@@ -208,7 +199,7 @@ const RegisterPage = () => {
                               e.preventDefault();
                               setShowPassword(!showPassword);
                             }}
-                            className="absolute right-3 top-1/3 text-gray-400 hover:text-gray-600"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                           >
                             {showPassword ? (
                               <EyeOff className="h-4 w-4" />
@@ -223,22 +214,19 @@ const RegisterPage = () => {
                   )}
                 />
 
-                {/* Confirm Password Field */}
                 <FormField
                   control={form.control}
                   name="confirmPassword"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-sm font-medium">
-                        Xác nhận mật khẩu
-                      </FormLabel>
+                      <FormLabel>Xác nhận mật khẩu</FormLabel>
                       <FormControl>
                         <div className="relative">
-                          <Lock className="absolute left-3 top-1/3 h-4 w-4 text-gray-400" />
+                          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                           <Input
                             type={showConfirmPassword ? "text" : "password"}
                             placeholder="••••••••"
-                            className="pl-10 pr-10 h-12"
+                            className="pl-10 pr-10"
                             {...field}
                           />
                           <button
@@ -247,7 +235,7 @@ const RegisterPage = () => {
                               e.preventDefault();
                               setShowConfirmPassword(!showConfirmPassword);
                             }}
-                            className="absolute right-3 top-1/3 text-gray-400 hover:text-gray-600"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                           >
                             {showConfirmPassword ? (
                               <EyeOff className="h-4 w-4" />
@@ -259,13 +247,12 @@ const RegisterPage = () => {
                       </FormControl>
                       <FormMessage />
 
-                      {/* Password Match Indicator */}
                       {field.value && password && (
                         <div className="text-xs">
                           {password === field.value ? (
                             <p className="text-green-600">✓ Mật khẩu khớp</p>
                           ) : (
-                            <p className="text-red-500">
+                            <p className="text-destructive">
                               ✗ Mật khẩu không khớp
                             </p>
                           )}
@@ -275,17 +262,16 @@ const RegisterPage = () => {
                   )}
                 />
 
-                {/* Submit Button */}
                 <Button
                   type="submit"
-                  className="w-full h-12 bg-green-600 hover:bg-green-700 text-white font-medium"
+                  className="w-full font-medium"
                   disabled={loading || !form.formState.isValid}
                 >
                   {loading ? (
-                    <div className="flex items-center space-x-2">
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      <span>Đang tạo tài khoản...</span>
-                    </div>
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Đang tạo tài khoản...
+                    </>
                   ) : (
                     "Tạo tài khoản"
                   )}
@@ -295,11 +281,11 @@ const RegisterPage = () => {
           </CardContent>
 
           <CardFooter className="flex flex-col space-y-2 pt-6">
-            <div className="text-center text-sm text-gray-600">
+            <div className="text-center text-sm text-muted-foreground">
               Đã có tài khoản?{" "}
               <Link
                 to="/login"
-                className="text-green-600 hover:text-green-800 font-medium transition-colors"
+                className="text-primary hover:text-primary/80 font-medium transition-colors"
               >
                 Đăng nhập ngay
               </Link>
@@ -308,7 +294,7 @@ const RegisterPage = () => {
             <div className="text-center">
               <Link
                 to="/"
-                className="text-xs text-gray-500 hover:text-gray-700 transition-colors"
+                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
               >
                 ← Về trang chủ
               </Link>
@@ -316,17 +302,16 @@ const RegisterPage = () => {
           </CardFooter>
         </Card>
 
-        {/* Footer */}
-        <div className="mt-8 text-center text-xs text-gray-500">
+        <div className="mt-8 text-center text-xs text-muted-foreground">
           <p>© 2024 PhoneStore. All rights reserved.</p>
           <div className="mt-2 space-x-4">
-            <Link to="/privacy" className="hover:text-gray-700">
+            <Link to="/privacy" className="hover:text-foreground">
               Chính sách bảo mật
             </Link>
-            <Link to="/terms" className="hover:text-gray-700">
+            <Link to="/terms" className="hover:text-foreground">
               Điều khoản sử dụng
             </Link>
-            <Link to="/support" className="hover:text-gray-700">
+            <Link to="/support" className="hover:text-foreground">
               Hỗ trợ
             </Link>
           </div>

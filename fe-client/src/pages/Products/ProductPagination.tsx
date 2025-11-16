@@ -42,11 +42,7 @@ export default function ProductPagination({
                 onClick={() => {
                   setPagination({ ...pagination, page });
                 }}
-                className={`${
-                  page === pagination.page
-                    ? "bg-black text-white hover:bg-gray-900"
-                    : "hover:bg-gray-100 text-gray-800"
-                } border border-gray-300 rounded-md`}
+                className="border border-gray-300 rounded-md"
               >
                 {page}
               </Button>

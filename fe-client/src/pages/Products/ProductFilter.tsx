@@ -1,7 +1,5 @@
 import { Button } from "@/components/ui/button";
 import { SlidersHorizontal } from "lucide-react";
-import type { ProductType } from "@/types/productType.type";
-import type { Brand } from "@/types/brand.type";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -54,15 +52,17 @@ export default function ProductFilter({
   handleDefaultFilter,
 }: ProductFilterProps) {
   return (
-    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-4 mb-10 flex flex-wrap items-center justify-between gap-4">
+    <div className="bg-card border rounded-2xl shadow-sm p-4 mb-10 flex flex-wrap items-center justify-between gap-4">
       <div className="flex items-center gap-2">
-        <SlidersHorizontal className="w-5 h-5 text-black" />
-        <h2 className="font-semibold text-gray-900 text-lg">Bộ lọc sản phẩm</h2>
+        <SlidersHorizontal className="w-5 h-5 text-foreground" />
+        <h2 className="font-semibold text-foreground text-lg">
+          Bộ lọc sản phẩm
+        </h2>
       </div>
       <Button
         onClick={handleDefaultFilter}
         variant="outline"
-        className="text-sm font-medium rounded-full border-gray-300 text-gray-800 hover:bg-gray-100 hover:text-black transition-all"
+        className="text-sm font-medium rounded-full transition-all"
       >
         Đặt lại
       </Button>
@@ -71,6 +71,7 @@ export default function ProductFilter({
         placeholder="Tìm kiếm sản phẩm..."
         value={searchText}
         onChange={(e) => setSearchText(e.target.value)}
+        className="rounded-full"
       />
       <div className="w-full flex flex-wrap items-center gap-3 mt-2">
         <Select
@@ -81,7 +82,7 @@ export default function ProductFilter({
             setSortOrder(order as "ASC" | "DESC");
           }}
         >
-          <SelectTrigger className="w-[180px] rounded-full text-sm border-gray-300 flex items-center justify-between hover:bg-gray-100 text-gray-800">
+          <SelectTrigger className="w-[180px] rounded-full text-sm flex items-center justify-between">
             {sortBy
               ? `Giá ${sortOrder === "ASC" ? "tăng dần" : "giảm dần"}`
               : "Sắp xếp theo giá"}
@@ -115,7 +116,7 @@ export default function ProductFilter({
             setBrandId(value === "all" ? undefined : value);
           }}
         >
-          <SelectTrigger className="w-[180px] rounded-full text-sm border-gray-300 flex items-center justify-between hover:bg-gray-100 text-gray-800">
+          <SelectTrigger className="w-[180px] rounded-full text-sm flex items-center justify-between">
             {brandId ? mapBrands.get(brandId) : "Thương hiệu"}
           </SelectTrigger>
           <SelectContent>
@@ -139,7 +140,7 @@ export default function ProductFilter({
             setProductTypeId(value === "all" ? undefined : value)
           }
         >
-          <SelectTrigger className="w-[180px] rounded-full text-sm border-gray-300 flex items-center justify-between hover:bg-gray-100 text-gray-800">
+          <SelectTrigger className="w-[180px] rounded-full text-sm flex items-center justify-between">
             {productTypeId
               ? mapProductTypes.get(productTypeId)
               : "Loại sản phẩm"}
@@ -162,7 +163,9 @@ export default function ProductFilter({
       </div>
 
       <div className="w-[300px] flex flex-col gap-2">
-        <label className="text-sm font-medium text-gray-700">Khoảng giá</label>
+        <label className="text-sm font-medium text-foreground">
+          Khoảng giá
+        </label>
         <div className="flex items-center gap-2">
           <div className="flex-1">
             <Input
@@ -174,10 +177,11 @@ export default function ProductFilter({
               defaultValue={0}
               min={0}
               max={priceMax}
-              className="text-sm"
+              className="text-sm rounded-full"
             />
           </div>
-          <span className="text-gray-500">-</span>
+
+          <span className="text-muted-foreground">-</span>
           <div className="flex-1">
             <Input
               type="number"
@@ -186,7 +190,7 @@ export default function ProductFilter({
               step={100000}
               onChange={(e) => setPriceMax(Number(e.target.value))}
               min={priceMin}
-              className="text-sm"
+              className="text-sm rounded-full"
             />
           </div>
         </div>
