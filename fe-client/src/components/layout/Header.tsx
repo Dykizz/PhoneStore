@@ -25,7 +25,6 @@ export function Header() {
 
   const { user, logout } = useAuth(); // Lấy thông tin user và hàm logout
 
-  // Hàm xử lý đăng xuất
   const handleLogout = async () => {
     try {
       await logout();
@@ -42,27 +41,21 @@ export function Header() {
     }
   };
 
-  // Danh sách các mục điều hướng
   const navigation = [
     { name: "Trang chủ", href: "/" },
     { name: "Sản phẩm", href: "/products" },
-    // Thêm các mục khác nếu cần
   ];
 
   return (
-    // Header chính, cố định ở trên cùng
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
-        {/* Logo và Tên cửa hàng */}
         <Link to="/" className="flex items-center space-x-2">
-          {/* Icon logo đơn giản */}
           <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center">
             <span className="text-primary-foreground font-bold">PS</span>
           </div>
           <span className="font-bold text-xl">Phone Store</span>
         </Link>
 
-        {/* Navigation cho Desktop */}
         <nav className="hidden md:flex items-center space-x-6 text-sm font-medium">
           {navigation.map((item) => (
             <Link
@@ -75,7 +68,6 @@ export function Header() {
           ))}
         </nav>
 
-        {/* Các nút hành động bên phải */}
         <div className="flex items-center space-x-2">
           {/* Nút tìm kiếm (ví dụ) */}
           <div className="relative flex items-center">
@@ -129,17 +121,9 @@ export function Header() {
             </Button>
           </div>
 
-          {/* SỬA 3: Thay thế nút giỏ hàng cũ bằng CartPopover */}
-          {/* Nút giỏ hàng cũ đã bị xóa */}
-          {/* <Button variant="ghost" size="icon">
-            <ShoppingCart className="h-4 w-4" />
-          </Button> */}
-          {/* Sử dụng CartPopover component */}
           <CartPopover />
 
-          {/* Menu User hoặc Nút Đăng nhập/Đăng ký */}
           {user ? (
-            // Nếu đã đăng nhập -> Hiển thị Dropdown Menu User
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -148,7 +132,6 @@ export function Header() {
                 >
                   <Avatar className="h-8 w-8">
                     <AvatarImage src={user?.avatar} alt="User Avatar" />
-                    {/* Fallback nếu không có ảnh */}
                     <AvatarFallback>
                       {user?.userName?.charAt(0)?.toUpperCase() || "U"}
                     </AvatarFallback>
