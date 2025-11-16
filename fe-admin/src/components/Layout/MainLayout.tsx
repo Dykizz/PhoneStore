@@ -92,7 +92,6 @@ const MainLayout: React.FC = () => {
       ],
     },
     { key: "logout", icon: <LogoutOutlined />, label: "Đăng xuất" },
-    { key: "/settings", icon: <SettingOutlined />, label: "Cài đặt" },
   ];
 
   const handleMenuClick = ({ key }: { key: string }) => {

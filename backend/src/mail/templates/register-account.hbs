@@ -1,0 +1,57 @@
+<html lang='vi'>
+  <head>
+    <meta charset='UTF-8' />
+    <title>Xác thực đăng ký tài khoản</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        color: #333;
+        background-color: #f0f2f5;
+        margin: 0;
+        padding: 24px;
+      }
+      .container {
+        max-width: 600px;
+        margin: auto;
+        padding: 24px;
+        border: 1px solid #e5e5e5;
+        border-radius: 8px;
+        background-color: #ffffff;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      }
+      a.verify-link {
+        display: inline-block;
+        margin: 16px 0;
+        padding: 12px 20px;
+        background-color: #2e7d32;
+        color: #fff;
+        text-decoration: none;
+        border-radius: 4px;
+        font-weight: bold;
+      }
+      a.verify-link:hover {
+        background-color: #1b5e20;
+      }
+    </style>
+  </head>
+  <body>
+    <div class='container'>
+      <h2>Xin chào,</h2>
+      <p>Bạn đã yêu cầu đăng ký tài khoản mới trên hệ thống của chúng tôi.</p>
+      <p>Vui lòng nhấn vào nút bên dưới để xác thực email của bạn:</p>
+      <a
+        class='verify-link'
+        href='{{host}}/verify?email={{email}}&type=register&token={{token}}'
+      >
+        Xác thực đăng ký tài khoản
+      </a>
+      <p>Link xác thực này có hiệu lực trong
+        <strong>{{expiration}}</strong>.</p>
+      <p>Vui lòng không chia sẻ link này với bất kỳ ai.</p>
+      <p>Nếu bạn không thực hiện yêu cầu này, vui lòng bỏ qua email này.</p>
+      <br />
+      <p>Trân trọng,</p>
+      <p><strong>Đội ngũ hỗ trợ QuizSystem</strong></p>
+    </div>
+  </body>
+</html>
