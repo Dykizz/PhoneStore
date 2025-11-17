@@ -63,15 +63,15 @@ export function Home() {
           biệt!
         </p>
         <div className="mt-10">
-          <Link to="/products">
+          <Link to="/products?category=phone">
             <Button size="lg" className="mr-4">
-              Mua ngay
+              Mua điện thoại
             </Button>
           </Link>
 
-          <Link to="/products">
+          <Link to="/products?category=accessory">
             <Button variant="outline" size="lg">
-              Xem thêm
+              Mua phụ kiện
             </Button>
           </Link>
         </div>

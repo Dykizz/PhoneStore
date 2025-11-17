@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Link, useNavigate } from "react-router-dom";
+import { href, Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -40,7 +40,14 @@ export function Header() {
 
   const navigation = [
     { name: "Trang chủ", href: "/" },
-    { name: "Sản phẩm", href: "/products" },
+    {
+      name: "Điện thoại",
+      href: "/products?category=phone",
+    },
+    {
+      name: "Phụ kiện",
+      href: "/products?category=accessory",
+    },
   ];
 
   return (

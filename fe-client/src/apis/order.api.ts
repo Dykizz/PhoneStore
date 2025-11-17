@@ -1,6 +1,11 @@
 import type { ApiResponse } from "@/interfaces/apiResponse.interface";
 import type { PaginatedResponse } from "@/interfaces/pagination.interface";
-import type { BaseOrder, CreateOrder, DetailOrder } from "@/types/order.type";
+import {
+  OrderStatus,
+  type BaseOrder,
+  type CreateOrder,
+  type DetailOrder,
+} from "@/types/order.type";
 import apiClient from "@/utils/apiClient";
 
 export async function createOrder(
@@ -19,4 +24,10 @@ export async function getMyOrders(
 
 export async function getOrder(id: string): Promise<ApiResponse<DetailOrder>> {
   return await apiClient.get<DetailOrder>(`/orders/${id}`);
+}
+
+export async function cancelOrder(id: string): Promise<ApiResponse<void>> {
+  return await apiClient.patch<void>(`/orders/${id}/status`, {
+    status: OrderStatus.CANCELLED,
+  });
 }

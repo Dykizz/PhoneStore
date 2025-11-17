@@ -17,14 +17,11 @@ interface ProductFilterProps {
   setSortOrder: (sortOrder: "ASC" | "DESC") => void;
   brandId: string | undefined;
   setBrandId: (brandId: string | undefined) => void;
-  productTypeId: string | undefined;
-  setProductTypeId: (productTypeId: string | undefined) => void;
   priceMin: number | undefined;
   setPriceMin: (priceMin: number) => void;
   priceMax: number | undefined;
   setPriceMax: (priceMax: number) => void;
   mapBrands: Map<string, string>;
-  mapProductTypes: Map<string, string>;
   brands: { id: string; name: string }[];
   productTypes: { id: string; name: string }[];
   handleDefaultFilter: () => void;
@@ -39,16 +36,12 @@ export default function ProductFilter({
   setSortOrder,
   brandId,
   setBrandId,
-  productTypeId,
-  setProductTypeId,
   priceMin,
   setPriceMin,
   priceMax,
   setPriceMax,
   mapBrands,
-  mapProductTypes,
   brands,
-  productTypes,
   handleDefaultFilter,
 }: ProductFilterProps) {
   return (
@@ -128,34 +121,6 @@ export default function ProductFilter({
                 value={brand.id}
               >
                 {brand.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Select
-          key={productTypeId}
-          value={productTypeId || "all"}
-          onValueChange={(value) =>
-            setProductTypeId(value === "all" ? undefined : value)
-          }
-        >
-          <SelectTrigger className="w-[180px] rounded-full text-sm flex items-center justify-between">
-            {productTypeId
-              ? mapProductTypes.get(productTypeId)
-              : "Loại sản phẩm"}
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem className="cursor-pointer" value="all">
-              Tất cả
-            </SelectItem>
-            {productTypes.map((type) => (
-              <SelectItem
-                className="cursor-pointer"
-                key={type.id}
-                value={type.id}
-              >
-                {type.name}
               </SelectItem>
             ))}
           </SelectContent>
