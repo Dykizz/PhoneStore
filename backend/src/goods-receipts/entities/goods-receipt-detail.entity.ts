@@ -1,11 +1,4 @@
-import {
-  Column,
-  Entity,
-  JoinColumn,
-  ManyToOne,
-  PrimaryColumn,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
 import { GoodsReceipt } from './goods-receipt.entity';
 import { Product } from 'src/products/entities/product.entity';
 import { VariantProduct } from 'src/products/dto/response-product.dto';

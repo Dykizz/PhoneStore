@@ -31,7 +31,7 @@ import {
   SlidersHorizontal,
 } from "lucide-react";
 import { OrderStatus, PaymentMethod, type BaseOrder } from "@/types/order.type";
-import { getMyOrders } from "@/apis/order.api";
+import { cancelOrder, getMyOrders } from "@/apis/order.api";
 import type { MetaPagination } from "@/interfaces/pagination.interface";
 import { QueryBuilder } from "@/utils/queryBuilder";
 import { showToast } from "@/utils/toast";
@@ -201,12 +201,29 @@ export default function OrdersPage() {
   const getPaymentLabel = (method: PaymentMethod) =>
     method === PaymentMethod.CASH_ON_DELIVERY ? "COD" : "Chuyển khoản";
 
-  const handleCancel = (id: string) => {
-    setOrders((prev) =>
-      prev.map((o) =>
-        o.id === id ? { ...o, status: OrderStatus.CANCELLED } : o
-      )
-    );
+  const handleCancel = async (id: string) => {
+    try {
+      const response = await cancelOrder(id);
+      console.log(response);
+      if (response.success) {
+        showToast({
+          type: "success",
+          title: "Thành công",
+          description: "Huỷ đơn hàng thành công",
+        });
+      } else {
+        throw new Error(response.message);
+      }
+    } catch (error) {
+      showToast({
+        type: "error",
+        title: "Lỗi",
+        description:
+          error instanceof Error ? error.message : "Huỷ đơn hàng thất bại",
+      });
+    } finally {
+      fetchMyOrders(pagination.page);
+    }
   };
 
   return (
@@ -391,13 +408,7 @@ export default function OrdersPage() {
                 {order.status === OrderStatus.NEW && (
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button
-                        size="sm"
-                        className="bg-red-100 hover:bg-red-200 text-red-600 transition-all duration-200"
-                        onClick={() => {}}
-                      >
-                        Huỷ
-                      </Button>
+                      <Button>Hủy</Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                       <AlertDialogHeader>

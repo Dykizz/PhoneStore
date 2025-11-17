@@ -186,11 +186,27 @@ export class OrdersService {
     // ✅ Validate business logic
     const validTransitions: Record<OrderStatus, OrderStatus[]> = {
       new: [OrderStatus.PROCESSING, OrderStatus.CANCELLED],
-      processing: [OrderStatus.SHIPPED, OrderStatus.CANCELLED],
+      processing: [OrderStatus.SHIPPED],
       shipped: [OrderStatus.DELIVERED],
       delivered: [],
       cancelled: [],
     };
+
+    if (
+      status === OrderStatus.CANCELLED &&
+      !validTransitions[order.status].includes(status)
+    ) {
+      let infor = 'Mới tạo';
+      if (order.status === OrderStatus.PROCESSING) {
+        infor = 'đang được xử lý';
+      } else if (order.status === OrderStatus.SHIPPED) {
+        infor = 'đang được giao hàng';
+      } else if (order.status === OrderStatus.DELIVERED) {
+        infor = 'đã được giao hàng';
+      }
+
+      throw new BadRequestException(`Đơn hàng này  ${infor}, không thể huỷ`);
+    }
 
     if (!validTransitions[order.status].includes(status)) {
       throw new BadRequestException(
@@ -203,7 +219,6 @@ export class OrdersService {
     await queryRunner.startTransaction();
 
     try {
-      // ✅ CHỈ HỦY ĐƠN MỚI HOẶC ĐANG XỬ LÝ THÌ CỘNG LẠI QUANTITY
       if (status === OrderStatus.CANCELLED) {
         const orderDetails = await queryRunner.manager.find(OrderDetail, {
           where: { orderId: order.id },
