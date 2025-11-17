@@ -196,13 +196,15 @@ export class OrdersService {
       status === OrderStatus.CANCELLED &&
       !validTransitions[order.status].includes(status)
     ) {
-      let infor = 'Mới tạo';
+      let infor = 'mới tạo';
       if (order.status === OrderStatus.PROCESSING) {
         infor = 'đang được xử lý';
       } else if (order.status === OrderStatus.SHIPPED) {
         infor = 'đang được giao hàng';
       } else if (order.status === OrderStatus.DELIVERED) {
         infor = 'đã được giao hàng';
+      } else if (order.status === OrderStatus.CANCELLED) {
+        infor = 'đã huỷ trước đó';
       }
 
       throw new BadRequestException(`Đơn hàng này  ${infor}, không thể huỷ`);

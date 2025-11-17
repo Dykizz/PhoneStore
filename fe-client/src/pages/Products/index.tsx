@@ -28,9 +28,6 @@ const defautFilter = {
 export default function ProductsPage() {
   const [products, setProducts] = useState<BaseProduct[]>([]);
   const [brands, setBrands] = useState<{ id: string; name: string }[]>([]);
-  const [productTypes, setproductTypes] = useState<
-    { id: string; name: string }[]
-  >([]);
   const [loading, setLoading] = useState(false);
   const [pagination, setPagination] = useState<MetaPagination>({
     total: 0,
@@ -142,17 +139,15 @@ export default function ProductsPage() {
   useEffect(() => {
     setSearchText(search);
   }, [search]);
+
   useEffect(() => {
     setSearchParams({ search: searchText });
   }, [searchText]);
 
   useEffect(() => {
-    console.log("Category changed:", category);
-    setProductTypeId(
-      category === "accessory"
-        ? "95ea2006-b528-4d15-81b6-2a4ac723fa09"
-        : "ebd5e145-d7eb-4cd0-80bc-e71e0a623c76"
-    );
+    if (category) {
+      setSearchParams({ category });
+    }
     fetchProducts(1);
   }, [category]);
 
@@ -197,7 +192,6 @@ export default function ProductsPage() {
         setPriceMin={setPriceMin}
         setSearchText={setSearchText}
         brands={brands}
-        productTypes={productTypes || []}
         setBrandId={setBrandId}
         sortBy={sortBy}
         setSortBy={setSortBy}

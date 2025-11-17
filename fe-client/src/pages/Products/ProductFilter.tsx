@@ -23,7 +23,6 @@ interface ProductFilterProps {
   setPriceMax: (priceMax: number) => void;
   mapBrands: Map<string, string>;
   brands: { id: string; name: string }[];
-  productTypes: { id: string; name: string }[];
   handleDefaultFilter: () => void;
 }
 
