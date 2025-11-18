@@ -43,7 +43,7 @@ export function Home() {
       </div>
     );
 
-  if (error)
+  if (error){
     return (
       <div className="flex justify-center items-center h-96 text-red-500 text-lg">
         {error}
