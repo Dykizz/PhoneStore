@@ -15,6 +15,7 @@ import { ResponseMessage } from 'src/common/decorators/response-message.decorato
 import { PaginationQueryDto } from 'src/common/dtos/pagination-query.dto';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { UserRole } from 'src/users/entities/user.entity';
+import { Public } from 'src/common/decorators/public.decorator';
 
 @Controller('brands')
 export class BrandsController {
@@ -24,11 +25,11 @@ export class BrandsController {
   @Roles(UserRole.ADMIN)
   @ResponseMessage('Thương hiệu được tạo thành công')
   async create(@Body() createBrandDto: CreateBrandDto) {
-    return await this.brandsService.create(createBrandDto);
+    return await this.brandsService.createBand(createBrandDto);
   }
 
   @Get()
-  @Roles(UserRole.ADMIN)
+  @Public()
   @ResponseMessage('Lấy danh sách thương hiệu thành công')
   async findAll(@Query() query: PaginationQueryDto) {
     return this.brandsService.findAll(query);
@@ -48,13 +49,13 @@ export class BrandsController {
     @Param('id') id: string,
     @Body() updateBrandDto: UpdateBrandDto,
   ) {
-    return await this.brandsService.update(id, updateBrandDto);
+    return await this.brandsService.updateBand(id, updateBrandDto);
   }
 
   @Delete(':id')
   @Roles(UserRole.ADMIN)
   @ResponseMessage('Xóa thương hiệu thành công')
   async remove(@Param('id') id: string) {
-    return await this.brandsService.remove(id);
+    return await this.brandsService.removeBand(id);
   }
 }

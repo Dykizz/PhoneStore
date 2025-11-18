@@ -21,6 +21,7 @@ import DetailUserPage from "@/pages/Users/Detailuser";
 import UnAuthLayout from "@/components/Layout/UnAuthLayout";
 import OrdersPage from "@/pages/Orders";
 import DetailOrderPage from "@/pages/Orders/DetailOrder";
+import StatisticsPage from "@/pages/Statistics";
 export const ThemeContext = React.createContext({
   isDark: false,
   toggleTheme: () => {},
@@ -29,10 +30,9 @@ export const ThemeContext = React.createContext({
 export const router = createBrowserRouter([
   {
     element: <UnAuthLayout />,
-
     children: [
       {
-        path: "/login",
+        path: "login",
         element: <LoginPage />,
       },
     ],
@@ -45,74 +45,34 @@ export const router = createBrowserRouter([
         index: true,
         element: <Dashboard />,
       },
-      {
-        path: "suppliers",
-        element: <SuppliersPage />,
-      },
-      {
-        path: "product-types",
-        element: <ProductTypesPage />,
-      },
-      {
-        path: "brands",
-        element: <BrandsPage />,
-      },
-      {
-        path: "products",
-        element: <ProductsPage />,
-      },
-      {
-        path: "products/add",
-        element: <AddProductPage />,
-      },
-      {
-        path: "products/edit/:id",
-        element: <EditProductPage />,
-      },
-      {
-        path: "products/:id",
-        element: <ProductDetailPage />,
-      },
-      {
-        path: "discount-policies",
-        element: <DiscountPolicyPage />,
-      },
-      {
-        path: "goods-receipts",
-        element: <GoodsReceiptsPage />,
-      },
-      {
-        path: "goods-receipts/add",
-        element: <CreateGoodsReceiptPage />,
-      },
-      {
-        path: "goods-receipts/edit/:id",
-        element: <EditGoodsReceiptPage />,
-      },
-      {
-        path: "users",
-        element: <UsersPage />,
-      },
-      {
-        path: "users/add",
-        element: <AddUserPage />,
-      },
-      {
-        path: "users/edit/:id",
-        element: <EditUserPage />,
-      },
-      {
-        path: "users/:id",
-        element: <DetailUserPage />,
-      },
-      {
-        path: "orders",
-        element: <OrdersPage />,
-      },
-      {
-        path: "orders/:id",
-        element: <DetailOrderPage />,
-      },
+
+      { path: "suppliers", element: <SuppliersPage /> },
+      { path: "product-types", element: <ProductTypesPage /> },
+      { path: "brands", element: <BrandsPage /> },
+
+      { path: "products", element: <ProductsPage /> },
+      { path: "products/list", element: <ProductsPage /> },
+      { path: "products/add", element: <AddProductPage /> },
+      { path: "products/edit/:id", element: <EditProductPage /> },
+      { path: "products/:id", element: <ProductDetailPage /> },
+
+      { path: "discount-policies", element: <DiscountPolicyPage /> },
+
+      { path: "goods-receipts", element: <GoodsReceiptsPage /> },
+      { path: "goods-receipts/list", element: <GoodsReceiptsPage /> },
+      { path: "goods-receipts/add", element: <CreateGoodsReceiptPage /> },
+      { path: "goods-receipts/edit/:id", element: <EditGoodsReceiptPage /> },
+
+      { path: "users", element: <UsersPage /> },
+      { path: "users/list", element: <UsersPage /> },
+      { path: "users/add", element: <AddUserPage /> },
+      { path: "users/edit/:id", element: <EditUserPage /> },
+      { path: "users/:id", element: <DetailUserPage /> },
+
+      { path: "orders", element: <OrdersPage /> },
+      { path: "orders/:id", element: <DetailOrderPage /> },
+
+      { path: "statistics", element: <StatisticsPage /> },
     ],
   },
 ]);

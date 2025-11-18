@@ -10,12 +10,6 @@ import ip16_xanhmongket from "./assets/ip16_xanhmongket.webp";
 import ip17promax_bac from "./assets/ip17promax_bac.webp";
 import ip17promax_camvutru from "./assets/ip17promax_camvutru.webp";
 import ip17promax_xanhdam from "./assets/ip17promax_xanhdam.webp";
-import {
-  OrderStatus,
-  PaymentMethod,
-  PaymentStatus,
-  type DetailOrder,
-} from "./types/order.type";
 
 /* -------------------------- ProductType -------------------------- */
 export type ProductType = {
@@ -118,6 +112,7 @@ export type Order = {
   totalprice: number;
 };
 
+
 /* -------------------------- OrderDetail ------------------------ */
 export type OrderDetail = {
   orderId: number;
@@ -125,6 +120,8 @@ export type OrderDetail = {
   amount: number;
   price: number;
 };
+
+/* -------------------------- ORDER STATUS ENUM ------------------------- */
 
 /* -------------------------- DỮ LIỆU MẪU ------------------------- */
 export const productTypes: ProductType[] = [
@@ -714,10 +711,6 @@ export const orderDetails: OrderDetail[] = [
   { orderId: 1, id: 1, amount: 1, price: 17390000 },
 ];
 
-// fe-client/src/data.ts
-
-// ... (Giữ nguyên toàn bộ code cũ của bạn ở trên) ...
-
 /* -------------------------- CÁC KIỂU DỮ LIỆU ĐỘNG ------------------------- */
 
 // Kiểu cho một "phiên bản" (variant) của sản phẩm
@@ -834,149 +827,3 @@ export const checkoutData: CheckoutInfo = {
   subtotal: 49290000,
 };
 
-export const ordersData: DetailOrder[] = [
-  {
-    id: "ORD001",
-    customer: {
-      id: "C001",
-      userName: "Ken",
-      email: "ken@example.com",
-    },
-    totalAmount: 29990000,
-    status: OrderStatus.DELIVERED,
-    paymentMethod: PaymentMethod.BANK_TRANSFER,
-    paymentStatus: PaymentStatus.COMPLETED,
-    addressShipping: "12 Nguyễn Huệ, Quận 1, TP. HCM",
-    phoneNumber: "0901234567",
-    note: "Giao trong giờ hành chính",
-    createdAt: new Date("2025-11-01"),
-    updatedAt: new Date("2025-11-03"),
-    items: [
-      {
-        id: "1",
-        productName: "iPhone 17 Pro Max 256GB",
-        productImage: ip17promax_camvutru,
-        price: 29990000,
-        quantity: 1,
-      },
-    ],
-  },
-  {
-    id: "ORD002",
-    customer: {
-      id: "C001",
-      userName: "Ken",
-      email: "ken@example.com",
-    },
-    totalAmount: 15990000,
-    status: OrderStatus.SHIPPED,
-    paymentMethod: PaymentMethod.CASH_ON_DELIVERY,
-    paymentStatus: PaymentStatus.PENDING,
-    addressShipping: "24 Đinh Tiên Hoàng, Quận Bình Thạnh, TP. HCM",
-    phoneNumber: "0987654321",
-    note: "Gọi trước khi giao",
-    createdAt: new Date("2025-11-05"),
-    updatedAt: new Date("2025-11-06"),
-    items: [
-      {
-        id: "2",
-        name: "iPhone 16 128GB | Chính hãng VN/A",
-        image: ip16_den,
-        price: 15990000,
-        quantity: 1,
-      },
-    ],
-  },
-  {
-    id: "ORD003",
-    customer: {
-      id: "C002",
-      userName: "Huy",
-      email: "huy.nguyen@example.com",
-    },
-    totalAmount: 45980000,
-    status: OrderStatus.PROCESSING,
-    paymentMethod: PaymentMethod.BANK_TRANSFER,
-    paymentStatus: PaymentStatus.PENDING,
-    addressShipping: "89 Lê Lợi, Quận 3, TP. HCM",
-    phoneNumber: "0911122233",
-    note: "Đóng gói kỹ, dễ vỡ",
-    createdAt: new Date("2025-11-07"),
-    updatedAt: new Date("2025-11-08"),
-    items: [
-      {
-        id: "3",
-        name: "iPhone 17 Pro Max 512GB",
-        image: ip17promax_bac,
-        price: 34990000,
-        quantity: 1,
-      },
-      {
-        id: "4",
-        name: "AirPods Pro 2 | MagSafe",
-        image: ip15_hong,
-        price: 10990000,
-        quantity: 1,
-      },
-    ],
-  },
-  {
-    id: "ORD004",
-    customer: {
-      id: "C003",
-      userName: "Linh",
-      email: "linh.tran@example.com",
-    },
-    totalAmount: 12990000,
-    status: OrderStatus.NEW,
-    paymentMethod: PaymentMethod.CASH_ON_DELIVERY,
-    paymentStatus: PaymentStatus.PENDING,
-    addressShipping: "102 Võ Văn Ngân, Thủ Đức, TP. HCM",
-    phoneNumber: "0933444555",
-    note: "Giao buổi chiều",
-    createdAt: new Date("2025-11-09"),
-    updatedAt: new Date("2025-11-09"),
-    items: [
-      {
-        id: "5",
-        name: "Apple Watch Series 10 | 41mm",
-        image: ip16_trang,
-        price: 12990000,
-        quantity: 1,
-      },
-    ],
-  },
-  {
-    id: "ORD005",
-    customer: {
-      id: "C004",
-      userName: "An",
-      email: "an.vo@example.com",
-    },
-    totalAmount: 53970000,
-    status: OrderStatus.CANCELLED,
-    paymentMethod: PaymentMethod.BANK_TRANSFER,
-    paymentStatus: PaymentStatus.FAILED,
-    addressShipping: "55 Nguyễn Trãi, Quận 5, TP. HCM",
-    phoneNumber: "0909090909",
-    note: "Đã huỷ do sai địa chỉ",
-    createdAt: new Date("2025-10-28"),
-    updatedAt: new Date("2025-11-01"),
-    items: [
-      {
-        id: "6",
-        name: "iPhone 16 Pro 256GB",
-        image: ip16_hong,
-        price: 28990000,
-        quantity: 1,
-      },
-      {
-        id: "7",
-        name: "iPad Air M2 11 inch 128GB",
-        image: ip16_xanhluuly,
-        price: 24980000,
-        quantity: 1,
-      },
-    ],
-  },
-];

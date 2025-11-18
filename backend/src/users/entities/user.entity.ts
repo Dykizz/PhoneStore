@@ -79,12 +79,14 @@ export class User {
   @BeforeInsert()
   @BeforeUpdate()
   async hashPassword() {
-    if (this.password) {
-      this.password = await bcrypt.hash(this.password, 10);
-    }
-  }
+    if (!this.password) return;
 
-  async validatePassword(password: string): Promise<boolean> {
-    return bcrypt.compare(password, this.password);
+    if (/^\$2[aby]\$/.test(this.password)) {
+      return;
+    }
+
+    // Debug an toàn: không log password
+    console.log(`[users] hashing plaintext password for user=${this.email}`);
+    this.password = await bcrypt.hash(this.password, 10);
   }
 }

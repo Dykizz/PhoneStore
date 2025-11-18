@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Eye, EyeOff, Mail, Lock, Phone } from "lucide-react";
+// THÊM: Import Loader2 cho nút loading
+import { Eye, EyeOff, Mail, Lock, Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -29,7 +30,6 @@ import { login } from "@/apis/auth.api";
 import { showToast } from "@/utils/toast";
 import { useAuth } from "@/hooks/useAuth";
 
-// Validation schema
 const loginSchema = z.object({
   email: z.string().min(1, "Email là bắt buộc").email("Email không hợp lệ"),
   password: z
@@ -66,10 +66,9 @@ const LoginPage = () => {
       });
 
       if (!response.success) {
-        console.log("🔴 Login failed:", response);
         const errorMsg = response.message || "Có lỗi xảy ra";
         const { statusCode } = response;
-        if (statusCode === 400) {
+        if (statusCode === 401) {
           showToast({
             type: "error",
             title: "Đăng nhập thất bại",
@@ -103,19 +102,24 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-muted flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        {/* Header */}
         <div className="text-center mb-8">
-          <div className="flex items-center justify-center mb-4">
-            <Phone className="h-10 w-10 text-blue-600 mr-2" />
-            <h1 className="text-3xl font-bold text-gray-900">PhoneStore</h1>
+          <div className="flex items-center justify-center space-x-2 mb-4">
+            <Link to="/" className="flex items-center space-x-2">
+              <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center">
+                <span className="text-primary-foreground font-bold">PS</span>
+              </div>
+              <span className="font-bold text-2xl text-foreground">
+                Phone Store
+              </span>
+            </Link>
           </div>
-          <p className="text-gray-600">Chào mừng bạn trở lại!</p>
+
+          <p className="text-muted-foreground">Chào mừng bạn trở lại!</p>
         </div>
 
-        {/* Login Card */}
-        <Card className="shadow-lg border-0">
+        <Card className="shadow-sm">
           <CardHeader className="space-y-1 pb-6">
             <CardTitle className="text-2xl font-semibold text-center">
               Đăng nhập
@@ -134,16 +138,14 @@ const LoginPage = () => {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-sm font-medium">
-                        Email
-                      </FormLabel>
+                      <FormLabel>Email</FormLabel>
                       <FormControl>
                         <div className="relative">
-                          <Mail className="absolute left-3 top-1/3 h-4 w-4 text-gray-400" />
+                          <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                           <Input
                             type="email"
                             placeholder="Nhập email"
-                            className="pl-10 h-12"
+                            className="pl-10"
                             {...field}
                           />
                         </div>
@@ -159,16 +161,14 @@ const LoginPage = () => {
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-sm font-medium">
-                        Mật khẩu
-                      </FormLabel>
+                      <FormLabel>Mật khẩu</FormLabel>
                       <FormControl>
                         <div className="relative">
-                          <Lock className="absolute left-3 top-1/3 size-4 text-gray-400" />
+                          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
                           <Input
                             type={showPassword ? "text" : "password"}
                             placeholder="Nhập mật khẩu"
-                            className="pl-10 pr-10 h-12"
+                            className="pl-10 pr-10"
                             {...field}
                           />
                           <button
@@ -177,7 +177,7 @@ const LoginPage = () => {
                               e.preventDefault();
                               setShowPassword(!showPassword);
                             }}
-                            className="absolute right-3 top-1/3 text-gray-400 hover:text-gray-600"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                           >
                             {showPassword ? (
                               <EyeOff className="h-4 w-4" />
@@ -192,7 +192,6 @@ const LoginPage = () => {
                   )}
                 />
 
-                {/* Remember Me & Forgot Password */}
                 <div className="flex items-center justify-between">
                   <FormField
                     control={form.control}
@@ -206,7 +205,7 @@ const LoginPage = () => {
                           />
                         </FormControl>
                         <div className="space-y-1 leading-none">
-                          <FormLabel className="text-sm text-gray-600 cursor-pointer">
+                          <FormLabel className="text-sm cursor-pointer">
                             Ghi nhớ đăng nhập
                           </FormLabel>
                         </div>
@@ -216,23 +215,19 @@ const LoginPage = () => {
 
                   <Link
                     to="/forgot-password"
-                    className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                    className="text-sm text-primary hover:text-primary/80 font-medium"
                   >
                     Quên mật khẩu?
                   </Link>
                 </div>
 
-                {/* Submit Button */}
                 <Button
                   type="submit"
-                  className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-medium"
+                  className="w-full font-medium"
                   disabled={loading}
                 >
                   {loading ? (
-                    <div className="flex items-center space-x-2">
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      <span>Đang đăng nhập...</span>
-                    </div>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   ) : (
                     "Đăng nhập"
                   )}
@@ -242,11 +237,11 @@ const LoginPage = () => {
           </CardContent>
 
           <CardFooter className="flex flex-col space-y-2 pt-6">
-            <div className="text-center text-sm text-gray-600">
+            <div className="text-center text-sm text-muted-foreground">
               Chưa có tài khoản?{" "}
               <Link
                 to="/register"
-                className="text-blue-600 hover:text-blue-800 font-medium transition-colors"
+                className="text-primary hover:text-primary/80 font-medium transition-colors"
               >
                 Đăng ký ngay
               </Link>
@@ -255,7 +250,7 @@ const LoginPage = () => {
             <div className="text-center">
               <Link
                 to="/"
-                className="text-xs text-gray-500 hover:text-gray-700 transition-colors"
+                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
               >
                 ← Về trang chủ
               </Link>

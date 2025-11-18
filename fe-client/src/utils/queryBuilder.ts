@@ -1,3 +1,4 @@
+// utils/queryBuilder.ts
 import qs from "qs";
 
 export interface QueryParams {
@@ -27,7 +28,7 @@ export interface FilterOperator {
 export class QueryBuilder {
   private params: QueryParams = {};
 
-  // Reset builder
+  // Reset để tái sử dụng
   reset() {
     this.params = {};
     return this;
@@ -40,13 +41,15 @@ export class QueryBuilder {
   }
 
   limit(limit: number) {
-    this.params.limit = Math.min(Math.max(1, limit), 100);
+    this.params.limit = Math.min(Math.max(1, limit), 100); // Max 100
     return this;
   }
 
   // Search
   search(term: string) {
-    if (term?.trim()) this.params.search = term.trim();
+    if (term?.trim()) {
+      this.params.search = term.trim();
+    }
     return this;
   }
 
@@ -57,24 +60,44 @@ export class QueryBuilder {
     return this;
   }
 
-  // Filter
+  // Generic filter
   filter(key: string, value: any) {
-    if (!this.params.filters) this.params.filters = {};
-    if (value !== undefined && value !== null && value !== "")
+    if (!this.params.filters) {
+      this.params.filters = {};
+    }
+
+    if (value !== undefined && value !== null && value !== "") {
       this.params.filters[key] = value;
+    }
+
     return this;
   }
 
+  // Conditional filter - chỉ add nếu condition = true
   filterIf(condition: boolean, key: string, value: any) {
-    if (condition) return this.filter(key, value);
+    if (condition) {
+      return this.filter(key, value);
+    }
     return this;
   }
 
+  // Multiple filters at once
+  filters(filters: Record<string, any>) {
+    Object.entries(filters).forEach(([key, value]) => {
+      this.filter(key, value);
+    });
+    return this;
+  }
+
+  // Array filters
   filterArray(key: string, values: any[]) {
-    if (values?.length) return this.filter(key, values);
+    if (values?.length) {
+      return this.filter(key, values);
+    }
     return this;
   }
 
+  // Operator-based filters
   filterGte(key: string, value: any) {
     return this.filter(key, { operator: "gte", value });
   }
@@ -92,19 +115,23 @@ export class QueryBuilder {
   }
 
   filterLike(key: string, value: string) {
-    if (value?.trim())
+    if (value?.trim()) {
       return this.filter(key, { operator: "like", value: value.trim() });
+    }
     return this;
   }
 
   filterIn(key: string, values: any[]) {
-    if (values?.length) return this.filter(key, { operator: "in", value: values });
+    if (values?.length) {
+      return this.filter(key, { operator: "in", value: values });
+    }
     return this;
   }
 
   filterRange(key: string, min: any, max: any) {
-    if (min !== undefined && max !== undefined)
+    if (min !== undefined && max !== undefined) {
       return this.filter(key, { operator: "between", value: [min, max] });
+    }
     return this;
   }
 
@@ -116,7 +143,12 @@ export class QueryBuilder {
     return this.filter(key, { operator: "exists", value: exists });
   }
 
-  filterDateRange(key: string, startDate: string | Date, endDate: string | Date) {
+  // Date helpers
+  filterDateRange(
+    key: string,
+    startDate: string | Date,
+    endDate: string | Date
+  ) {
     if (startDate && endDate) {
       const start =
         typeof startDate === "string"
@@ -131,38 +163,26 @@ export class QueryBuilder {
     return this;
   }
 
-  // ✅ NEW BUILD FUNCTION — dùng format phẳng, tương thích mọi backend
+  filterDateAfter(key: string, date: string | Date) {
+    const dateStr =
+      typeof date === "string" ? date : date.toISOString().split("T")[0];
+    return this.filterGte(key, dateStr);
+  }
+
+  filterDateBefore(key: string, date: string | Date) {
+    const dateStr =
+      typeof date === "string" ? date : date.toISOString().split("T")[0];
+    return this.filterLte(key, dateStr);
+  }
+
+  // Build methods
   build(): string {
-    const flatParams: Record<string, any> = {};
-
-    if (this.params.filters) {
-      for (const [key, val] of Object.entries(this.params.filters)) {
-        if (typeof val === "object" && val.operator && val.value !== undefined) {
-          // operator-based (vd: price[gte]=15000000)
-          flatParams[`${key}[${val.operator}]`] = val.value;
-        } else {
-          // normal filter (vd: brandId=xyz)
-          flatParams[key] = val;
-        }
-      }
-    }
-
-    return qs.stringify(
-      {
-        page: this.params.page,
-        limit: this.params.limit,
-        sortBy: this.params.sortBy,
-        sortOrder: this.params.sortOrder,
-        search: this.params.search,
-        ...flatParams,
-      },
-      {
-        skipNulls: true,
-        addQueryPrefix: true,
-        arrayFormat: "brackets",
-        encode: false,
-      }
-    );
+    return qs.stringify(this.params, {
+      skipNulls: true,
+      addQueryPrefix: true,
+      arrayFormat: "brackets",
+      encode: false,
+    });
   }
 
   buildObject(): QueryParams {
@@ -170,37 +190,15 @@ export class QueryBuilder {
   }
 
   buildWithoutPrefix(): string {
-    const flatParams: Record<string, any> = {};
-
-    if (this.params.filters) {
-      for (const [key, val] of Object.entries(this.params.filters)) {
-        if (typeof val === "object" && val.operator && val.value !== undefined) {
-          flatParams[`${key}[${val.operator}]`] = val.value;
-        } else {
-          flatParams[key] = val;
-        }
-      }
-    }
-
-    return qs.stringify(
-      {
-        page: this.params.page,
-        limit: this.params.limit,
-        sortBy: this.params.sortBy,
-        sortOrder: this.params.sortOrder,
-        search: this.params.search,
-        ...flatParams,
-      },
-      {
-        skipNulls: true,
-        addQueryPrefix: false,
-        arrayFormat: "brackets",
-        encode: false,
-      }
-    );
+    return qs.stringify(this.params, {
+      skipNulls: true,
+      addQueryPrefix: false,
+      arrayFormat: "brackets",
+      encode: false,
+    });
   }
 
-  // Static factory
+  // Static factory methods
   static create(): QueryBuilder {
     return new QueryBuilder();
   }
@@ -217,10 +215,12 @@ export class QueryBuilder {
   }
 }
 
-// Utility shortcuts
+// Utility functions
 export const createQuery = () => new QueryBuilder();
 
-export const buildQuery = (callback: (builder: QueryBuilder) => void): string => {
+export const buildQuery = (
+  callback: (builder: QueryBuilder) => void
+): string => {
   const builder = new QueryBuilder();
   callback(builder);
   return builder.build();

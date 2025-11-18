@@ -137,8 +137,6 @@ const OrdersPage: React.FC = () => {
 
   const getPaymentMethodText = (method: PaymentMethod) => {
     const methods = {
-      credit_card: "Thẻ tín dụng",
-      paypal: "PayPal",
       bank_transfer: "Chuyển khoản",
       cash_on_delivery: "COD",
     };
@@ -268,8 +266,6 @@ const OrdersPage: React.FC = () => {
             style={{ width: "100%" }}
             allowClear
           >
-            <Option value="credit_card">Thẻ tín dụng</Option>
-            <Option value="paypal">PayPal</Option>
             <Option value="bank_transfer">Chuyển khoản</Option>
             <Option value="cash_on_delivery">COD</Option>
           </Select>

@@ -1,6 +1,6 @@
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PassportStrategy } from '@nestjs/passport';
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 import { UsersService } from 'src/users/users.service';
@@ -20,6 +20,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: IUser) {
+    const isBlocked = await this.usersService.checkIsBlocked(payload.email);
+    if (isBlocked) {
+      throw new UnauthorizedException('Tài khoản của bạn đã bị khóa.');
+    }
     return {
       id: payload.id,
       email: payload.email,

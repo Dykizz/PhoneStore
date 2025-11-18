@@ -28,49 +28,70 @@ class ApiClient {
   constructor(baseURL: string) {
     this.axiosInstance = axios.create({
       baseURL,
-      withCredentials: true, // <== quan trọng để gửi cookie cùng request
-      timeout: 20000, // 20 giây timeout
+      withCredentials: true,
+      timeout: 20000,
     });
 
     // Thêm token vào mọi request
     this.axiosInstance.interceptors.request.use((config) => {
-      if (this.accessToken) {
-        config.headers = config.headers ?? {};
-        config.headers["Authorization"] = `Bearer ${this.accessToken}`;
-      } else {
-        // Lấy accessToken từ localStorage nếu chưa có trong biến
-        const accessToken =
-          typeof window !== "undefined"
-            ? localStorage.getItem("access_token")
-            : null;
-        if (accessToken) {
-          this.accessToken = accessToken;
-          config.headers = config.headers ?? {};
-          config.headers["Authorization"] = `Bearer ${accessToken}`;
+      config.headers = config.headers ?? {};
+      const url = String(config?.url || "").toLowerCase();
+
+      // Nếu là route auth thì đánh dấu skip-refresh và không attach Authorization
+      if (
+        url.includes("/auth/login") ||
+        url.includes("/auth/register") ||
+        url.includes("/auth/refresh-token")
+      ) {
+        config.headers["x-skip-refresh"] = "1";
+        return config;
+      }
+
+      // Nếu request đã được đánh dấu skip-refresh thì không attach token
+      const skipRefresh = !!config.headers["x-skip-refresh"];
+      if (!skipRefresh) {
+        if (this.accessToken) {
+          config.headers["Authorization"] = `Bearer ${this.accessToken}`;
+        } else {
+          const accessToken =
+            typeof window !== "undefined"
+              ? localStorage.getItem("access_token")
+              : null;
+          if (accessToken) {
+            this.accessToken = accessToken;
+            config.headers["Authorization"] = `Bearer ${accessToken}`;
+          }
         }
       }
+
       return config;
     });
 
     // Xử lý response và refresh token khi cần
     this.axiosInstance.interceptors.response.use(
       (response: AxiosResponse) => {
-        // Kiểm tra response.data có cấu trúc của API và statusCode là 401
-        const responseData = response.data as { statusCode: number; [key: string]: unknown };
+        const responseData = response.data as any;
+        const url = String(response.config?.url || "");
+        const skipRefresh = !!response.config?.headers?.["x-skip-refresh"];
+        const isAuthRoute =
+          url.includes("/auth/login") || url.includes("/auth/refresh-token");
+
         if (
           responseData &&
           responseData.statusCode === 401 &&
-          !(response.config as ExtendedInternalAxiosRequestConfig)._retry
+          !(response.config as ExtendedInternalAxiosRequestConfig)._retry &&
+          !skipRefresh &&
+          !isAuthRoute
         ) {
           return this.handleTokenRefresh(
             response.config as ExtendedInternalAxiosRequestConfig
           );
         }
+
         return response;
       },
       (error) => {
-        // Better error logging với fallbacks
-        const safeLog = {
+        const safeLog: any = {
           message: error?.message || "Unknown error",
           code: error?.code || "NO_CODE",
           url: error?.config?.url || "Unknown URL",
@@ -79,7 +100,6 @@ class ApiClient {
           statusText: error?.response?.statusText || "No status text",
         };
 
-        // Chỉ log response data nếu có và không quá lớn
         if (error?.response?.data) {
           try {
             const dataStr = JSON.stringify(error.response.data);
@@ -87,25 +107,70 @@ class ApiClient {
               dataStr.length > 500
                 ? `${dataStr.substring(0, 500)}... (truncated)`
                 : error.response.data;
-          } catch (e) {
+          } catch {
             safeLog.responseData = "Unable to serialize response data";
           }
         }
 
-        //Môi trường dev thì log chi tiết hơn
+        const serverMsg =
+          error?.response?.data?.message ||
+          error?.response?.data?.error ||
+          (typeof error?.response?.data === "string"
+            ? error.response.data
+            : null);
+        if (serverMsg) {
+          error.message = String(serverMsg);
+          safeLog.serverMessage = serverMsg;
+        }
+
         if (process.env.NODE_ENV === "development") {
           console.error("API Request Failed:", safeLog);
         }
 
-        // Handle token refresh cho HTTP errors
+        const errUrl = String(error?.config?.url || "");
+        const errSkip = !!error?.config?.headers?.["x-skip-refresh"];
+        const isAuthRoute =
+          errUrl.includes("/auth/login") ||
+          errUrl.includes("/auth/refresh-token");
+
+        // Nếu 401 và chưa retry, và không phải auth route / skip, thì thử refresh
         if (
           error?.response?.data?.statusCode === 401 &&
           error?.config &&
-          !error.config._retry
+          !error.config._retry &&
+          !errSkip &&
+          !isAuthRoute
         ) {
           return this.handleTokenRefresh(
             error.config as ExtendedInternalAxiosRequestConfig
           );
+        }
+
+        // Nếu đã retry (đã refresh) mà vẫn 401 => clear và redirect (hoặc gọi callback)
+        if (
+          error?.response?.status === 401 &&
+          error?.config &&
+          error.config._retry
+        ) {
+          this.clearToken();
+          if (typeof window !== "undefined") {
+            localStorage.removeItem("user");
+            localStorage.removeItem("access_token");
+            localStorage.removeItem("permissionCodes");
+            try {
+              const msg =
+                error?.response?.data?.message ||
+                error?.response?.data?.error ||
+                "";
+              if (msg && /ban|blocked|locked/i.test(msg)) {
+                // optional: show toast about banned account
+              }
+            } catch {
+              // ignore
+            }
+            window.location.href = "/login";
+          }
+          return Promise.reject(error);
         }
 
         return Promise.reject(error);
@@ -130,20 +195,26 @@ class ApiClient {
       });
     }
 
-    // Đánh dấu request đã được thử refresh token
     config._retry = true;
     this.isRefreshing = true;
 
-    // Gọi API refresh token, cookie refreshToken tự gửi đi
     return this.axiosInstance
-      .post("/auth/refresh-token")
+      .post("/auth/refresh-token", undefined, {
+        headers: { "x-skip-refresh": "1" },
+      })
       .then((res) => {
-        const newAccessToken = res.data.data.accessToken;
+        const newAccessToken = res.data?.data?.accessToken;
+        if (!newAccessToken) {
+          throw new Error("No new access token returned");
+        }
         this.accessToken = newAccessToken;
+        if (typeof window !== "undefined") {
+          localStorage.setItem("access_token", newAccessToken);
+        }
+
         this.isRefreshing = false;
         this.onRefreshed(newAccessToken);
 
-        // Sử dụng token mới cho request hiện tại
         config.headers = config.headers || {};
         config.headers["Authorization"] = `Bearer ${newAccessToken}`;
         return this.axiosInstance(config);
@@ -154,21 +225,28 @@ class ApiClient {
           console.error("Token refresh failed:", err);
         }
 
-        // Clear all auth data
         this.clearToken();
         if (typeof window !== "undefined") {
           localStorage.removeItem("user");
           localStorage.removeItem("permissionCodes");
+          localStorage.removeItem("access_token");
         }
 
         if (this.onAuthFailure) {
           this.onAuthFailure();
         } else {
-          // Fallback: direct redirect without notification
           if (typeof window !== "undefined") {
-            setTimeout(() => {
-              window.location.href = "/login";
-            }, 1000);
+            const pathname = window.location.pathname || "";
+            const isOnLogin =
+              pathname === "/login" ||
+              pathname.startsWith("/login") ||
+              pathname.toLowerCase().includes("login");
+
+            if (!isOnLogin) {
+              setTimeout(() => {
+                window.location.href = "/login";
+              }, 1000);
+            }
           }
         }
 
@@ -192,6 +270,7 @@ class ApiClient {
   public clearToken() {
     this.accessToken = null;
   }
+
   public async apiFetch<T = unknown>(
     url: string,
     config?: AxiosRequestConfig
@@ -203,7 +282,6 @@ class ApiClient {
     });
   }
 
-  // Các phương thức tiện ích cho các HTTP verbs phổ biến
   public async get<T = unknown>(
     url: string,
     params?: Record<string, unknown>,
@@ -222,15 +300,23 @@ class ApiClient {
     data?: Record<string, unknown> | unknown,
     config?: AxiosRequestConfig
   ): Promise<ApiResponse<T>> {
-    // Tạo config mới với headers được merge đúng cách
+    const headers = {
+      "Content-Type": "application/json",
+      ...(config?.headers || {}),
+    } as Record<string, unknown>;
+
+    if (
+      !headers["x-skip-refresh"] &&
+      (url?.includes("/auth/login") || url?.includes("/auth/register"))
+    ) {
+      headers["x-skip-refresh"] = "1";
+    }
+
     const mergedConfig: AxiosRequestConfig = {
       ...(config || {}),
       method: "POST",
       data,
-      headers: {
-        "Content-Type": "application/json",
-        ...(config?.headers || {}),
-      },
+      headers,
     };
 
     const response = await this.apiFetch<T>(url, mergedConfig);
@@ -242,7 +328,6 @@ class ApiClient {
     data?: Record<string, unknown> | unknown,
     config?: AxiosRequestConfig
   ): Promise<ApiResponse<T>> {
-    // Tạo config mới với headers được merge đúng cách
     const mergedConfig: AxiosRequestConfig = {
       ...(config || {}),
       method: "PUT",
@@ -262,7 +347,6 @@ class ApiClient {
     data?: Record<string, unknown> | unknown,
     config?: AxiosRequestConfig
   ): Promise<ApiResponse<T>> {
-    // Tạo config mới với headers được merge đúng cách
     const mergedConfig: AxiosRequestConfig = {
       ...(config || {}),
       method: "PATCH",

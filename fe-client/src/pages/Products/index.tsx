@@ -3,8 +3,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import type { BaseProduct } from "@/types/product.type";
 import { showToast } from "@/utils/toast";
 import { QueryBuilder } from "@/utils/queryBuilder";
-import { getProductTypes } from "@/apis/productType.api";
-import type { ProductType } from "@/types/productType.type";
 import type { Brand } from "@/types/brand.type";
 import { getBrands } from "@/apis/brand.api";
 import { getProducts } from "@/apis/product.api";
@@ -14,12 +12,14 @@ import Product from "./Product";
 import ProductFilter from "./ProductFilter";
 import ProductEmpty from "./ProductEmpty";
 import ProductPagination from "./ProductPagination";
+import { useSearchParams } from "react-router-dom";
+import { Package, Phone } from "lucide-react";
 
 const defautFilter = {
   priceMin: undefined,
   priceMax: undefined,
   brandId: undefined,
-  productTypeId: undefined,
+  productTypeId: "ebd5e145-d7eb-4cd0-80bc-e71e0a623c76",
   sortBy: "",
   sortOrder: "DESC" as "ASC" | "DESC",
   searchText: "",
@@ -28,9 +28,6 @@ const defautFilter = {
 export default function ProductsPage() {
   const [products, setProducts] = useState<BaseProduct[]>([]);
   const [brands, setBrands] = useState<{ id: string; name: string }[]>([]);
-  const [productTypes, setproductTypes] = useState<
-    { id: string; name: string }[]
-  >([]);
   const [loading, setLoading] = useState(false);
   const [pagination, setPagination] = useState<MetaPagination>({
     total: 0,
@@ -40,8 +37,13 @@ export default function ProductsPage() {
     hasNext: false,
     hasPrev: false,
   });
+  const [searchParams, setSearchParams] = useSearchParams();
+  const search = searchParams.get("search") || "";
+  const category = searchParams.get("category") || "phone";
 
-  const [searchText, setSearchText] = useState<string>(defautFilter.searchText);
+  const [searchText, setSearchText] = useState<string>(
+    search || defautFilter.searchText
+  );
   const [priceMin, setPriceMin] = useState<number | undefined>(
     defautFilter.priceMin
   );
@@ -52,8 +54,11 @@ export default function ProductsPage() {
     defautFilter.brandId
   );
   const [productTypeId, setProductTypeId] = useState<string | undefined>(
-    defautFilter.productTypeId
+    category === "accessory"
+      ? "95ea2006-b528-4d15-81b6-2a4ac723fa09"
+      : "ebd5e145-d7eb-4cd0-80bc-e71e0a623c76"
   );
+
   const [sortBy, setSortBy] = useState<string>(defautFilter.sortBy);
   const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">(
     defautFilter.sortOrder
@@ -73,12 +78,6 @@ export default function ProductsPage() {
     brands.forEach((brand) => map.set(brand.id, brand.name));
     return map;
   }, [brands]);
-
-  const mapProductTypes = useMemo(() => {
-    const map = new Map<string, string>();
-    productTypes.forEach((type) => map.set(type.id, type.name));
-    return map;
-  }, [productTypes]);
 
   const fetchProducts = async (page = 1) => {
     setLoading(true);
@@ -137,28 +136,23 @@ export default function ProductsPage() {
     }
   };
 
-  const fetchProductTypes = async () => {
-    const query = QueryBuilder.create().page(1).limit(100).build();
-    const response = await getProductTypes(query);
-    if (response.success) {
-      const tmp: { id: string; name: string }[] = [];
-      response.data.data.forEach((type: ProductType) => {
-        mapProductTypes.set(type.id, type.name);
-        tmp.push({ id: type.id, name: type.name });
-      });
-      setproductTypes(tmp);
-    } else {
-      showToast({
-        type: "error",
-        description: "Lỗi tải danh sách loại sản phẩm",
-        title: "Lỗi",
-      });
+  useEffect(() => {
+    setSearchText(search);
+  }, [search]);
+
+  useEffect(() => {
+    setSearchParams({ search: searchText });
+  }, [searchText]);
+
+  useEffect(() => {
+    if (category) {
+      setSearchParams({ category });
     }
-  };
+    fetchProducts(1);
+  }, [category]);
 
   useEffect(() => {
     fetchBrands();
-    fetchProductTypes();
   }, []);
 
   useEffect(() => {
@@ -179,6 +173,16 @@ export default function ProductsPage() {
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
+      <div className="flex items-center gap-3 mb-6">
+        {category === "accessory" ? (
+          <Package className="h-8 w-8 text-primary" />
+        ) : (
+          <Phone className="h-8 w-8 text-primary" />
+        )}
+        <h1 className="text-3xl font-bold text-primary">
+          {category === "accessory" ? "Phụ kiện" : "Điện thoại"}
+        </h1>
+      </div>
       <ProductFilter
         brandId={brandId}
         searchText={searchText}
@@ -188,16 +192,12 @@ export default function ProductsPage() {
         setPriceMin={setPriceMin}
         setSearchText={setSearchText}
         brands={brands}
-        productTypes={productTypes || []}
         setBrandId={setBrandId}
-        setProductTypeId={setProductTypeId}
-        productTypeId={productTypeId}
         sortBy={sortBy}
         setSortBy={setSortBy}
         sortOrder={sortOrder}
         setSortOrder={setSortOrder}
         mapBrands={mapBrands}
-        mapProductTypes={mapProductTypes}
         handleDefaultFilter={handleDefaultFilter}
       />
 

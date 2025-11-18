@@ -9,6 +9,7 @@ import type { BaseProduct, DetailProduct } from "@/types/product.type";
 import { QueryBuilder } from "@/utils/queryBuilder";
 import Product from "../Products/Product";
 import { showToast } from "@/utils/toast";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -19,6 +20,7 @@ export default function ProductDetail() {
   const [loading, setLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
   const navigeta = useNavigate();
+  const { user, setShowLoginDialog } = useAuth();
 
   const { addToCart, cartItems } = useCart();
 
@@ -101,6 +103,10 @@ export default function ProductDetail() {
 
   const handleAddToCart = () => {
     if (isAdding) return;
+    if (!user) {
+      setShowLoginDialog(true);
+      return;
+    }
     const selectedVariant = product.variants[selectedVariantIdx];
     const selectedVariantId = selectedVariant.id!;
     const availableQuantity = selectedVariant.quantity;
@@ -159,8 +165,8 @@ export default function ProductDetail() {
                 onClick={() => setSelectedVariantIdx(idx)}
                 className={`border rounded-xl overflow-hidden w-20 h-20 transition-all duration-300 ${
                   idx === selectedVariantIdx
-                    ? "border-black ring-2 ring-gray-300 scale-105"
-                    : "border-gray-300 hover:border-black"
+                    ? "ring-1 ring-primary scale-105"
+                    : "border-gray-300 hover:border-primary"
                 }`}
               >
                 <img
@@ -231,8 +237,8 @@ export default function ProductDetail() {
                     onClick={() => setSelectedVariantIdx(idx)}
                     className={`px-4 py-2 border rounded-full text-sm transition-all ${
                       idx === selectedVariantIdx
-                        ? "border-black bg-gray-100 text-black ring-2 ring-gray-300"
-                        : "border-gray-300 hover:border-black text-gray-700"
+                        ? "text-primary border-primary ring-1 ring-primary"
+                        : "hover:border-primary text-gray-700"
                     }`}
                   >
                     {variant.color}
@@ -249,7 +255,13 @@ export default function ProductDetail() {
               variant="outline"
               size="icon"
               disabled={quantity <= 1}
-              onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+              onClick={() => {
+                if (!user) {
+                  setShowLoginDialog(true);
+                  return;
+                }
+                setQuantity((q) => Math.max(1, q - 1));
+              }}
               className="h-8 w-8 border-gray-300"
             >
               -
@@ -263,11 +275,15 @@ export default function ProductDetail() {
               disabled={
                 quantity >= product.variants[selectedVariantIdx].quantity
               }
-              onClick={() =>
+              onClick={() => {
+                if (!user) {
+                  setShowLoginDialog(true);
+                  return;
+                }
                 setQuantity((q) =>
                   Math.min(q + 1, product.variants[selectedVariantIdx].quantity)
-                )
-              }
+                );
+              }}
               className="h-8 w-8 border-gray-300"
             >
               +
@@ -278,15 +294,19 @@ export default function ProductDetail() {
           <div className="flex flex-col sm:flex-row gap-4 mt-6">
             <Button
               variant="outline"
-              className="flex-1 border-2 border-gray-800 text-gray-800 hover:bg-gray-100 hover:shadow-md transition-all"
+              className="flex-1 border-2 border-border hover:shadow-md transition-all"
               onClick={handleAddToCart}
               disabled={product.variants[selectedVariantIdx].quantity <= 0}
             >
               {isAdding ? "Đang thêm..." : "🛒 Thêm vào giỏ hàng"}
             </Button>
             <Button
-              className="flex-1 bg-black hover:bg-gray-900 text-white shadow-md transition-all"
+              className="flex-1  shadow-md transition-all"
               onClick={() => {
+                if (!user) {
+                  setShowLoginDialog(true);
+                  return;
+                }
                 handleAddToCart();
                 navigeta("/cart");
               }}
@@ -301,10 +321,8 @@ export default function ProductDetail() {
       {/* ==== Mô tả chi tiết ==== */}
       {product.detailDescription && (
         <div className="mt-16 border-t pt-10">
-          <h2 className="text-2xl font-bold mb-4 text-gray-900">
-            Mô tả chi tiết
-          </h2>
-          <p className="text-gray-700 leading-relaxed text-justify">
+          <h2 className="text-2xl font-bold mb-4 ">Mô tả chi tiết</h2>
+          <p className="text-foreground leading-relaxed text-justify">
             {product.detailDescription}
           </p>
         </div>

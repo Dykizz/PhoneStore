@@ -1,5 +1,9 @@
 import { UploadService } from './../upload/upload.service';
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { Repository } from 'typeorm';
@@ -9,6 +13,7 @@ import { PaginatedResponseDto } from 'src/common/dtos/paginated-response.dto';
 import { BaseUserDto, DetailUserDto } from './dto/response-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
+import { ChangePasswordDto } from './dto/change-password.dto';
 
 @Injectable()
 export class UsersService {
@@ -17,13 +22,28 @@ export class UsersService {
     private readonly usersRepository: Repository<User>,
     private uploadService: UploadService,
   ) {}
+  async checkIsBlocked(email: string): Promise<boolean> {
+    const user = await this.usersRepository.findOne({ where: { email } });
+    if (!user) {
+      throw new BadRequestException('Không tìm thấy người dùng');
+    }
+
+    return user.isBlocked || false;
+  }
+
   async validateUser(email: string, password: string): Promise<IUser | null> {
     const user = await this.usersRepository.findOne({ where: { email } });
     if (!user) {
       return null;
     }
+
+    if (user.isBlocked) {
+      throw new UnauthorizedException('Tài khoản của bạn đã bị khóa.');
+    }
+
     const validPass = await bcrypt.compare(password, user.password);
     if (!validPass) {
+      console.log('Invalid password attempt for user:', email);
       return null;
     }
     return {
@@ -58,6 +78,26 @@ export class UsersService {
       isBlocked: user.isBlocked,
       defaultAddress: user.defaultAddress,
     };
+  }
+
+  async changePassword(id: string, changePasswordDto: ChangePasswordDto) {
+    const { currentPassword, newPassword } = changePasswordDto;
+
+    const user = await this.usersRepository.findOne({ where: { id } });
+    if (!user) {
+      throw new BadRequestException('Không tìm thấy người dùng');
+    }
+    const isPasswordMatching = await bcrypt.compare(
+      currentPassword,
+      user.password,
+    );
+
+    if (!isPasswordMatching) {
+      throw new BadRequestException('Mật khẩu hiện tại không chính xác');
+    }
+
+    user.password = newPassword;
+    await this.usersRepository.save(user);
   }
 
   //Chỉ dùng trong hệ thống
@@ -156,10 +196,13 @@ export class UsersService {
     };
   }
   async update(id: string, updateUserDto: UpdateUserDto) {
-    console.log('UpdateUserDto:', updateUserDto);
     const user = await this.usersRepository.findOne({ where: { id } });
     if (!user) {
       throw new BadRequestException('Không tìm thấy người dùng');
+    }
+    if (updateUserDto.isBlocked !== undefined) {
+      user.isBlocked = updateUserDto.isBlocked;
+      return await this.usersRepository.save(user);
     }
 
     const oldAvatar = user.avatar;
@@ -171,10 +214,6 @@ export class UsersService {
       } catch (error) {
         console.error('Error deleting old avatar:', error);
       }
-    }
-
-    if (!newAvatar) {
-      delete updateUserDto.avatar;
     }
 
     Object.assign(user, updateUserDto);

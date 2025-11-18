@@ -16,6 +16,7 @@ import { User } from 'src/common/decorators/user.decorator';
 import { IUser, UserRole } from './entities/user.entity';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { ResponseMessage } from 'src/common/decorators/response-message.decorator';
+import { ChangePasswordDto } from './dto/change-password.dto';
 
 @Controller('users')
 export class UsersController {
@@ -24,6 +25,22 @@ export class UsersController {
   @Get('my-profile')
   async getProfile(@User() user: IUser) {
     return await this.usersService.getProfile(user.id);
+  }
+
+  @Patch('my-profile')
+  async updateProfile(
+    @User() user: IUser,
+    @Body() updateUserDto: UpdateUserDto,
+  ) {
+    return await this.usersService.update(user.id, updateUserDto);
+  }
+
+  @Patch('my-profile/change-password')
+  async updatePassword(
+    @User() user: IUser,
+    @Body() changePasswordDto: ChangePasswordDto,
+  ) {
+    return await this.usersService.changePassword(user.id, changePasswordDto);
   }
 
   @Post()
@@ -54,9 +71,4 @@ export class UsersController {
   async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     return await this.usersService.update(id, updateUserDto);
   }
-
-  // @Delete(':id')
-  // remove(@Param('id') id: string) {
-  //   return this.usersService.remove(+id);
-  // }
 }

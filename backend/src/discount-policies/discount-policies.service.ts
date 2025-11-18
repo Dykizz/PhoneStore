@@ -14,7 +14,7 @@ export class DiscountPoliciesService {
     private readonly discountPoliciesRepository: Repository<DiscountPolicy>,
   ) {}
 
-  async create(createDiscountPolicyDto: CreateDiscountPolicyDto) {
+  async createDiscountPolicy(createDiscountPolicyDto: CreateDiscountPolicyDto) {
     const supplier = this.discountPoliciesRepository.create(
       createDiscountPolicyDto,
     );
@@ -54,7 +54,10 @@ export class DiscountPoliciesService {
     return new PaginatedResponseDto(items, total, query.page, query.limit);
   }
 
-  async update(id: string, updateDiscountPolicyDto: UpdateDiscountPolicyDto) {
+  async updateDiscountPolicy(
+    id: string,
+    updateDiscountPolicyDto: UpdateDiscountPolicyDto,
+  ) {
     const discountPolicy = await this.discountPoliciesRepository.findOne({
       where: { id },
     });
@@ -65,7 +68,7 @@ export class DiscountPoliciesService {
     await this.discountPoliciesRepository.save(discountPolicy);
   }
 
-  async remove(id: string): Promise<void> {
+  async removeDiscountPolicy(id: string): Promise<void> {
     const discountPolicy = await this.discountPoliciesRepository.findOne({
       where: { id },
     });

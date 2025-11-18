@@ -49,26 +49,14 @@ const MainLayout: React.FC = () => {
   } = theme.useToken();
 
   const menuItems = [
-    {
-      key: "/",
-      icon: <DashboardOutlined />,
-      label: "Dashboard",
-    },
-    {
-      key: "/suppliers",
-      icon: <TeamOutlined />,
-      label: "Nhà cung cấp",
-    },
+    { key: "/", icon: <DashboardOutlined />, label: "Dashboard" },
+    { key: "/suppliers", icon: <TeamOutlined />, label: "Nhà cung cấp" },
     {
       key: "/product-types",
       icon: <AppstoreOutlined />,
       label: "Loại sản phẩm",
     },
-    {
-      key: "/brands",
-      icon: <TrademarkOutlined />,
-      label: "Thương hiệu",
-    },
+    { key: "/brands", icon: <TrademarkOutlined />, label: "Thương hiệu" },
     {
       key: "/discount-policies",
       icon: <PercentageOutlined />,
@@ -79,14 +67,8 @@ const MainLayout: React.FC = () => {
       icon: <ShopOutlined />,
       label: "Sản phẩm",
       children: [
-        {
-          key: "/products",
-          label: "DS sản phẩm",
-        },
-        {
-          key: "/products/add",
-          label: "Thêm sản phẩm",
-        },
+        { key: "/products/list", label: "DS sản phẩm" },
+        { key: "/products/add", label: "Thêm sản phẩm" },
       ],
     },
     {
@@ -94,49 +76,29 @@ const MainLayout: React.FC = () => {
       icon: <FileTextOutlined />,
       label: "Phiếu nhập hàng",
       children: [
-        {
-          key: "/goods-receipts",
-          label: "DS phiếu nhập hàng",
-        },
-        {
-          key: "/goods-receipts/add",
-          label: "Tạo phiếu nhập hàng",
-        },
+        { key: "/goods-receipts/list", label: "DS phiếu nhập hàng" },
+        { key: "/goods-receipts/add", label: "Tạo phiếu nhập hàng" },
       ],
     },
-    {
-      key: "/orders",
-      icon: <ShoppingCartOutlined />,
-      label: "Đơn hàng",
-    },
+    { key: "/orders", icon: <ShoppingCartOutlined />, label: "Đơn hàng" },
+    { key: "/statistics", icon: <DashboardOutlined />, label: "Thống kê" },
     {
       key: "/users",
       icon: <UserOutlined />,
       label: "Người dùng",
       children: [
-        {
-          key: "/users",
-          label: "DS người dùng",
-        },
-        {
-          key: "/users/add",
-          label: "Tạo người dùng",
-        },
+        { key: "/users/list", label: "DS người dùng" },
+        { key: "/users/add", label: "Tạo người dùng" },
       ],
     },
-    {
-      key: "/",
-      icon: <LogoutOutlined />,
-      label: <div onClick={logout}>Đăng xuất</div>,
-    },
-    {
-      key: "/settings",
-      icon: <SettingOutlined />,
-      label: "Cài đặt",
-    },
+    { key: "logout", icon: <LogoutOutlined />, label: "Đăng xuất" },
   ];
 
   const handleMenuClick = ({ key }: { key: string }) => {
+    if (key === "logout") {
+      logout();
+      return;
+    }
     navigate(key);
   };
 
@@ -165,7 +127,7 @@ const MainLayout: React.FC = () => {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            backgroundColor: colorBgContainer, // Dùng cùng màu
+            backgroundColor: colorBgContainer,
           }}
         >
           <h2
@@ -185,11 +147,10 @@ const MainLayout: React.FC = () => {
           theme={isDark ? "dark" : "light"}
           mode="inline"
           selectedKeys={[location.pathname]}
-          defaultOpenKeys={["/products"]}
           items={menuItems}
           onClick={handleMenuClick}
           style={{
-            backgroundColor: colorBgContainer, // Dùng cùng màu
+            backgroundColor: colorBgContainer,
             border: "none",
           }}
         />

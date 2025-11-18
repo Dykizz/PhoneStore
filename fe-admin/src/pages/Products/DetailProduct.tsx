@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import {
   Card,
   Descriptions,
@@ -27,6 +27,7 @@ const ProductDetailPage: React.FC = () => {
   const [selectedVariantIndex, setSelectedVariantIndex] = useState<number>(0);
   const [loading, setLoading] = useState(false);
   const { errorNotification } = useNotificationContext();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -71,9 +72,10 @@ const ProductDetailPage: React.FC = () => {
           width: "100%",
         }}
       >
-        <Link to="/products">
-          <Button icon={<ArrowLeftOutlined />}>Quay lại</Button>
-        </Link>
+        <Button onClick={() => navigate(-1)} icon={<ArrowLeftOutlined />}>
+          Quay lại
+        </Button>
+
         <Link to={`/products/edit/${product.id}`}>
           <Button type="primary" icon={<EditOutlined />}>
             Chỉnh sửa

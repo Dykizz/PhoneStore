@@ -2,8 +2,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useCart, type CartItem } from "@/contexts/cartContexts";
 import { formatCurrencyVND } from "@/utils/util";
@@ -17,13 +16,22 @@ import {
   type CreateOrder,
 } from "@/types/order.type";
 import { createOrder } from "@/apis/order.api";
-import { useForm, Controller } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { showToast } from "@/utils/toast";
 import ProductItem from "./ProductItem";
 import { createPaymentVNPay } from "@/apis/vnpay.api";
 import AddressSelect from "./AddressSelect";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Separator } from "@/components/ui/separator";
 
 const schema = z.object({
   recipientName: z.string().min(1, "Vui lòng nhập tên người nhận"),
@@ -36,20 +44,10 @@ const schema = z.object({
   ward: z.string().min(1, "Vui lòng chọn phường/xã"),
   street: z.string().min(1, "Vui lòng nhập số nhà, tên đường"),
   paymentMethod: z.string().min(1, "Vui lòng chọn phương thức thanh toán"),
+  note: z.string().optional(),
 });
 
 type FormData = z.infer<typeof schema>;
-
-const FormInput = ({ label, error, ...props }: any) => (
-  <div>
-    <Label className="text-sm text-gray-600">{label}</Label>
-    <Input
-      {...props}
-      className="rounded-xl border-gray-200 focus:ring-2 focus:ring-red-500"
-    />
-    {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
-  </div>
-);
 
 export default function CheckoutPage() {
   const navigate = useNavigate();
@@ -63,13 +61,7 @@ export default function CheckoutPage() {
     ward: "",
   });
 
-  const {
-    control,
-    handleSubmit,
-    setValue,
-    watch,
-    formState: { errors },
-  } = useForm<FormData>({
+  const form = useForm<FormData>({
     resolver: zodResolver(schema),
     mode: "onSubmit",
     defaultValues: {
@@ -80,8 +72,17 @@ export default function CheckoutPage() {
       ward: "",
       street: "",
       paymentMethod: PaymentMethod.CASH_ON_DELIVERY,
+      note: "",
     },
   });
+
+  const {
+    control,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors, isSubmitting },
+  } = form;
 
   const cityValue = watch("city");
   const districtValue = watch("district");
@@ -173,6 +174,7 @@ export default function CheckoutPage() {
       paymentMethod: data.paymentMethod as PaymentMethod,
       recipientName: data.recipientName,
       phoneNumber: data.phoneNumber,
+      note: data.note,
     };
 
     try {
@@ -226,253 +228,290 @@ export default function CheckoutPage() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white pb-20">
+    <div className="min-h-screen bg-muted pb-20">
       <div className="max-w-7xl mx-auto px-6 lg:px-10 pt-10 relative">
         <button
           onClick={() => navigate("/cart")}
-          className="flex items-center gap-2 text-gray-600 hover:text-red-600 transition-colors mb-6 font-medium"
+          className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors mb-6 font-medium"
         >
           <ArrowLeft className="w-4 h-4" />
           Quay lại giỏ hàng
         </button>
 
-        <h1 className="text-3xl font-bold text-gray-900 text-center mb-10 tracking-tight">
+        <h1 className="text-3xl font-bold text-foreground text-center mb-10 tracking-tight">
           Thanh toán & Giao hàng
         </h1>
 
-        <div className="grid lg:grid-cols-3 gap-10">
-          <div className="lg:col-span-2 space-y-4">
-            {products.map((product) => (
-              <ProductItem key={product.variantId} product={product} />
-            ))}
-
-            <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-6 hover:shadow-md transition-all">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                Thông tin khách hàng
-              </h2>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <p className="font-medium text-gray-900">
-                    {inforUser?.userName}
-                  </p>
-                  <span className="text-gray-700 text-sm">
-                    {inforUser?.phoneNumber}
-                  </span>
-                </div>
-                <p className="text-sm text-gray-700">{inforUser.email}</p>
-                <p className="text-xs text-gray-400 italic">
-                  (*) Hóa đơn VAT sẽ được gửi qua email này
-                </p>
-              </div>
-            </div>
-
-            {/* Card nhận hàng */}
-            <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-6 hover:shadow-md transition-all">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                Thông tin nhận hàng
-              </h2>
-
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <Controller
-                    name="recipientName"
-                    control={control}
-                    render={({ field }) => (
-                      <FormInput
-                        {...field}
-                        label="Tên người nhận"
-                        error={errors.recipientName?.message}
-                      />
-                    )}
-                  />
-                  <Controller
-                    name="phoneNumber"
-                    control={control}
-                    render={({ field }) => (
-                      <FormInput
-                        {...field}
-                        label="SĐT người nhận"
-                        error={errors.phoneNumber?.message}
-                      />
-                    )}
-                  />
-                </div>
-
-                <div className="grid grid-cols-3 gap-4">
-                  <Controller
-                    name="city"
-                    control={control}
-                    render={({ field }) => (
-                      <AddressSelect
-                        {...field}
-                        label="Tỉnh / Thành phố"
-                        placeholder="Chọn tỉnh/thành phố"
-                        options={cityOptions}
-                        error={errors.city?.message}
-                        onValueChange={(value: string) => {
-                          field.onChange(value);
-                          const selected = cityOptions.find(
-                            (p) => p.value === value
-                          );
-                          updateAddressLabel("city", selected?.label || "");
-                          resetChildFields("city");
-                        }}
-                      />
-                    )}
-                  />
-                  <Controller
-                    name="district"
-                    control={control}
-                    render={({ field }) => (
-                      <AddressSelect
-                        {...field}
-                        label="Quận / Huyện"
-                        placeholder="Chọn quận/huyện"
-                        options={getSelectedProvince()?.children || []}
-                        error={errors.district?.message}
-                        onValueChange={(value: string) => {
-                          field.onChange(value);
-                          const selected =
-                            getSelectedProvince()?.children?.find(
-                              (d: any) => d.value === value
-                            );
-                          updateAddressLabel("district", selected?.label || "");
-                          resetChildFields("district");
-                        }}
-                      />
-                    )}
-                  />
-                  <Controller
-                    name="ward"
-                    control={control}
-                    render={({ field }) => (
-                      <AddressSelect
-                        {...field}
-                        label="Phường / Xã"
-                        placeholder="Chọn phường/xã"
-                        options={getSelectedDistrict()?.children || []}
-                        error={errors.ward?.message}
-                        onValueChange={(value: string) => {
-                          field.onChange(value);
-                          const selected =
-                            getSelectedDistrict()?.children?.find(
-                              (w: any) => w.value === value
-                            );
-                          updateAddressLabel("ward", selected?.label || "");
-                        }}
-                      />
-                    )}
-                  />
-                </div>
-
-                <Controller
-                  name="street"
-                  control={control}
-                  render={({ field }) => (
-                    <FormInput
-                      {...field}
-                      label="Số nhà, tên đường"
-                      placeholder="Ví dụ: 123 Lê Lợi"
-                      error={errors.street?.message}
-                    />
-                  )}
-                />
-
-                <Textarea
-                  placeholder="Ghi chú khác (nếu có)"
-                  className="rounded-xl border-gray-200 focus:ring-2 focus:ring-red-500"
-                />
-
-                <Controller
-                  name="paymentMethod"
-                  control={control}
-                  render={({ field }) => (
-                    <div>
-                      <Label className="text-sm text-gray-600 mb-3 block">
-                        Phương thức thanh toán
-                      </Label>
-                      <RadioGroup
-                        value={field.value}
-                        onValueChange={field.onChange}
-                        className="space-y-3"
-                      >
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem
-                            value={PaymentMethod.CASH_ON_DELIVERY}
-                            id="cod"
-                          />
-                          <Label
-                            htmlFor="cod"
-                            className="text-sm font-normal cursor-pointer"
-                          >
-                            Thanh toán khi nhận hàng (COD)
-                          </Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem
-                            value={PaymentMethod.BANK_TRANSFER}
-                            id="bank"
-                          />
-                          <Label
-                            htmlFor="bank"
-                            className="text-sm font-normal cursor-pointer"
-                          >
-                            Chuyển khoản ngân hàng
-                          </Label>
-                        </div>
-                      </RadioGroup>
-                      {errors.paymentMethod && (
-                        <p className="text-red-500 text-sm mt-1">
-                          {errors.paymentMethod.message}
-                        </p>
-                      )}
-                    </div>
-                  )}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Cột phải: Tổng đơn */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-[0_4px_20px_rgba(0,0,0,0.04)] p-6 h-fit sticky top-10">
-            <h2 className="text-lg font-bold mb-5 text-gray-900">
-              Tóm tắt đơn hàng
-            </h2>
-
-            <div className="space-y-3 text-sm text-gray-600">
+        <Form {...form}>
+          <form
+            onSubmit={handleCheckout}
+            className="grid lg:grid-cols-3 gap-10"
+          >
+            <div className="lg:col-span-2 space-y-4">
               {products.map((product) => (
-                <div key={product.variantId} className="flex justify-between">
-                  <span>
-                    {product.name} <strong>x{product.quantity}</strong>
-                  </span>
-                  <span>
-                    {formatCurrencyVND(product.finalPrice * product.quantity)}
-                  </span>
-                </div>
+                <ProductItem key={product.variantId} product={product} />
               ))}
-              <div className="flex justify-between">
-                <span>Phí vận chuyển</span>
-                <span>Miễn phí</span>
+
+              <div className="bg-card border rounded-2xl shadow-sm p-6 transition-all">
+                <h2 className="text-xl font-semibold text-foreground mb-4">
+                  Thông tin khách hàng
+                </h2>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <p className="font-medium text-foreground">
+                      {inforUser?.userName}
+                    </p>
+                    <span className="text-muted-foreground text-sm">
+                      {inforUser?.phoneNumber}
+                    </span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    {inforUser.email}
+                  </p>
+                  <p className="text-xs text-muted-foreground italic">
+                    (*) Hóa đơn VAT sẽ được gửi qua email này
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-card border rounded-2xl shadow-sm p-6 transition-all">
+                <h2 className="text-xl font-semibold text-foreground mb-4">
+                  Thông tin nhận hàng
+                </h2>
+
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      name="recipientName"
+                      control={control}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Tên người nhận</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      name="phoneNumber"
+                      control={control}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>SĐT người nhận</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-4">
+                    <FormField
+                      name="city"
+                      control={control}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Tỉnh / Thành phố</FormLabel>
+                          <AddressSelect
+                            {...field}
+                            placeholder="Chọn tỉnh/thành phố"
+                            options={cityOptions}
+                            onValueChange={(value: string) => {
+                              field.onChange(value);
+                              const selected = cityOptions.find(
+                                (p) => p.value === value
+                              );
+                              updateAddressLabel("city", selected?.label || "");
+                              resetChildFields("city");
+                            }}
+                          />
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      name="district"
+                      control={control}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Quận / Huyện</FormLabel>
+                          <AddressSelect
+                            {...field}
+                            placeholder="Chọn quận/huyện"
+                            options={getSelectedProvince()?.children || []}
+                            onValueChange={(value: string) => {
+                              field.onChange(value);
+                              const selected =
+                                getSelectedProvince()?.children?.find(
+                                  (d: any) => d.value === value
+                                );
+                              updateAddressLabel(
+                                "district",
+                                selected?.label || ""
+                              );
+                              resetChildFields("district");
+                            }}
+                          />
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      name="ward"
+                      control={control}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Phường / Xã</FormLabel>
+                          <AddressSelect
+                            {...field}
+                            placeholder="Chọn phường/xã"
+                            options={getSelectedDistrict()?.children || []}
+                            onValueChange={(value: string) => {
+                              field.onChange(value);
+                              const selected =
+                                getSelectedDistrict()?.children?.find(
+                                  (w: any) => w.value === value
+                                );
+                              updateAddressLabel("ward", selected?.label || "");
+                            }}
+                          />
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <FormField
+                    name="street"
+                    control={control}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Số nhà, tên đường</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="Ví dụ: 123 Lê Lợi" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    name="note"
+                    control={control}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Ghi chú (Tùy chọn)</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Ghi chú khác (nếu có)"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    name="paymentMethod"
+                    control={control}
+                    render={({ field }) => (
+                      <FormItem className="space-y-3">
+                        <FormLabel>Phương thức thanh toán</FormLabel>
+                        <FormControl>
+                          <RadioGroup
+                            value={field.value}
+                            onValueChange={field.onChange}
+                            className="space-y-3"
+                          >
+                            <FormItem className="flex items-center space-x-2 space-y-0">
+                              <FormControl>
+                                <RadioGroupItem
+                                  value={PaymentMethod.CASH_ON_DELIVERY}
+                                  id="cod"
+                                />
+                              </FormControl>
+                              <FormLabel
+                                htmlFor="cod"
+                                className="font-normal cursor-pointer"
+                              >
+                                Thanh toán khi nhận hàng (COD)
+                              </FormLabel>
+                            </FormItem>
+
+                            <FormItem className="flex items-center space-x-2 space-y-0">
+                              <FormControl>
+                                <RadioGroupItem
+                                  value={PaymentMethod.BANK_TRANSFER}
+                                  id="bank"
+                                />
+                              </FormControl>
+                              <FormLabel
+                                htmlFor="bank"
+                                className="font-normal cursor-pointer"
+                              >
+                                Thanh toán qua VNPay
+                              </FormLabel>
+                            </FormItem>
+                          </RadioGroup>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
               </div>
             </div>
 
-            <hr className="my-5 border-gray-200" />
+            <div className="bg-card rounded-2xl border shadow-sm p-6 h-fit sticky top-10">
+              <h2 className="text-lg font-bold mb-5 text-foreground">
+                Tóm tắt đơn hàng
+              </h2>
 
-            <div className="flex justify-between text-lg font-bold mb-6">
-              <span>Tổng cộng</span>
-              <span className="text-red-600">
-                {formatCurrencyVND(totalPrice)}
-              </span>
+              <div className="space-y-3 text-sm text-muted-foreground">
+                {products.map((product) => (
+                  <div key={product.variantId} className="flex justify-between">
+                    <span className="text-foreground">
+                      {product.name} <strong>x{product.quantity}</strong>
+                    </span>
+                    <span className="text-foreground">
+                      {formatCurrencyVND(product.finalPrice * product.quantity)}
+                    </span>
+                  </div>
+                ))}
+                <div className="flex justify-between">
+                  <span>Phí vận chuyển</span>
+                  <span className="text-foreground">Miễn phí</span>
+                </div>
+              </div>
+
+              <Separator className="my-5" />
+
+              <div className="flex justify-between text-lg font-bold mb-6">
+                <span className="text-foreground">Tổng cộng</span>
+                <span className="text-primary">
+                  {formatCurrencyVND(totalPrice)}
+                </span>
+              </div>
+
+              <Button
+                type="submit"
+                disabled={isSubmitting || products.length === 0}
+                className="text-lg px-10 h-12 rounded-xl w-full"
+              >
+                {isSubmitting ? (
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                ) : (
+                  "Tiếp tục thanh toán"
+                )}
+              </Button>
             </div>
-
-            <Button
-              onClick={handleCheckout}
-              className="bg-red-600 hover:bg-red-700 text-white text-lg px-10 py-5 rounded-xl w-full"
-            >
-              Tiếp tục thanh toán
-            </Button>
-          </div>
-        </div>
+          </form>
+        </Form>
       </div>
     </div>
   );
