@@ -5,6 +5,7 @@ import { InjectRepository, InjectDataSource } from '@nestjs/typeorm';
 import {
   Order,
   OrderStatus,
+  PaymentMethod,
   PaymentStatusOrder,
 } from './entities/order.entity';
 import { Repository, DeepPartial, DataSource } from 'typeorm';
@@ -183,7 +184,6 @@ export class OrdersService {
       throw new BadRequestException('Đơn hàng không tồn tại');
     }
 
-    // ✅ Validate business logic
     const validTransitions: Record<OrderStatus, OrderStatus[]> = {
       new: [OrderStatus.PROCESSING, OrderStatus.CANCELLED],
       processing: [OrderStatus.SHIPPED],
@@ -244,6 +244,12 @@ export class OrdersService {
       }
 
       order.status = status;
+      if (
+        status === OrderStatus.DELIVERED &&
+        order.paymentMethod === PaymentMethod.CASH_ON_DELIVERY
+      ) {
+        order.paymentStatus = PaymentStatusOrder.COMPLETED;
+      }
       await queryRunner.manager.save(order);
 
       await queryRunner.commitTransaction();

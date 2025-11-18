@@ -93,8 +93,6 @@ const DetailOrderPage: React.FC = () => {
 
   const getPaymentMethodText = (method: PaymentMethod) => {
     const methods = {
-      credit_card: "Thẻ tín dụng",
-      paypal: "PayPal",
       bank_transfer: "Chuyển khoản ngân hàng",
       cash_on_delivery: "Thanh toán khi nhận hàng (COD)",
     };

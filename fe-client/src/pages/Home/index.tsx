@@ -17,7 +17,12 @@ export function Home() {
       setIsLoading(true);
       setError(null);
       try {
-        const query = QueryBuilder.create().page(1).limit(8).build();
+        const query = QueryBuilder.create()
+          .page(1)
+          .limit(8)
+          .sortBy("createdAt", "DESC")
+          .filterGt("quantity", 0)
+          .build();
         const response = await getProducts(query);
         if (!response.success) {
           throw new Error(response.message);
@@ -79,7 +84,7 @@ export function Home() {
 
       <section className="py-12">
         <h2 className="text-3xl font-bold text-center mb-8">
-          Sản phẩm nổi bật
+          Sản phẩm mới nhất
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           {products.map((product) => (

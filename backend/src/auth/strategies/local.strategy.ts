@@ -12,7 +12,7 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
   constructor(private usersService: UsersService) {
     super({
       usernameField: 'email',
-      passReqToCallback: true, // cho phép nhận req vào validate()
+      passReqToCallback: true,
     });
   }
 

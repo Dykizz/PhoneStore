@@ -102,7 +102,12 @@ export class AuthService {
       );
     }
 
-    const { id: userId } = payload;
+    const { id: userId, email } = payload;
+
+    const isBlocked = await this.usersService.checkIsBlocked(email);
+    if (isBlocked) {
+      throw new UnauthorizedException('Tài khoản của bạn đã bị khóa.');
+    }
 
     const isValid = await this.validateRefreshToken(userId, oldRefreshToken);
 
