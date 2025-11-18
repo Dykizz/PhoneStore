@@ -24,39 +24,85 @@ export class StatisticsService {
     to: string,
     granularity: 'day' | 'month' | 'year' = 'day',
   ): Promise<{ labels: string[]; sold: number[]; revenue: number[] }> {
-    // choose to_char format based on granularity
-    const periodFormat =
-      granularity === 'day'
-        ? 'YYYY-MM-DD'
-        : granularity === 'month'
-          ? 'YYYY-MM'
-          : 'YYYY';
+    // validate simple
+    const fromTs = new Date(from);
+    const toTs = new Date(to);
+    if (isNaN(fromTs.getTime()) || isNaN(toTs.getTime())) {
+      throw new Error('Invalid from/to datetime');
+    }
+    if (fromTs > toTs) {
+      throw new Error('`from` must be before or equal to `to`');
+    }
 
-    const raw = await this.orderDetailsRepository
-      .createQueryBuilder('od')
-      .leftJoin('od.order', 'o')
-      .select(
-        `to_char(date_trunc('${granularity}', o."createdAt"), '${periodFormat}')`,
-        'period',
-      )
-      .addSelect('SUM(od.quantity)', 'sold')
-      .addSelect('SUM(od."itemTotal")', 'revenue')
-      .where('o."createdAt" BETWEEN :from AND :to', { from, to })
-      .andWhere('o.status != :cancelled', { cancelled: OrderStatus.CANCELLED })
-      .groupBy('period')
-      .orderBy('period', 'ASC')
-      .getRawMany();
+    const granMap = {
+      day: {
+        dateTrunc: 'day',
+        interval: '1 day',
+        labelFormat: 'YYYY-MM-DD',
+      },
+      month: {
+        dateTrunc: 'month',
+        interval: '1 month',
+        labelFormat: 'YYYY-MM',
+      },
+      year: {
+        dateTrunc: 'year',
+        interval: '1 year',
+        labelFormat: 'YYYY',
+      },
+    } as const;
 
-    const labels: string[] = raw.map(r => r.period);
-    const sold = raw.map(r => Number(r.sold ?? 0));
-    const revenue = raw.map(r => Number(r.revenue ?? 0));
-    return { labels, sold, revenue };
+    const g = granMap[granularity];
+
+    const sql = `
+    WITH buckets AS (
+      SELECT generate_series(
+        date_trunc($1, $2::timestamp),
+        date_trunc($1, $3::timestamp),
+        $4::interval
+      ) AS bucket
+    ),
+    agg AS (
+      SELECT
+        date_trunc($1, o."createdAt") AS bucket,
+        SUM(od.quantity) AS sold,
+        SUM(od."itemTotal") AS revenue
+      FROM order_details od
+      JOIN orders o ON od."orderId" = o.id
+      WHERE o."createdAt" BETWEEN $2::timestamp AND $3::timestamp
+        AND o."paymentStatus" = 'completed' 
+      GROUP BY date_trunc($1, o."createdAt")
+    )
+    SELECT
+      to_char(b.bucket, $5) AS label,
+      COALESCE(a.sold, 0)::bigint AS sold,
+      COALESCE(a.revenue, 0)::numeric AS revenue
+    FROM buckets b
+    LEFT JOIN agg a ON a.bucket = b.bucket
+    ORDER BY b.bucket ASC;
+  `;
+
+    // params: $1 = date_trunc unit, $2 = from, $3 = to, $4 = interval, $5 = to_char format
+    const params = [g.dateTrunc, from, to, g.interval, g.labelFormat];
+
+    const raw: Array<{ label: string; sold: string; revenue: string }> =
+      await this.orderDetailsRepository.query(sql, params);
+
+    const labels: string[] = [];
+    const soldArr: number[] = [];
+    const revenueArr: number[] = [];
+
+    raw.shift(); // remove first row which is always zeroes
+
+    for (const row of raw) {
+      labels.push(row.label);
+      soldArr.push(Number(row.sold ?? 0));
+      revenueArr.push(Number(row.revenue ?? 0));
+    }
+
+    return { labels, sold: soldArr, revenue: revenueArr };
   }
 
-  /**
-   * Top customers by revenue within date range.
-   * Returns up to `limit` customers with fields { customerId, name, revenue, orders }.
-   */
   async getTopCustomers(
     from: string,
     to: string,

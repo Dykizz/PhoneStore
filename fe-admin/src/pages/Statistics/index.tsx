@@ -1,5 +1,16 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
-import { Row, Col, Card, Table, Spin, DatePicker, Button, Select } from "antd";
+import {
+  Row,
+  Col,
+  Card,
+  Table,
+  Spin,
+  DatePicker,
+  Button,
+  Select,
+  Space,
+  Statistic,
+} from "antd";
 import { Column, Line } from "@ant-design/charts";
 import dayjs from "dayjs";
 import { getStatistics } from "@/apis/statistics.api";
@@ -62,7 +73,20 @@ export default function StatisticsPage() {
       sold: s.sold[idx] ?? 0,
       revenue: s.revenue[idx] ?? 0,
     }));
-  }, [rawData.soldAndRevenue, granularity]);
+  }, [rawData.soldAndRevenue]);
+
+  const totals = useMemo(() => {
+    const s = rawData.soldAndRevenue ?? { labels: [], sold: [], revenue: [] };
+    const totalSold = (s.sold || []).reduce(
+      (acc, v) => acc + (Number(v) || 0),
+      0
+    );
+    const totalRevenue = (s.revenue || []).reduce(
+      (acc, v) => acc + (Number(v) || 0),
+      0
+    );
+    return { totalSold, totalRevenue };
+  }, [rawData.soldAndRevenue]);
 
   const topProducts: TopProductStatistics[] = rawData.top5Product ?? [];
   const topCustomers: TopCustomerStatistics[] = rawData.top5User ?? [];
@@ -76,68 +100,32 @@ export default function StatisticsPage() {
   }, [timeSeries]);
 
   const lineConfig = useMemo(() => {
-    const alias =
-      granularity === "day"
-        ? "Ngày"
-        : granularity === "month"
-        ? "Tháng"
-        : "Năm";
-
     return {
       data: chartData,
       xField: "date",
-      yField: "sold", // Chỉ dùng 'sold'
-      smooth: true,
-      color: "#2b8ef8",
-      meta: {
-        date: { alias },
-        sold: { alias: "Số lượng mua" },
+      yField: "sold",
+
+      interaction: {
+        tooltip: {
+          marker: false,
+        },
       },
-      xAxis: { tickCount: 6 },
-      yAxis: { title: { text: "Số lượng" } },
-      tooltip: {
-        shared: true,
-        showCrosshairs: true,
-        formatter: (datum: any) => ({ name: "Số lượng", value: datum.sold }),
+      style: {
+        lineWidth: 2,
       },
-    } as any;
-  }, [chartData, granularity]);
+    };
+  }, [chartData]);
 
   const columnConfig = useMemo(() => {
-    const alias =
-      granularity === "day"
-        ? "Ngày"
-        : granularity === "month"
-        ? "Tháng"
-        : "Năm";
-
     return {
       data: chartData,
       xField: "date",
       yField: "revenue",
-      color: "#4caf50",
-      meta: {
-        date: { alias },
-        revenue: { alias: "Doanh thu" },
-      },
-      xAxis: { tickCount: 6 },
-      yAxis: {
-        title: { text: "Doanh thu (VND)" },
-        label: {
-          formatter: (v: any) =>
-            typeof v === "number" ? `${(v / 1000).toFixed(0)}k` : v,
-        },
-      },
-      tooltip: {
-        shared: true,
-        showCrosshairs: true,
-        formatter: (datum: any) => ({
-          name: "Doanh thu",
-          value: formatCurrencyVND(datum.revenue),
-        }),
-      },
-    } as any;
-  }, [chartData, granularity]);
+
+      autoFit: true,
+      maxColumnWidth: 40,
+    };
+  }, [chartData]);
 
   const customersColumns = [
     {
@@ -173,6 +161,39 @@ export default function StatisticsPage() {
       <Row gutter={[16, 16]} align="middle" className="mb-4">
         <Col flex="auto">
           <h2 className="font-semibold">Báo cáo thống kê</h2>
+        </Col>
+      </Row>
+
+      <Row gutter={[16, 16]} className="mb-4">
+        <Col xs={24} md={12}>
+          <Card bordered={false}>
+            <Space direction="vertical" style={{ width: "100%" }}>
+              <Statistic
+                title="Tổng sản phẩm đã bán"
+                value={totals.totalSold}
+                valueStyle={{ fontSize: 28, fontWeight: 700 }}
+                suffix={<span style={{ fontSize: 22 }}>📦</span>}
+              />
+              <div style={{ color: "#8b8b8b", fontSize: 12 }}>
+                Tổng số sản phẩm đã bán trong khoảng thời gian đã chọn
+              </div>
+            </Space>
+          </Card>
+        </Col>
+
+        <Col xs={24} md={12}>
+          <Card bordered={false}>
+            <Space direction="vertical" style={{ width: "100%" }}>
+              <Statistic
+                title="Tổng doanh thu"
+                value={formatCurrencyVND(totals.totalRevenue)}
+                valueStyle={{ fontSize: 28, fontWeight: 700, color: "#389e0d" }}
+              />
+              <div style={{ color: "#8b8b8b", fontSize: 12 }}>
+                Tổng doanh thu (bao gồm tất cả đơn hàng hợp lệ)
+              </div>
+            </Space>
+          </Card>
         </Col>
       </Row>
 

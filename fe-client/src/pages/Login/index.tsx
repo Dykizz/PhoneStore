@@ -30,7 +30,6 @@ import { login } from "@/apis/auth.api";
 import { showToast } from "@/utils/toast";
 import { useAuth } from "@/hooks/useAuth";
 
-// Validation schema
 const loginSchema = z.object({
   email: z.string().min(1, "Email là bắt buộc").email("Email không hợp lệ"),
   password: z
@@ -67,10 +66,9 @@ const LoginPage = () => {
       });
 
       if (!response.success) {
-        console.log("🔴 Login failed:", response);
         const errorMsg = response.message || "Có lỗi xảy ra";
         const { statusCode } = response;
-        if (statusCode === 400) {
+        if (statusCode === 401) {
           showToast({
             type: "error",
             title: "Đăng nhập thất bại",

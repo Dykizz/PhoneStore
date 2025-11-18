@@ -1,5 +1,9 @@
 import { UploadService } from './../upload/upload.service';
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { Repository } from 'typeorm';
@@ -18,13 +22,28 @@ export class UsersService {
     private readonly usersRepository: Repository<User>,
     private uploadService: UploadService,
   ) {}
+  async checkIsBlocked(email: string): Promise<boolean> {
+    const user = await this.usersRepository.findOne({ where: { email } });
+    if (!user) {
+      throw new BadRequestException('Không tìm thấy người dùng');
+    }
+
+    return user.isBlocked || false;
+  }
+
   async validateUser(email: string, password: string): Promise<IUser | null> {
     const user = await this.usersRepository.findOne({ where: { email } });
     if (!user) {
       return null;
     }
+
+    if (user.isBlocked) {
+      throw new UnauthorizedException('Tài khoản của bạn đã bị khóa.');
+    }
+
     const validPass = await bcrypt.compare(password, user.password);
     if (!validPass) {
+      console.log('Invalid password attempt for user:', email);
       return null;
     }
     return {
@@ -180,6 +199,10 @@ export class UsersService {
     const user = await this.usersRepository.findOne({ where: { id } });
     if (!user) {
       throw new BadRequestException('Không tìm thấy người dùng');
+    }
+    if (updateUserDto.isBlocked !== undefined) {
+      user.isBlocked = updateUserDto.isBlocked;
+      return await this.usersRepository.save(user);
     }
 
     const oldAvatar = user.avatar;
