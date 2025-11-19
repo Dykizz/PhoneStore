@@ -45,6 +45,7 @@ export class GoodsReceiptsController {
   }
 
   @Patch(':id')
+  @ResponseMessage('Cập nhật phiếu nhập hàng thành công')
   async update(
     @Param('id') id: string,
     @Body() updateGoodsReceiptDto: UpdateGoodsReceiptDto,

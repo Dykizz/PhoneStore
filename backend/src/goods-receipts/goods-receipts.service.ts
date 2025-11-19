@@ -20,7 +20,10 @@ export class GoodsReceiptsService {
     private readonly goodsReceiptDetailRepository: Repository<GoodsReceiptDetail>,
   ) {}
 
-  async createGoodsReceipt(createGoodsReceiptDto: CreateGoodsReceiptDto, user: IUser) {
+  async createGoodsReceipt(
+    createGoodsReceiptDto: CreateGoodsReceiptDto,
+    user: IUser,
+  ) {
     const { products, supplierId, note } = createGoodsReceiptDto;
 
     if (!products || products.length === 0) {
@@ -167,13 +170,23 @@ export class GoodsReceiptsService {
     return detailGoodsReceipt;
   }
 
-  async updateGoodsReceipt(id: string, updateGoodsReceiptDto: UpdateGoodsReceiptDto) {
-    const { products } = updateGoodsReceiptDto;
-    if (products && products.length > 0) {
+  async updateGoodsReceipt(
+    id: string,
+    updateGoodsReceiptDto: UpdateGoodsReceiptDto,
+  ) {
+    const { supplierId, note } = updateGoodsReceiptDto;
+    const goodsReceipt = await this.goodsReceiptRepository.findOne({
+      where: { id },
+    });
+    if (!goodsReceipt) {
+      throw new NotFoundException('Phiếu nhập hàng không tồn tại');
     }
-    return `This action updates a #${id} goodsReceipt`;
-  }
 
+    if (supplierId !== undefined) goodsReceipt.supplierId = supplierId;
+    if (note !== undefined) goodsReceipt.note = note;
+
+    await this.goodsReceiptRepository.save(goodsReceipt);
+  }
   async updateOrCreateGoodReceiptDetail(
     goodsReceiptId: string,
     productId: string,

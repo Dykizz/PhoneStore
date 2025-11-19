@@ -137,6 +137,7 @@ export class UsersService {
 
   async findAll(
     query: PaginationQueryDto,
+    user: IUser,
   ): Promise<PaginatedResponseDto<BaseUserDto>> {
     const searchFields = ['email', 'userName', 'phoneNumber'];
     const validSortFields = ['email', 'userName', 'createdAt', 'updatedAt'];
@@ -150,6 +151,12 @@ export class UsersService {
       searchFields,
       validSortFields,
     );
+
+    if (user && user.id) {
+      queryBuilder.andWhere('user.id != :currentUserId', {
+        currentUserId: user.id,
+      });
+    }
 
     const [users, total] = await queryBuilder.getManyAndCount();
 

@@ -22,6 +22,7 @@ import UnAuthLayout from "@/components/Layout/UnAuthLayout";
 import OrdersPage from "@/pages/Orders";
 import DetailOrderPage from "@/pages/Orders/DetailOrder";
 import StatisticsPage from "@/pages/Statistics";
+import DetailGoodsReceiptPage from "@/pages/GoodsReceipts/DetailGoosReceipt";
 export const ThemeContext = React.createContext({
   isDark: false,
   toggleTheme: () => {},
@@ -62,6 +63,7 @@ export const router = createBrowserRouter([
       { path: "goods-receipts/list", element: <GoodsReceiptsPage /> },
       { path: "goods-receipts/add", element: <CreateGoodsReceiptPage /> },
       { path: "goods-receipts/edit/:id", element: <EditGoodsReceiptPage /> },
+      { path: "goods-receipts/:id", element: <DetailGoodsReceiptPage /> },
 
       { path: "users", element: <UsersPage /> },
       { path: "users/list", element: <UsersPage /> },

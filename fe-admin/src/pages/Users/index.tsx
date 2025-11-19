@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Table, Input, Select, Button, Space, Avatar } from "antd";
 import {
   EditOutlined,
+  EyeFilled,
   LockOutlined,
   PlusOutlined,
   SearchOutlined,
@@ -13,7 +14,7 @@ import { getUsers, updateUser } from "@/apis/user.api";
 import type { BaseUser } from "@/types/user.type";
 import { useNotificationContext } from "@/providers/NotificationProvider";
 import type { ColumnsType } from "antd/es/table";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Tag } from "antd";
 const { Option } = Select;
 
@@ -30,7 +31,7 @@ const UsersPage: React.FC = () => {
   const [sortBy, setSortBy] = useState<string>("");
   const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("DESC");
   const { errorNotification } = useNotificationContext();
-
+  const navigate = useNavigate();
   const fetchUsers = async (page = 1) => {
     setLoading(true);
     try {
@@ -179,11 +180,23 @@ const UsersPage: React.FC = () => {
       key: "actions",
       render: (_, record) => (
         <Space>
-          <Link to={`/users/edit/${record.id}`}>
-            <Button type="primary" icon={<EditOutlined />} size="small">
-              Sửa
-            </Button>
-          </Link>
+          <Button
+            icon={<EyeFilled />}
+            type="link"
+            onClick={() => navigate(`/users/${record.id}`)}
+          >
+            Chi tiết
+          </Button>
+
+          <Button
+            type="primary"
+            onClick={() => navigate(`/user/edit/${record.id}`)}
+            icon={<EditOutlined />}
+            size="small"
+          >
+            Sửa
+          </Button>
+
           <Button
             onClick={() => toggleBlockUser(record.id, record.isBlocked)}
             icon={record.isBlocked ? <UnlockOutlined /> : <LockOutlined />}
