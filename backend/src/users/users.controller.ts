@@ -53,8 +53,8 @@ export class UsersController {
   @Get()
   @Roles(UserRole.ADMIN)
   @ResponseMessage('Lấy danh sách người dùng thành công')
-  async findAll(@Query() query: PaginationQueryDto) {
-    return this.usersService.findAll(query);
+  async findAll(@Query() query: PaginationQueryDto, @User() user: IUser) {
+    return this.usersService.findAll(query, user);
   }
 
   @Get(':id')

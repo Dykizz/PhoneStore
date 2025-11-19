@@ -1,16 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {
-  Form,
-  Input,
-  Button,
-  Select,
-  InputNumber,
-  Space,
-  Col,
-  Row,
-  AutoComplete,
-} from "antd";
-import { PlusOutlined } from "@ant-design/icons";
+import { Form, Input, Button, Select, Space, Col, Row } from "antd";
 import { useNavigate, useParams } from "react-router-dom";
 import { getGoodsReceipt, updateGoodsReceipt } from "@/apis/goodsReceipt.api";
 import type {
@@ -20,11 +9,6 @@ import type {
 import { useNotificationContext } from "@/providers/NotificationProvider";
 import { QueryBuilder } from "@/utils/queryBuilder";
 import { getSuppliers } from "@/apis/supplier.api";
-import { getProducts } from "@/apis/product.api";
-import type { BaseProduct, VariantProduct } from "@/types/product.type";
-import { useDebounce } from "@/hooks/useDebounce";
-import { da } from "zod/locales";
-
 const { Option } = Select;
 const { TextArea } = Input;
 
@@ -35,9 +19,6 @@ const EditGoodsReceiptPage: React.FC = () => {
   const [suppliers, setSuppliers] = useState<{ id: string; name: string }[]>(
     []
   );
-  const [products, setProducts] = useState<BaseProduct[]>([]);
-  const [searchText, setSearchText] = useState("");
-  const debouncedSearch = useDebounce(searchText, 500);
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const { successNotification, errorNotification, warningNotification } =
@@ -58,47 +39,16 @@ const EditGoodsReceiptPage: React.FC = () => {
     const response = await getGoodsReceipt(id);
     if (response.success) {
       const data: DetailGoodsReceipt = response.data;
-
       form.resetFields();
-
       form.setFieldsValue({
         supplierId: data.supplierId,
         note: data.note,
       });
-      console.log("products", data.products);
-
-      const productsList = data.products.map((p) => ({
-        productId: p.productId,
-        productName: p.name,
-        quantity: p.quantity,
-        price: p.price,
-        variants: p.variants,
-      }));
-
-      // Đảm bảo Form.List hiển thị đủ field
-      form.setFieldsValue({ products: productsList });
     } else {
       errorNotification("Lỗi tải phiếu nhập", response.message);
     }
     setLoading(false);
   };
-
-  useEffect(() => {
-    const fetch = async () => {
-      if (!debouncedSearch) return;
-      const query = QueryBuilder.create()
-        .search(debouncedSearch)
-        .page(1)
-        .limit(5)
-        .build();
-
-      const response = await getProducts(query);
-      if (response.success) {
-        setProducts(response.data.data);
-      }
-    };
-    fetch();
-  }, [debouncedSearch]);
 
   useEffect(() => {
     fetchSuppliers();
@@ -108,13 +58,8 @@ const EditGoodsReceiptPage: React.FC = () => {
   const handleSubmit = async (values: any) => {
     setSubmitting(true);
     try {
-      const data: CreateGoodReceipt = {
+      const data: Partial<CreateGoodReceipt> = {
         supplierId: values.supplierId,
-        products: values.products.map((p: any) => ({
-          productId: p.productId,
-          quantity: p.quantity,
-          price: p.price,
-        })),
         note: values.note,
       };
       const response = await updateGoodsReceipt(id!, data);
@@ -156,261 +101,6 @@ const EditGoodsReceiptPage: React.FC = () => {
             </Form.Item>
           </Col>
         </Row>
-
-        <Form.List name="products">
-          {(fields, { add, remove }) => (
-            <>
-              {fields.map(({ key, name, ...restField }) => (
-                <div key={key}>
-                  {" "}
-                  <Row gutter={16} align="middle">
-                    <Col span={8}>
-                      <Form.Item
-                        {...restField}
-                        name={[name, "productName"]}
-                        label="Tên sản phẩm"
-                        rules={[
-                          { required: true, message: "Vui lòng chọn sản phẩm" },
-                        ]}
-                      >
-                        <AutoComplete
-                          placeholder="Nhập tên sản phẩm"
-                          onSearch={setSearchText}
-                          onSelect={(value) => {
-                            const selectedProduct = products.find(
-                              (p) => p.name === value
-                            );
-                            if (!selectedProduct) return;
-
-                            const currentProducts =
-                              form.getFieldValue("products") || [];
-
-                            const isDuplicate = currentProducts.some(
-                              (p: BaseProduct, i: number) =>
-                                i !== name && p.id === selectedProduct.id
-                            );
-
-                            if (isDuplicate) {
-                              warningNotification(
-                                "Sản phẩm đã được thêm",
-                                "Vui lòng chọn sản phẩm khác"
-                              );
-                              return;
-                            }
-
-                            form.setFieldsValue({
-                              products: currentProducts.map(
-                                (p: BaseProduct, i: number) =>
-                                  i === name
-                                    ? {
-                                        ...p,
-                                        id: selectedProduct.id,
-                                        productName: selectedProduct.name,
-                                        price: selectedProduct.price || 0,
-                                        variants: selectedProduct.variants.map(
-                                          (v) => ({
-                                            color: v.color,
-                                            image: v.image,
-                                            quantity: 0,
-                                          })
-                                        ),
-                                      }
-                                    : p
-                              ),
-                            });
-                          }}
-                          options={products.map((product) => ({
-                            value: product.name,
-                            label: (
-                              <div
-                                style={{
-                                  display: "flex",
-                                  alignItems: "center",
-                                  gap: 8,
-                                }}
-                              >
-                                <img
-                                  src={
-                                    product.variants[0]?.image ||
-                                    "/no-image.png"
-                                  }
-                                  alt={product.name}
-                                  style={{
-                                    width: 40,
-                                    height: 40,
-                                    objectFit: "cover",
-                                    borderRadius: 6,
-                                    border: "1px solid #f0f0f0",
-                                  }}
-                                />
-                                <div
-                                  style={{
-                                    display: "flex",
-                                    flexDirection: "column",
-                                  }}
-                                >
-                                  <span style={{ fontWeight: 500 }}>
-                                    {product.name}
-                                  </span>
-                                  <span style={{ fontSize: 12, color: "#888" }}>
-                                    Có {product.variants.length} màu
-                                  </span>
-                                </div>
-                              </div>
-                            ),
-                          }))}
-                          popupRender={(menu) => (
-                            <div
-                              style={{
-                                maxHeight: 250,
-                                overflowY: "auto",
-                                borderRadius: 8,
-                              }}
-                            >
-                              {menu}
-                            </div>
-                          )}
-                        />
-                      </Form.Item>
-                    </Col>
-
-                    <Col span={6}>
-                      <Form.Item
-                        {...restField}
-                        name={[name, "quantity"]}
-                        label="Số lượng"
-                        rules={[
-                          { required: true, message: "Vui lòng nhập số lượng" },
-                        ]}
-                      >
-                        <InputNumber
-                          style={{ width: "100%" }}
-                          min={1}
-                          placeholder="Số lượng"
-                        />
-                      </Form.Item>
-                    </Col>
-
-                    <Col span={6}>
-                      <Form.Item
-                        {...restField}
-                        name={[name, "price"]}
-                        label="Giá"
-                        rules={[
-                          { required: true, message: "Vui lòng nhập giá" },
-                        ]}
-                      >
-                        <InputNumber
-                          min={0}
-                          formatter={(value) =>
-                            `₫ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
-                          }
-                          parser={(value) => value!.replace(/₫\s?|(,*)/g, "")}
-                          style={{ width: "100%" }}
-                          placeholder="Giá"
-                        />
-                      </Form.Item>
-                    </Col>
-
-                    <Col span={4}>
-                      <Button danger onClick={() => remove(name)}>
-                        Xóa
-                      </Button>
-                    </Col>
-                  </Row>
-                  <Form.Item
-                    shouldUpdate={(prev, cur) =>
-                      prev.products?.[name]?.variants !==
-                      cur.products?.[name]?.variants
-                    }
-                  >
-                    {() => {
-                      const variants =
-                        form.getFieldValue(["products", name, "variants"]) ||
-                        [];
-                      return variants.length > 0 ? (
-                        <div
-                          style={{
-                            marginLeft: 16,
-                            marginBottom: 12,
-                            background: "#fafafa",
-                            padding: 12,
-                            borderRadius: 8,
-                          }}
-                        >
-                          <strong>Các màu:</strong>
-                          {variants.map((v: VariantProduct, index: number) => (
-                            <Row
-                              key={index}
-                              align="middle"
-                              gutter={12}
-                              style={{ marginTop: 8 }}
-                            >
-                              <Col span={10}>
-                                <div
-                                  style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: 8,
-                                  }}
-                                >
-                                  <img
-                                    src={v.image}
-                                    alt={v.color}
-                                    style={{
-                                      width: 40,
-                                      height: 40,
-                                      borderRadius: 6,
-                                      objectFit: "cover",
-                                      border: "1px solid #ddd",
-                                    }}
-                                  />
-                                  <span>{v.color}</span>
-                                </div>
-                              </Col>
-                              <Col span={8}>
-                                <Form.Item
-                                  name={[name, "variants", index, "quantity"]}
-                                  label="Số lượng"
-                                  rules={[
-                                    {
-                                      required: true,
-                                      message: "Nhập số lượng cho màu này",
-                                    },
-                                  ]}
-                                >
-                                  <InputNumber
-                                    min={0}
-                                    style={{ width: "100%" }}
-                                  />
-                                </Form.Item>
-                              </Col>
-                            </Row>
-                          ))}
-                        </div>
-                      ) : null;
-                    }}
-                  </Form.Item>
-                </div>
-              ))}
-
-              <Row gutter={16}>
-                <Col span={24}>
-                  <Form.Item>
-                    <Button
-                      type="dashed"
-                      onClick={() => add()}
-                      block
-                      icon={<PlusOutlined />}
-                    >
-                      Thêm sản phẩm
-                    </Button>
-                  </Form.Item>
-                </Col>
-              </Row>
-            </>
-          )}
-        </Form.List>
 
         <Row gutter={16}>
           <Col span={24}>

@@ -14,6 +14,7 @@ import {
   EditOutlined,
   DeleteOutlined,
   SearchOutlined,
+  EyeFilled,
 } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
@@ -203,6 +204,13 @@ export default function GoodsReceiptsPage() {
       key: "actions",
       render: (_, record) => (
         <Space>
+          <Button
+            icon={<EyeFilled />}
+            type="link"
+            onClick={() => navigate(`/goods-receipts/${record.id}`)}
+          >
+            Chi tiết
+          </Button>
           <Button
             type="link"
             icon={<EditOutlined />}
