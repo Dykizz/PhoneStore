@@ -289,7 +289,9 @@ export default function ProfilePage() {
           title: "Thành công",
           description: "Đã lưu thông tin.",
         });
-        setForceLoad((prev) => !prev);
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
       } else {
         throw new Error(response.message);
       }

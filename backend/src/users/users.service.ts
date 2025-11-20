@@ -7,7 +7,7 @@ import {
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { Repository } from 'typeorm';
-import { IUser, User } from './entities/user.entity';
+import { IUser, User, UserRole } from './entities/user.entity';
 import { PaginationQueryDto } from 'src/common/dtos/pagination-query.dto';
 import { PaginatedResponseDto } from 'src/common/dtos/paginated-response.dto';
 import { BaseUserDto, DetailUserDto } from './dto/response-user.dto';
@@ -225,5 +225,26 @@ export class UsersService {
 
     Object.assign(user, updateUserDto);
     return await this.usersRepository.save(user);
+  }
+
+  async countUsers(): Promise<{
+    admin: number;
+    user: number;
+    employee: number;
+  }> {
+    const adminCount = await this.usersRepository.count({
+      where: { role: UserRole.ADMIN },
+    });
+    const customerCount = await this.usersRepository.count({
+      where: { role: UserRole.USER },
+    });
+    const employeeCount = await this.usersRepository.count({
+      where: { role: UserRole.EMPLOYEE },
+    });
+    return {
+      admin: adminCount,
+      user: customerCount,
+      employee: employeeCount,
+    };
   }
 }
