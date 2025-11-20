@@ -120,6 +120,7 @@ export class StatisticsService {
       .addSelect('COUNT(DISTINCT o.id)', 'orders')
       .where('o."createdAt" BETWEEN :from AND :to', { from, to })
       .andWhere('o.status != :cancelled', { cancelled: OrderStatus.CANCELLED })
+      .andWhere('o."paymentStatus" = :paid', { paid: 'completed' })
       .groupBy('u.id, u.userName, u.email')
       .orderBy('revenue', 'DESC')
       .limit(limit)
@@ -157,6 +158,7 @@ export class StatisticsService {
       .addSelect('SUM(od."itemTotal")', 'revenue')
       .where('o."createdAt" BETWEEN :from AND :to', { from, to })
       .andWhere('o.status != :cancelled', { cancelled: OrderStatus.CANCELLED })
+      .andWhere('o."paymentStatus" = :paid', { paid: 'completed' })
       .groupBy('od.productId, p.name, od."snapshotProdct"')
       .orderBy('sold', 'DESC')
       .limit(limit)
@@ -168,5 +170,66 @@ export class StatisticsService {
       sold: Number(r.sold ?? 0),
       revenue: Number(r.revenue ?? 0),
     }));
+  }
+
+  async getTodayRevenueComparison(): Promise<{
+    today: number;
+    yesterday: number;
+    change: number;
+    isHigher: boolean;
+    pctChange: number;
+  }> {
+    const dayRangeIso = (offsetDays = 0) => {
+      const d = new Date();
+      d.setHours(0, 0, 0, 0);
+      d.setDate(d.getDate() + offsetDays);
+      const start = new Date(d);
+      const end = new Date(d);
+      end.setHours(23, 59, 59, 999);
+      return { start: start.toISOString(), end: end.toISOString() };
+    };
+
+    const todayRange = dayRangeIso(0);
+    const yesterdayRange = dayRangeIso(-1);
+
+    const sumRevenueBetween = async (fromIso: string, toIso: string) => {
+      const raw = await this.orderDetailsRepository
+        .createQueryBuilder('od')
+        .leftJoin('od.order', 'o')
+        .select('COALESCE(SUM(od."itemTotal"), 0)', 'revenue')
+        .where('o."createdAt" BETWEEN :from AND :to', {
+          from: fromIso,
+          to: toIso,
+        })
+        .andWhere('o.status != :cancelled', {
+          cancelled: OrderStatus.CANCELLED,
+        })
+        .andWhere('o."paymentStatus" = :paid', { paid: 'completed' })
+        .getRawOne();
+
+      return Number(raw?.revenue ?? 0);
+    };
+
+    const [today, yesterday] = await Promise.all([
+      sumRevenueBetween(todayRange.start, todayRange.end),
+      sumRevenueBetween(yesterdayRange.start, yesterdayRange.end),
+    ]);
+
+    const change = today - yesterday;
+    const isHigher = today > yesterday;
+    const pctChange =
+      yesterday === 0
+        ? today === 0
+          ? 0
+          : 100
+        : (change / Math.abs(yesterday)) * 100;
+
+    return {
+      today,
+      yesterday,
+      change,
+      isHigher,
+      pctChange: Number(pctChange.toFixed(2)),
+    };
   }
 }

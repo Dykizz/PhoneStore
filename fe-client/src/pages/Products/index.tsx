@@ -15,11 +15,14 @@ import ProductPagination from "./ProductPagination";
 import { useSearchParams } from "react-router-dom";
 import { Package, Phone } from "lucide-react";
 
+const PHONE_PRODUCT_TYPE_ID = "ebd5e145-d7eb-4cd0-80bc-e71e0a623c76";
+const ACCESSORY_PRODUCT_TYPE_ID = "95ea2006-b528-4d15-81b6-2a4ac723fa09";
+
 const defautFilter = {
   priceMin: undefined,
   priceMax: undefined,
   brandId: undefined,
-  productTypeId: "ebd5e145-d7eb-4cd0-80bc-e71e0a623c76",
+  productTypeId: PHONE_PRODUCT_TYPE_ID,
   sortBy: "",
   sortOrder: "DESC" as "ASC" | "DESC",
   searchText: "",
@@ -29,40 +32,49 @@ export default function ProductsPage() {
   const [products, setProducts] = useState<BaseProduct[]>([]);
   const [brands, setBrands] = useState<{ id: string; name: string }[]>([]);
   const [loading, setLoading] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialSearch = searchParams.get("search") ?? defautFilter.searchText;
+  const initialCategory = searchParams.get("category") ?? "phone";
+  const initialPage = Number(searchParams.get("page")) || 1;
+  const initialLimit = Number(searchParams.get("limit")) || 8;
+  const initialPriceMin = searchParams.get("priceMin")
+    ? Number(searchParams.get("priceMin"))
+    : undefined;
+  const initialPriceMax = searchParams.get("priceMax")
+    ? Number(searchParams.get("priceMax"))
+    : undefined;
+  const initialBrandId = searchParams.get("brandId") ?? undefined;
+  const initialProductTypeId =
+    searchParams.get("productTypeId") ??
+    (initialCategory === "accessory"
+      ? ACCESSORY_PRODUCT_TYPE_ID
+      : PHONE_PRODUCT_TYPE_ID);
+  const initialSortBy = searchParams.get("sortBy") ?? defautFilter.sortBy;
+  const initialSortOrder =
+    (searchParams.get("sortOrder") as "ASC" | "DESC") || defautFilter.sortOrder;
+
   const [pagination, setPagination] = useState<MetaPagination>({
     total: 0,
-    page: 1,
-    limit: 8,
+    page: initialPage,
+    limit: initialLimit,
     totalPages: 0,
     hasNext: false,
     hasPrev: false,
   });
-  const [searchParams, setSearchParams] = useSearchParams();
-  const search = searchParams.get("search") || "";
-  const category = searchParams.get("category") || "phone";
 
-  const [searchText, setSearchText] = useState<string>(
-    search || defautFilter.searchText
-  );
-  const [priceMin, setPriceMin] = useState<number | undefined>(
-    defautFilter.priceMin
-  );
-  const [priceMax, setPriceMax] = useState<number | undefined>(
-    defautFilter.priceMax
-  );
-  const [brandId, setBrandId] = useState<string | undefined>(
-    defautFilter.brandId
-  );
+  // make category reactive
+  const [category, setCategory] = useState<string>(initialCategory);
+
+  const [searchText, setSearchText] = useState<string>(initialSearch);
+  const [priceMin, setPriceMin] = useState<number | undefined>(initialPriceMin);
+  const [priceMax, setPriceMax] = useState<number | undefined>(initialPriceMax);
+  const [brandId, setBrandId] = useState<string | undefined>(initialBrandId);
   const [productTypeId, setProductTypeId] = useState<string | undefined>(
-    category === "accessory"
-      ? "95ea2006-b528-4d15-81b6-2a4ac723fa09"
-      : "ebd5e145-d7eb-4cd0-80bc-e71e0a623c76"
+    initialProductTypeId
   );
 
-  const [sortBy, setSortBy] = useState<string>(defautFilter.sortBy);
-  const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">(
-    defautFilter.sortOrder
-  );
+  const [sortBy, setSortBy] = useState<string>(initialSortBy);
+  const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">(initialSortOrder);
 
   const handleDefaultFilter = () => {
     setSearchText(defautFilter.searchText);
@@ -72,7 +84,17 @@ export default function ProductsPage() {
     setProductTypeId(defautFilter.productTypeId);
     setSortBy(defautFilter.sortBy);
     setSortOrder(defautFilter.sortOrder);
+
+    setSearchParams(
+      {
+        page: "1",
+        limit: String(pagination.limit),
+        category,
+      },
+      { replace: true }
+    );
   };
+
   const mapBrands = useMemo(() => {
     const map = new Map<string, string>();
     brands.forEach((brand) => map.set(brand.id, brand.name));
@@ -86,8 +108,8 @@ export default function ProductsPage() {
         .page(page)
         .limit(pagination.limit)
         .search(searchText)
-        .filterIf(!!priceMin, "price", { gte: priceMin })
-        .filterIf(!!priceMax, "price", { lte: priceMax })
+        .filterIf(priceMin !== undefined, "price", { gte: priceMin })
+        .filterIf(priceMax !== undefined, "price", { lte: priceMax })
         .filterIf(!!brandId, "brandId", brandId)
         .filterIf(!!productTypeId, "productTypeId", productTypeId)
         .sortBy(sortBy, sortOrder)
@@ -123,7 +145,6 @@ export default function ProductsPage() {
     if (brandsData.success) {
       const tmp: { id: string; name: string }[] = [];
       brandsData.data.data.forEach((brand: Brand) => {
-        mapBrands.set(brand.id, brand.name);
         tmp.push({ id: brand.id, name: brand.name });
       });
       setBrands(tmp);
@@ -137,26 +158,68 @@ export default function ProductsPage() {
   };
 
   useEffect(() => {
-    setSearchText(search);
-  }, [search]);
+    const params: Record<string, string> = {};
+    if (searchText) params.search = searchText;
+    if (category) params.category = category;
+    if (priceMin !== undefined) params.priceMin = String(priceMin);
+    if (priceMax !== undefined) params.priceMax = String(priceMax);
+    if (brandId) params.brandId = brandId;
+    if (productTypeId) params.productTypeId = productTypeId!;
+    if (sortBy) params.sortBy = sortBy;
+    if (sortOrder) params.sortOrder = sortOrder;
+    params.page = String(pagination.page);
+    params.limit = String(pagination.limit);
+
+    setSearchParams(params, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    searchText,
+    category,
+    priceMin,
+    priceMax,
+    brandId,
+    productTypeId,
+    sortBy,
+    sortOrder,
+    pagination.page,
+    pagination.limit,
+  ]);
 
   useEffect(() => {
-    setSearchParams({ search: searchText });
-  }, [searchText]);
-
-  useEffect(() => {
-    if (category) {
-      setSearchParams({ category });
+    const c = searchParams.get("category") ?? "phone";
+    if (c !== category) {
+      setCategory(c);
     }
-    fetchProducts(1);
-  }, [category]);
+
+    const ptFromUrl = searchParams.get("productTypeId");
+    if (ptFromUrl) {
+      if (ptFromUrl !== productTypeId) setProductTypeId(ptFromUrl);
+    } else {
+      const defaultPt =
+        c === "accessory" ? ACCESSORY_PRODUCT_TYPE_ID : PHONE_PRODUCT_TYPE_ID;
+      if (defaultPt !== productTypeId) setProductTypeId(defaultPt);
+    }
+
+    const pageFromUrl = Number(searchParams.get("page")) || 1;
+    if (pageFromUrl !== pagination.page) {
+      setPagination((p) => ({ ...p, page: pageFromUrl }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   useEffect(() => {
     fetchBrands();
+    fetchProducts(pagination.page);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
-    fetchProducts(1);
+    if (pagination.page !== 1) {
+      setPagination((p) => ({ ...p, page: 1 }));
+    } else {
+      fetchProducts(1);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     searchText,
     priceMin,
@@ -169,6 +232,7 @@ export default function ProductsPage() {
 
   useEffect(() => {
     fetchProducts(pagination.page);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pagination.page]);
 
   return (
@@ -183,6 +247,7 @@ export default function ProductsPage() {
           {category === "accessory" ? "Phụ kiện" : "Điện thoại"}
         </h1>
       </div>
+
       <ProductFilter
         brandId={brandId}
         searchText={searchText}
@@ -220,6 +285,7 @@ export default function ProductsPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
       {products.length > 0 && (
         <div className="mt-10">
           <ProductPagination

@@ -137,7 +137,14 @@ export default function ProductFilter({
               placeholder="Giá từ"
               value={priceMin}
               step={100000}
-              onChange={(e) => setPriceMin(Number(e.target.value) || 0)}
+              onChange={(e) => {
+                const val = Number(e.target.value);
+                let finalVal = val;
+                if (finalVal < 0) finalVal = 0;
+                else if (finalVal > (priceMax || 500000000))
+                  finalVal = priceMax || 500000000;
+                setPriceMin(finalVal);
+              }}
               defaultValue={0}
               min={0}
               max={priceMax}
@@ -151,8 +158,15 @@ export default function ProductFilter({
               type="number"
               placeholder="Giá đến"
               value={priceMax}
+              max={500000000}
               step={100000}
-              onChange={(e) => setPriceMax(Number(e.target.value))}
+              onChange={(e) => {
+                const val = Number(e.target.value);
+                let finalVal = val;
+                if (finalVal < (priceMin || 0)) finalVal = priceMin || 0;
+                else if (finalVal > 500000000) finalVal = 500000000;
+                setPriceMax(val < 500000000 ? val : 500000000);
+              }}
               min={priceMin}
               className="text-sm rounded-full"
             />

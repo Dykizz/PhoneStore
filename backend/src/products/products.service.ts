@@ -380,4 +380,26 @@ export class ProductsService {
     });
     return result;
   }
+
+  async countProducts(): Promise<{
+    total: number;
+    released: number;
+    unreleased: number;
+    totalVariants: number;
+  }> {
+    const total = await this.productsRepository.count();
+    const released = await this.productsRepository.count({
+      where: { isReleased: true },
+    });
+    const unreleased = await this.productsRepository.count({
+      where: { isReleased: false },
+    });
+    const totalVariants = await this.productVariantsRepository.count();
+    return {
+      total,
+      released,
+      unreleased,
+      totalVariants,
+    };
+  }
 }
