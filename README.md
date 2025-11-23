@@ -72,7 +72,4 @@
 
 - **Môi trường làm việc**: Khi làm việc, chỉ mở **một thư mục con** (`backend`, `fe-client`, hoặc `fe-admin`) trong một cửa sổ VS Code riêng biệt. **Không mở thư mục cha** để tránh các lỗi import không mong muốn.
 - **API**: Các API call phải được đặt trong thư mục `apis` và tuân thủ kiểu trả về `ApiResponse<T>`.
-- **Truy vấn**: Sử dụng `queryBuilder.ts` trong thư mục `utils` để xây dựng các truy vấn. Xem file `queryBuilder.example.tsx` để tham khảo.
-- **Backend (NestJS)**:
-  - **Tổ chức Module**: Mỗi module là một thư mục riêng biệt. Hãy tham khảo cấu trúc của `Module Users` trước khi bắt đầu.
-  - **Phụ thuộc**: Module A có thể import Module B để sử dụng service của nó. **Hạn chế việc hai module import lẫn nhau** để tránh các phụ thuộc vòng tròn.
+- **Truy vấn**: Sử dụng `queryBuilder.ts` trong thư mục `utils` để xây dựng các truy vấn.
