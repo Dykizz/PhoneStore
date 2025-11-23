@@ -68,6 +68,43 @@
 
 ---
 
+## ▶️ Bước 3: Chạy dự án (môi trường phát triển)
+
+Lưu ý: mở mỗi thư mục (`backend`, `fe-client`, `fe-admin`) trong một cửa sổ VS Code riêng theo quy tắc dự án.
+
+1. Chạy backend
+
+   ```bash
+   cd backend
+   npm install      # nếu chưa cài
+   # Tạo file .env như hướng dẫn ở Bước 2 trước khi chạy
+   npm run dev
+   ```
+
+   - Backend mặc định chạy trên: http://localhost:8000
+
+2. Chạy FE - Client
+
+   ```bash
+   cd fe-client
+   npm install      # nếu chưa cài
+   npm run dev
+   ```
+
+   - Client mặc định chạy trên: http://localhost:5173
+
+3. Chạy FE - Admin
+   ```bash
+   cd fe-admin
+   npm install      # nếu chưa cài
+   npm run dev
+   ```
+   - Admin mặc định chạy trên: http://localhost:3000
+
+Mỗi phần (backend, fe-client, fe-admin) nên chạy trong terminal/VS Code riêng để dễ theo dõi logs.
+
+---
+
 ## ⚠️ Quy Tắc và Lưu Ý
 
 - **Môi trường làm việc**: Khi làm việc, chỉ mở **một thư mục con** (`backend`, `fe-client`, hoặc `fe-admin`) trong một cửa sổ VS Code riêng biệt. **Không mở thư mục cha** để tránh các lỗi import không mong muốn.
