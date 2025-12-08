@@ -54,6 +54,7 @@ export default function CheckoutPage() {
   const { cartItems, checkoutSuccess } = useCart();
   const [products, setProducts] = useState<CartItem[]>([]);
   const [inforUser, setInforUser] = useState<DetailUser | null>(null);
+  const [isCartLoading, setIsCartLoading] = useState(true);
   const [cityOptions, setCityOptions] = useState<any[]>([]);
   const [addressLabels, setAddressLabels] = useState({
     city: "",
@@ -114,8 +115,63 @@ export default function CheckoutPage() {
   };
 
   useEffect(() => {
+    if (isCartLoading) {
+      const timer = setTimeout(() => {
+        setIsCartLoading(false);
+      }, 200);
+      return () => clearTimeout(timer);
+    }
+
+    if (cartItems.length === 0) {
+      navigate("/");
+      showToast({
+        title: "Giỏ hàng trống",
+        description: "Vui lòng thêm sản phẩm vào giỏ hàng trước khi thanh toán",
+        type: "warning",
+      });
+      return;
+    }
     setProducts(cartItems.filter((item) => item.selected));
-  }, [cartItems]);
+  }, [cartItems, navigate, isCartLoading]);
+
+  const parseAndSetAddress = (userInfo: DetailUser) => {
+    const addressParts = userInfo.defaultAddress
+      ? userInfo.defaultAddress.split(", ")
+      : [];
+
+    console.log("Address parts:", addressParts);
+    console.log("CityOptions available:", cityOptions.length);
+
+    if (addressParts.length === 4 && cityOptions.length > 0) {
+      const [street, wardLabel, districtLabel, cityLabel] = addressParts;
+
+      const foundCity = cityOptions.find((c) => c.label === cityLabel);
+      if (foundCity) {
+        const foundDistrict = foundCity.children?.find(
+          (d) => d.label === districtLabel
+        );
+        if (foundDistrict) {
+          const foundWard = foundDistrict.children?.find(
+            (w) => w.label === wardLabel
+          );
+          if (foundWard) {
+            setValue("city", foundCity.value);
+            setValue("district", foundDistrict.value);
+            setValue("ward", foundWard.value);
+            setValue("street", street);
+
+            setAddressLabels({
+              city: cityLabel,
+              district: districtLabel,
+              ward: wardLabel,
+            });
+
+            console.log("Address set successfully");
+          }
+        }
+      }
+    }
+  };
 
   useEffect(() => {
     const fetchUserInfor = async () => {
@@ -123,17 +179,20 @@ export default function CheckoutPage() {
       if (!response.success) return navigate("/login");
 
       setInforUser(response.data);
+      parseAndSetAddress(response.data);
+
       setValue("recipientName", response.data.userName || "");
       setValue("phoneNumber", response.data.phoneNumber || "");
-
-      const defaultAddress = response.data.defaultAddress;
-      if (defaultAddress) {
-        const parts = defaultAddress.split(", ").map((part) => part.trim());
-        if (parts.length === 4) setValue("street", parts[0]);
-      }
     };
     fetchUserInfor();
   }, [navigate, setValue]);
+
+  // Khi cityOptions load xong và đã có user info, parse lại address
+  useEffect(() => {
+    if (cityOptions.length > 0 && inforUser) {
+      parseAndSetAddress(inforUser);
+    }
+  }, [cityOptions, inforUser]);
 
   useEffect(() => {
     fetch("https://provinces.open-api.vn/api/?depth=3")
@@ -220,7 +279,13 @@ export default function CheckoutPage() {
     }
   });
 
-  if (!inforUser) return null;
+  if (!inforUser || isCartLoading) {
+    return (
+      <div className="min-h-screen bg-muted flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
 
   const totalPrice = products.reduce(
     (total, item) => total + item.finalPrice * item.quantity,

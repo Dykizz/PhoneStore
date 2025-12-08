@@ -1,7 +1,14 @@
 import { useAuth } from "@/hooks/useAuth";
+import type { UserRole } from "@/types/user.type";
 import { MenuFoldOutlined, MenuUnfoldOutlined } from "@ant-design/icons";
 import { Button, Layout, Switch, theme } from "antd";
 import { useEffect } from "react";
+
+const roleTile = (role: UserRole) => {
+  if (role === "admin") return "Quản trị viên";
+  if (role === "employee") return "Nhân viên";
+  return "Người dùng";
+};
 
 export default function Header({
   collapsed,
@@ -62,6 +69,7 @@ export default function Header({
           unCheckedChildren="☀️"
           size="small"
         />
+        Xin chào, {roleTile(user?.role || "user")}
         <span>{user?.userName}</span>
       </div>
     </Header>

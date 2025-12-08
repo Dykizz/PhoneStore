@@ -190,7 +190,7 @@ const UsersPage: React.FC = () => {
 
           <Button
             type="primary"
-            onClick={() => navigate(`/user/edit/${record.id}`)}
+            onClick={() => navigate(`/users/edit/${record.id}`)}
             icon={<EditOutlined />}
             size="small"
           >
