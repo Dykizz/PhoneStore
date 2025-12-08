@@ -58,7 +58,7 @@ export interface CreateOrder {
   items: {
     variantId: string;
     quantity: number;
-  };
+  }[];
   paymentMethod: PaymentMethod;
   recipientName: string;
   addressShipping: string;

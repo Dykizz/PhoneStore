@@ -137,7 +137,9 @@ const MainLayout: React.FC = () => {
               color: isDark ? colorTextBase : colorPrimary,
               fontSize: collapsed ? "14px" : "16px",
               transition: "font-size 0.2s",
+              cursor: "pointer",
             }}
+            onClick={() => navigate("/")}
           >
             {collapsed ? "PS" : "Phone Store"}
           </h2>
